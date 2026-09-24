@@ -59,7 +59,7 @@ export async function demandHeatmap(filters = {}) {
         totalUnits: 1,
         avgBudget: { $round: ["$avgBudget", 0] },
         urgentCount: 1,
-        // A display index, not a probability or a forecast.
+        
         intensity: {
           $round: [
             {

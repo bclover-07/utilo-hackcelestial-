@@ -2924,6 +2924,7 @@ button.landing-mobile-toggle {
   background: white;
 }
 
+
 @media (max-width: 860px) {
   .comic-chaos-grid {
     grid-template-columns: 1fr;
@@ -2932,6 +2933,139 @@ button.landing-mobile-toggle {
     grid-template-columns: 1fr;
   }
   .simulator-sandbox {
+    padding: 18px;
+  }
+  .landing-hero {
+    grid-template-columns: 1fr;
+    padding: 40px 5vw 50px;
+    gap: 30px;
+  }
+  .landing-hero h1 {
+    font-size: clamp(38px, 8vw, 72px);
+  }
+  .landing-hero > div > p {
+    font-size: 15px;
+  }
+  .hero-art {
+    height: 280px;
+    padding: 10px;
+  }
+  .hero-sticker {
+    font-size: 11px;
+    padding: 10px 14px;
+  }
+  .art-orbit {
+    font-size: 60px;
+  }
+  .landing-links {
+    display: none;
+  }
+  .landing-mobile-toggle,
+  button.landing-mobile-toggle {
+    display: flex !important;
+  }
+  .landing-nav {
+    padding: 16px 4vw;
+  }
+  .auth-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    margin: 30px 0;
+  }
+  .auth-page {
+    padding: 20px 16px;
+  }
+  .auth-story h1 {
+    font-size: clamp(30px, 7vw, 48px);
+  }
+  .auth-story > p {
+    font-size: 15px;
+  }
+  .auth-form {
+    padding: 24px 20px;
+  }
+  .auth-form h2 {
+    font-size: 24px;
+  }
+  .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .overview-grid {
+    grid-template-columns: 1fr;
+  }
+  .split-layout {
+    grid-template-columns: 1fr;
+  }
+  .inbox {
+    grid-template-columns: 1fr;
+  }
+  .search-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .hero-note > span {
+    width: 38px;
+    height: 38px;
+    font-size: 20px;
+  }
+}
+@media (max-width: 520px) {
+  .landing-hero h1 {
+    font-size: clamp(28px, 10vw, 50px);
+  }
+  .landing-hero h1 > span {
+    padding: 0 8px 6px;
+    border-radius: 10px;
+  }
+  .landing-hero h1 sup {
+    font-size: 28px;
+    margin-left: 4px;
+  }
+  .hero-art {
+    height: 200px;
+  }
+  .hero-sticker {
+    display: none;
+  }
+  .art-orbit {
+    display: none;
+  }
+  .scene-frame {
+    border-radius: 35% 35% 20% 20%;
+  }
+  .scene-label {
+    font-size: 18px;
+  }
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+  .stat > strong {
+    font-size: 22px;
+  }
+  .stat {
+    padding: 14px;
+  }
+  .mini-stat strong {
+    font-size: 30px;
+  }
+  .hero-doodle {
+    font-size: 60px;
+    right: 10px;
+    bottom: 10px;
+  }
+  .overview-hero h2 {
+    font-size: 24px;
+  }
+  .auth-page {
+    padding: 14px 12px;
+  }
+  .auth-form {
+    padding: 18px 14px;
+  }
+  .auth-form h2 {
+    font-size: 20px;
+  }
+  .auth-story .panel {
     padding: 18px;
   }
 }

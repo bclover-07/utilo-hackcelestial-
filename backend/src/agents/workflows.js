@@ -2,7 +2,7 @@ import { z } from "zod";
 import { Annotation, StateGraph, START, END } from "@langchain/langgraph";
 import { Listing, Insight } from "../models/index.js";
 import { assert } from "../middlewares/errors.js";
-import { retrieveVectors } from "../services/vectorService.js";
+import { retrieveVectorEvidence, keywordEvidence, fuseRanks } from "../services/vectorService.js";
 import { analytics } from "../services/analyticsService.js";
 import { parseRequest } from "./requestParserAgent.js";
 import { planBundle } from "./bundlePlannerAgent.js";
@@ -107,21 +107,20 @@ export async function rag(user, raw) {
     vector: Annotation(),
     sources: Annotation(),
     answer: Annotation(),
+    retrieval: Annotation(),
   });
   const pipeline = new StateGraph(state)
     .addNode("embed_query", async () => ({ vector: await embed(text) }))
     .addNode("retrieve_evidence", async (s) => {
-      const sources = await retrieveVectors(
-        s.vector,
-        process.env.HF_EMBEDDING_MODEL ||
-          "sentence-transformers/all-MiniLM-L6-v2",
-      );
+      const vectorResult = await retrieveVectorEvidence(s.vector, process.env.HF_EMBEDDING_MODEL || "sentence-transformers/all-MiniLM-L6-v2", 12);
+      const keywords = await keywordEvidence(text);
+      const sources = fuseRanks(vectorResult.sources, keywords);
       assert(
         sources.length,
         409,
-        "No compatible resources have been indexed yet. Providers can index listings from My listings.",
+        "No resource evidence was found. Try a listing keyword, or ask providers to index relevant listings.",
       );
-      return { sources };
+      return { sources, retrieval: { engine: vectorResult.engine, fallback: vectorResult.fallback, semanticCount: vectorResult.sources.length, keywordCount: keywords.length, fusion: "reciprocal rank fusion", availabilityChecked: false } };
     })
     .addNode("grounded_answer", async (s) => ({
       answer: await invoke(
@@ -134,13 +133,14 @@ export async function rag(user, raw) {
     .addEdge("retrieve_evidence", "grounded_answer")
     .addEdge("grounded_answer", END)
     .compile();
-  const { answer, sources } = await pipeline.invoke({});
+  const { answer, sources, retrieval } = await pipeline.invoke({});
   return {
     answer,
     sources,
+    retrieval,
     trace: [
-      "Hugging Face: query embedding",
-      "MongoDB aggregation: exact cosine top-5 over all compatible indexed resources",
+      retrieval.engine,
+      "Hybrid retrieval: keyword and semantic results combined by reciprocal rank fusion",
       "Gemini: evidence-grounded answer",
     ],
   };

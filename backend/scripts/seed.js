@@ -20,7 +20,7 @@ async function seed() {
   await mongoose.connect(config.mongo, { serverSelectionTimeoutMS: 15000 });
   console.log("Connected successfully.");
 
-  // 1. Categories
+  
   const categories = [
     { slug: "banquet_hall", name: "Banquet halls & Venues", color: "#FFE66D" },
     { slug: "chairs", name: "Chairs & Seating", color: "#4ECDC4" },
@@ -39,7 +39,7 @@ async function seed() {
   }
   console.log(`Verified ${categories.length} platform categories.`);
 
-  // 2. Settings
+  
   await Setting.updateOne(
     { key: "platform" },
     { $set: { key: "platform", commissionPercent: 5, minBookingValue: 0 } },
@@ -48,7 +48,7 @@ async function seed() {
 
   const hashedPassword = await bcrypt.hash("Password123!", 12);
 
-  // 3. Demo Provider Account
+  
   const provider = await BusinessProfile.findOneAndUpdate(
     { email: "provider@utlio.com" },
     {
@@ -72,7 +72,7 @@ async function seed() {
   );
   console.log(`Seeded Demo Provider: provider@utlio.com (ID: ${provider._id})`);
 
-  // 4. Demo Seeker Account
+  
   const seeker = await BusinessProfile.findOneAndUpdate(
     { email: "seeker@utlio.com" },
     {
@@ -96,7 +96,7 @@ async function seed() {
   );
   console.log(`Seeded Demo Seeker: seeker@utlio.com (ID: ${seeker._id})`);
 
-  // 5. Demo Admin Account
+  
   const admin = await BusinessProfile.findOneAndUpdate(
     { email: "admin@utlio.com" },
     {
@@ -118,7 +118,7 @@ async function seed() {
   );
   console.log(`Seeded Demo Admin: admin@utlio.com (ID: ${admin._id})`);
 
-  // 6. Seed Provider Listings
+  
   const listingsData = [
     {
       owner: provider._id,
@@ -243,9 +243,9 @@ async function seed() {
   }
   console.log(`Seeded ${createdListings.length} listings for Provider.`);
 
-  // 7. Seed Seeker RFQ Requests
-  const startDate1 = new Date(Date.now() + 4 * 86400000); // 4 days from now
-  const endDate1 = new Date(startDate1.getTime() + 12 * 3600000); // +12 hours
+  
+  const startDate1 = new Date(Date.now() + 4 * 86400000); 
+  const endDate1 = new Date(startDate1.getTime() + 12 * 3600000); 
 
   const req1 = await Request.findOneAndUpdate(
     { seeker: seeker._id, title: "Annual Fintech Leadership Gala Dinner 2026" },
@@ -300,7 +300,7 @@ async function seed() {
   );
   console.log(`Seeded 2 active RFQ requests for Seeker.`);
 
-  // 8. Seed Quote & Live Negotiation between Provider and Seeker
+  
   const ballroom = createdListings[0];
   const quote = await Quote.findOneAndUpdate(
     { request: req1._id, provider: provider._id, listing: ballroom._id },
@@ -334,7 +334,7 @@ async function seed() {
     { upsert: true, new: true }
   );
 
-  // Seed Messages in Quote
+  
   await Message.deleteMany({ quote: quote._id });
   await Message.insertMany([
     {
@@ -358,7 +358,7 @@ async function seed() {
   ]);
   console.log(`Seeded active negotiation thread on quote: ${quote._id}`);
 
-  // 9. Seed Confirmed Booking
+  
   const boardroom = createdListings[1];
   const bookingStart = new Date(Date.now() + 2 * 86400000);
   const bookingEnd = new Date(bookingStart.getTime() + 6 * 3600000);
@@ -387,7 +387,7 @@ async function seed() {
     { upsert: true, new: true }
   );
 
-  // Mark calendar availability block for confirmed booking
+  
   await Availability.findOneAndUpdate(
     { booking: booking._id },
     {
@@ -403,7 +403,7 @@ async function seed() {
   );
   console.log(`Seeded confirmed booking & availability block: ${booking._id}`);
 
-  // 10. Seed Ratings & Reviews
+  
   await Rating.findOneAndUpdate(
     { from: seeker._id, to: provider._id },
     {

@@ -1,4 +1,4 @@
-// Deterministic coverage of independent searches; this is not a reservation.
+
 export function summarizePlan(matches = []) {
   const requirements = matches.length;
   const matched = matches.filter((item) => item.total > 0).length;

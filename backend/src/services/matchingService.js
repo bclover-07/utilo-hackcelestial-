@@ -5,7 +5,7 @@ export function overlaps(a, b) {
     new Date(a.start) < new Date(b.end) && new Date(a.end) > new Date(b.start)
   );
 }
-// Maximum simultaneous occupancy, not the sum of non-overlapping bookings.
+
 export function peakReserved(blocks, start, end) {
   const events = blocks
     .filter((b) => overlaps(b, { start, end }))
@@ -77,9 +77,9 @@ export function rank(listing, filters, rating) {
     ],
   };
 }
-export async function search(raw, user, { log = false, session } = {}) {
+export async function search(raw, user, { log = false, session, all = false } = {}) {
   const f = searchSchema.parse(raw);
-  const query = { status: "active" };
+  const query = { status: "active", moderationHold: { $ne: true } };
   if (user) query.owner = { $ne: user._id };
   if (f.category) query.category = f.category;
   if (f.city)
@@ -143,7 +143,7 @@ export async function search(raw, user, { log = false, session } = {}) {
     )
     .map((l) =>
       rank(
-        l,
+        { ...l, availableQuantity: l.quantity - (f.start ? peakReserved(blocks.filter(b => String(b.listing) === String(l._id)), f.start, f.end) : 0) },
         f,
         ratings.find((r) => String(r._id) === String(l.owner)),
       ),
@@ -157,7 +157,7 @@ export async function search(raw, user, { log = false, session } = {}) {
       resultCount: results.length,
     });
   return {
-    items: results.slice((f.page - 1) * 24, f.page * 24),
+    items: all ? results : results.slice((f.page - 1) * 24, f.page * 24),
     total: results.length,
     page: f.page,
     candidateLimit: 200,

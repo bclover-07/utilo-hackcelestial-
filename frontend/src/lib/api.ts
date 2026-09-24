@@ -1,4 +1,35 @@
 type Options = { method?: string; body?: unknown; signal?: AbortSignal };
+export async function streamPlan<T = unknown>(body: unknown, onProgress: (event: { step: string; status: string; elapsedMs?: number }) => void): Promise<T> {
+  const response = await fetch("/api/ai/plans/stream", { method: "POST", credentials: "include", cache: "no-store", signal: AbortSignal.timeout(110000), headers: { "Content-Type": "application/json", "X-Utlio-Request": "1" }, body: JSON.stringify(body) });
+  if (!response.ok) {
+    if (response.status === 401) window.dispatchEvent(new Event("utlio:session-expired"));
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || "Unable to start planning.");
+  }
+  if (!response.body) throw new Error("Streaming is unavailable. Please retry.");
+  const reader = response.body.getReader(), decoder = new TextDecoder();
+  let buffer = "", result: T | undefined;
+  const consume = (line: string) => {
+    if (!line.trim()) return;
+    const event = JSON.parse(line);
+    if (event.type === "error") throw new Error(event.message);
+    if (event.type === "progress") onProgress(event);
+    if (event.type === "result") result = event.plan;
+  };
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n"); buffer = lines.pop() || "";
+      lines.forEach(consume);
+    }
+    buffer += decoder.decode();
+    if (buffer.trim()) consume(buffer);
+    if (!result) throw new Error("The connection ended before a result arrived. Check your saved plans before retrying.");
+    return result;
+  } finally { reader.releaseLock(); }
+}
 export async function api<T = unknown>(
   path: string,
   options: Options = {},

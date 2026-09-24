@@ -57,8 +57,8 @@ export async function transition(user, id, raw) {
       r.status = r.items.some((i) => i.booking) ? "partial" : "open";
       r.revision++;
       await r.save({ session });
-      // Competing offers were closed when this item was booked. Restore those
-      // conversations so the now-open requirement can actually be fulfilled.
+      
+      
       await Quote.updateMany(
         { request: r._id, itemIndex: b.itemIndex, status: "closed" },
         [

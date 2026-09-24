@@ -18,7 +18,7 @@ function CartoonObjects({ paused }) {
         rotationIntensity={0.3}
         floatIntensity={0.6}
       >
-        {/* 1. Cartoon Banquet Table */}
+        {}
         <RoundedBox
           args={[2.8, 0.24, 1.6]}
           radius={0.1}
@@ -40,9 +40,9 @@ function CartoonObjects({ paused }) {
           )),
         )}
 
-        {/* 2. Floating Cyan Banquet Chair */}
+        {}
         <group position={[-1.6, 0.7, -0.4]} rotation={[0.2, 0.4, -0.1]}>
-          {/* Seat */}
+          {}
           <RoundedBox
             args={[0.9, 0.14, 0.9]}
             radius={0.06}
@@ -51,7 +51,7 @@ function CartoonObjects({ paused }) {
             <meshToonMaterial color="#79D9C5" />
             <Edges color="#171915" />
           </RoundedBox>
-          {/* Backrest */}
+          {}
           <RoundedBox
             args={[0.9, 0.9, 0.12]}
             radius={0.06}
@@ -60,7 +60,7 @@ function CartoonObjects({ paused }) {
             <meshToonMaterial color="#79D9C5" />
             <Edges color="#171915" />
           </RoundedBox>
-          {/* Chair Legs */}
+          {}
           {[-0.35, 0.35].flatMap((cx) =>
             [-0.35, 0.35].map((cz) => (
               <RoundedBox
@@ -75,13 +75,13 @@ function CartoonObjects({ paused }) {
           )}
         </group>
 
-        {/* 3. Floating Audio Speaker Box (Comic Punchy Pink) */}
+        {}
         <group position={[1.6, 0.6, 0.3]} rotation={[-0.1, -0.3, 0.15]}>
           <RoundedBox args={[1.0, 1.4, 0.8]} radius={0.1} position={[0, 0, 0]}>
             <meshToonMaterial color="#F7A7C2" />
             <Edges color="#171915" />
           </RoundedBox>
-          {/* Speaker Woofer Cones */}
+          {}
           <mesh position={[0, 0.3, 0.42]} rotation={[Math.PI / 2, 0, 0]}>
             <cylinderGeometry args={[0.3, 0.3, 0.06, 24]} />
             <meshStandardMaterial color="#1E1E1E" />
@@ -92,13 +92,13 @@ function CartoonObjects({ paused }) {
           </mesh>
         </group>
 
-        {/* 4. Floating Electric Lime Comic Ring */}
+        {}
         <mesh position={[0.2, 1.6, 0.2]} rotation={[1.1, 0.5, 0]}>
           <torusGeometry args={[0.7, 0.2, 16, 36]} />
           <meshStandardMaterial color="#A6F420" roughness={0.25} />
         </mesh>
 
-        {/* 5. Golden Comic Star Prism */}
+        {}
         <mesh position={[-0.4, 1.3, -0.5]} rotation={[0.4, 0.2, 0.8]}>
           <octahedronGeometry args={[0.65]} />
           <meshStandardMaterial
@@ -109,7 +109,7 @@ function CartoonObjects({ paused }) {
           />
         </mesh>
 
-        {/* 6. Floating Lavender Sphere Accent */}
+        {}
         <mesh position={[0.9, -0.2, 1.2]}>
           <sphereGeometry args={[0.38, 24, 24]} />
           <meshStandardMaterial color="#C3B1E1" roughness={0.3} />

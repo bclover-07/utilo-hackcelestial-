@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { DM_Sans, Space_Grotesk } from "next/font/google";
 import "./workspace.css";
 import "./neo.css";
+import "./conductor.css";
 import { AuthProvider } from "@/context/AuthContext";
+import MotionExperience from "@/components/MotionExperience";
 const dmSans = DM_Sans({
   subsets: ["latin"],
   variable: "--font-dm",
@@ -35,7 +37,7 @@ export default function RootLayout({
       className={`${dmSans.variable} ${spaceGrotesk.variable}`}
     >
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider><MotionExperience>{children}</MotionExperience></AuthProvider>
       </body>
     </html>
   );

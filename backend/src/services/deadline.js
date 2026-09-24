@@ -1,5 +1,5 @@
 import { ApiError } from "../middlewares/errors.js";
-// Enforce a deadline even when an upstream SDK does not honor cancellation.
+
 export async function withDeadline(operation, milliseconds = 45000) {
   const controller = new AbortController();
   let timer;

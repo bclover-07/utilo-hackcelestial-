@@ -46,7 +46,7 @@ async function validateListing(user, raw) {
 export async function createListing(user, raw) {
   const data = await validateListing(user, raw);
   const l = await Listing.create({ ...data, owner: user._id });
-  // Saved-search alerts derive from actual search matches, never sample recommendations.
+  
   for (const saved of await SavedSearch.find({
     "filters.category": l.category,
   }).limit(100)) {
@@ -88,6 +88,7 @@ export async function setStatus(user, id, body) {
     .object({ status: z.enum(["active", "paused", "archived"]) })
     .parse(body);
   const l = await ownListing(user, id);
+  assert(status !== "active" || user.verification === "verified", 403, "Business approval is required to publish resources. Complete your profile for review.");
   assert(
     status !== "active" || !l.moderationHold,
     409,

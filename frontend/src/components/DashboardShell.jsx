@@ -47,7 +47,7 @@ const seekerSections = [
     title: "SEEKER TOOLS",
     links: [
       ["search", "Discover resources", "⌕"],
-      ["planner", "AI Event copilot", "✳"],
+      ["planner", "AI Conductor", "✳"],
       ["requests", "My requirements (RFQs)", "↗"],
       ["compare", "Saved & compare", "♡"],
     ],
@@ -155,7 +155,7 @@ export default function DashboardShell({ children, admin = false }) {
       <a className="skip-link" href="#workspace-content">
         Skip to workspace
       </a>
-      {/* Mobile Drawer Backdrop Overlay */}
+      {}
       <div
         className={`sidebar-backdrop ${menu ? "is-open" : ""}`}
         onClick={() => setMenu(false)}
@@ -362,6 +362,7 @@ export default function DashboardShell({ children, admin = false }) {
               {switchError}
             </p>
           )}
+          {!admin && auth.user.verification !== "verified" && <div className="notice business-verification-banner"><strong>{auth.user.verification === "rejected" ? "Business verification needs an update." : "Your business approval is pending."}</strong><p>One approval covers seeker and provider modes. Explore and plan now; approval is required to publish resources, request quotes or confirm bookings.</p><Link href="/dashboard/profile">Complete your business profile →</Link></div>}
           {children}
         </main>
 

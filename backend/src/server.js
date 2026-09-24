@@ -13,7 +13,7 @@ try {
   process.exit(1);
 }
 await Promise.all(Object.values(mongoose.models).map((m) => m.init()));
-// Real editable taxonomy and platform policy, not sample marketplace records.
+
 for (const [slug, name, color] of [
   ["banquet_hall", "Banquet halls", "#FFE66D"],
   ["chairs", "Chairs & seating", "#4ECDC4"],

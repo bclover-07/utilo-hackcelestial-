@@ -2,6 +2,7 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { quoteController as c } from "../controllers/quoteController.js";
 import { aiController } from "../controllers/aiController.js";
+import { verifiedBusiness } from "../middlewares/auth.js";
 
 export const quoteRoutes = Router();
 
@@ -13,8 +14,8 @@ const aiLimit = rateLimit({
 });
 
 quoteRoutes.get("/quotes", c.quotes);
-quoteRoutes.post("/quotes/:id/offers", c.offer);
-quoteRoutes.post("/quotes/:id/accept", c.accept);
+quoteRoutes.post("/quotes/:id/offers", verifiedBusiness, c.offer);
+quoteRoutes.post("/quotes/:id/accept", verifiedBusiness, c.accept);
 quoteRoutes.post("/quotes/:id/decline", c.decline);
 quoteRoutes.get("/quotes/:id/messages", c.messages);
 quoteRoutes.post("/quotes/:id/messages", c.message);

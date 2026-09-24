@@ -20,7 +20,7 @@ export function llm() {
 
 export async function invokeModel(system, input, schema) {
   try {
-    const model = schema ? llm().withStructuredOutput(schema) : llm();
+    const model = schema ? llm().withStructuredOutput(schema, { method: "jsonSchema" }) : llm();
     const result = await withDeadline((signal) =>
       model.invoke(
         [new SystemMessage(system), new HumanMessage(JSON.stringify(input))],
@@ -37,9 +37,13 @@ export async function invokeModel(system, input, schema) {
             .join("\n");
   } catch (error) {
     if (error instanceof ApiError) throw error;
+    
+    console.warn("AI invocation failed", { structured: !!schema, type: error.name, status: Number(error.status) || undefined });
     throw new ApiError(
       503,
-      "Gemini could not complete the request. Check the configured model, API key and quota; no generated result was saved.",
+      schema
+        ? "AI could not produce a valid requirement draft. Retry or enter and confirm the requirements manually; no request was created."
+        : "AI could not complete this response. Retry shortly; no generated result was saved.",
     );
   }
 }

@@ -23,7 +23,7 @@ export function errorHandler(error, req, res, next) {
       .json({ error: "Invalid data or file. Check the form and try again." });
   if (error.status)
     return res.status(error.status).json({ error: error.message });
-  console.error("Request failed:", error.name); // Never log credentials, provider payloads or request bodies.
+  console.error("Request failed:", error.name); 
   res
     .status(500)
     .json({ error: "The operation could not be completed. Please try again." });

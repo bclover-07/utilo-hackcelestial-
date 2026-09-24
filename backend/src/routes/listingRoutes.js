@@ -2,6 +2,7 @@ import { Router } from "express";
 import { listingController as c } from "../controllers/listingController.js";
 import { aiController } from "../controllers/aiController.js";
 import rateLimit from "express-rate-limit";
+import { verifiedBusiness } from "../middlewares/auth.js";
 
 export const listingRoutes = Router();
 
@@ -13,9 +14,9 @@ const aiLimit = rateLimit({
 });
 
 listingRoutes.get("/listings", c.listings);
-listingRoutes.post("/listings", c.createListing);
+listingRoutes.post("/listings", verifiedBusiness, c.createListing);
 listingRoutes.get("/listings/:id", c.listing);
-listingRoutes.put("/listings/:id", c.updateListing);
+listingRoutes.put("/listings/:id", verifiedBusiness, c.updateListing);
 listingRoutes.patch("/listings/:id/status", c.listingStatus);
 listingRoutes.get("/listings/:id/availability", c.availability);
 listingRoutes.post("/listings/:id/availability", c.block);

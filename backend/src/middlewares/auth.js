@@ -30,6 +30,11 @@ export function business(req, res, next) {
   assert(req.user.role === "business", 403, "Business account required.");
   next();
 }
+export function verifiedBusiness(req, res, next) {
+  assert(req.user.role === "business" && req.user.verification === "verified", 403,
+    "Business approval is required for this action. Complete your profile and verification documents; one approval covers both seeker and provider modes.");
+  next();
+}
 
 export function isAllowedOrigin(origin) {
   if (!origin) return true;

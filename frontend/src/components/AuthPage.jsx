@@ -167,11 +167,13 @@ function AuthForm({ register, initialPersona, initialDemo }) {
               : "Choose how you’d like to get things moving."}
           </p>
           <fieldset disabled={busy} className="persona-fieldset">
-            <legend>
-              {register ? "Start your journey as" : "Open your workspace as"}
-            </legend>
-            <div className="persona-toggle" aria-label="Account and workspace">
-              {Object.entries(personas).map(([key, item]) => {
+            <legend>Account type</legend>
+            <div className="persona-toggle account-type-toggle" aria-label="Account type">
+              <button type="button" aria-pressed={role === "business"} className={role === "business" ? "selected" : ""} onClick={() => selectPersona("seeker")}><Package size={19} /> Business</button>
+              <button type="button" aria-pressed={role === "admin"} className={role === "admin" ? "selected" : ""} onClick={() => selectPersona("admin")}><ShieldCheck size={19} /> Admin</button>
+            </div>
+            {role === "business" && <><p className="business-mode-label">{register ? "Choose your starting mode" : "Open your business workspace in"}</p><div className="persona-toggle business-mode-toggle" aria-label="Business mode">
+              {Object.entries(personas).filter(([key]) => key !== "admin").map(([key, item]) => {
                 const Icon = item.icon;
                 return (
                   <button
@@ -187,13 +189,14 @@ function AuthForm({ register, initialPersona, initialDemo }) {
                   </button>
                 );
               })}
-            </div>
+            </div></>}
             <p className="persona-caption">
               {personas[persona].detail}
               {persona === "admin" && register
                 ? " An invitation is required."
                 : ""}
             </p>
+            {role === "business" && <p className="business-approval-note">One account and one business approval cover both modes. Switch between seeking and providing in your dashboard. {register ? "Explore and plan after signup; complete your business profile for admin approval before publishing resources or creating requests." : "Your selected mode changes the workspace tools, not your account permissions."}</p>}
           </fieldset>
           <form
             className="form-stack"

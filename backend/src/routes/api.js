@@ -19,33 +19,33 @@ export const api = Router();
 
 const send = (fn) => async (req, res) => res.json(await fn(req, res));
 
-// Public health check
+
 api.get("/health", send(async () => ({
   status: mongoose.connection.readyState === 1 ? "ready" : "unavailable",
 })));
 
-// Public categories taxonomy (available to unauthenticated visitors, seekers, providers, and admins)
+
 api.get("/categories", listingController.categories);
 
-// Public authentication routes
+
 api.use("/auth", authRoutes);
 
-// Protected routes (valid session cookie required)
+
 api.use(auth);
 
 api.get("/auth/me", authController.me);
 api.post("/auth/logout", authController.logout);
 api.patch("/profile", authController.profile);
 
-// Shared authenticated routes (any authenticated role)
+
 api.use(uploadRoutes);
 api.use(notificationRoutes);
 api.use(analyticsRoutes);
 
-// Admin-only routes
+
 api.use("/admin", adminRoutes);
 
-// Business-only routes (seeker & provider modes)
+
 const b = Router();
 b.use(business);
 b.use(searchRoutes);

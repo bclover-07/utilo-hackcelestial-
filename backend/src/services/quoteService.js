@@ -8,6 +8,7 @@ import {
   Availability,
   Setting,
   Message,
+  BusinessProfile,
 } from "../models/index.js";
 import { offerSchema } from "./validation.js";
 import { assert } from "../middlewares/errors.js";
@@ -28,6 +29,7 @@ export async function offer(user, id, raw) {
   return mongoose.connection.transaction(async (session) => {
     const q = await getQuote(user, id, session);
     const r = await Request.findById(q.request).session(session);
+    assert(await BusinessProfile.countDocuments({ _id: { $in: [q.provider, q.seeker] }, verification: "verified" }).session(session) === 2, 403, "Both businesses must be approved before negotiating.");
     assert(
       ["open", "partial"].includes(r.status) &&
         !r.items[q.itemIndex].booking &&
@@ -72,6 +74,7 @@ export async function accept(user, id, raw) {
   const { version } = z.object({ version: z.number().int().min(1) }).parse(raw);
   return mongoose.connection.transaction(async (session) => {
     const q = await getQuote(user, id, session);
+    assert(await BusinessProfile.countDocuments({ _id: { $in: [q.provider, q.seeker] }, verification: "verified" }).session(session) === 2, 403, "Both businesses must be approved before confirming a booking.");
     assert(
       q.status === "offered" && q.version === version,
       409,
@@ -91,8 +94,8 @@ export async function accept(user, id, raw) {
       409,
       "This requirement is no longer open.",
     );
-    // All competing confirmations and owner blocks write the same listing document.
-    // MongoDB retries transactions on write conflicts before re-reading reservations.
+    
+    
     const l = await Listing.findOneAndUpdate(
       { _id: q.listing, status: "active" },
       { $inc: { revision: 1 } },
