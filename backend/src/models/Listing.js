@@ -1,0 +1,37 @@
+import { Schema, model, ref, point } from "./helpers.js";
+
+export const Listing = model(
+  "Listing",
+  {
+    owner: ref("BusinessProfile"),
+    category: { type: String, required: true },
+    title: String,
+    description: String,
+    quantity: Number,
+    capacity: Number,
+    price: Number,
+    unit: { type: String, enum: ["hour", "day", "event"] },
+    minHours: Number,
+    deposit: Number,
+    delivery: Boolean,
+    deliveryFee: Number,
+    conditions: String,
+    cancellationHours: Number,
+    city: String,
+    address: String,
+    location: point,
+    attributes: Schema.Types.Mixed,
+    photos: [String],
+    status: {
+      type: String,
+      enum: ["active", "paused", "archived"],
+      default: "active",
+    },
+    revision: { type: Number, default: 0 },
+    moderationHold: { type: Boolean, default: false },
+    embedding: { type: [Number], select: false },
+    embeddingModel: String,
+    indexedAt: Date,
+  },
+  [[{ location: "2dsphere" }], [{ owner: 1, status: 1 }]],
+);
