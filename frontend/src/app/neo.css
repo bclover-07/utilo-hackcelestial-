@@ -1,4 +1,4 @@
-/* Utlio's shared rounded neubrutalist system. Imported after structural styles. */
+
 :root {
   --ink: #171915;
   --paper: #fff9eb;
@@ -498,7 +498,7 @@ summary:hover {
     scroll-behavior: auto !important;
   }
 }
-/* Public exchange and authentication compositions */
+
 .brand {
   font-size: 30px;
   letter-spacing: -0.07em;
@@ -2059,7 +2059,7 @@ summary:hover {
     gap: 5px;
   }
 }
-/* Keep native date/select controls inside narrow layouts. */
+
 .field,
 .form-stack,
 .form-grid,
@@ -2112,12 +2112,9 @@ summary:hover {
   gap: 14px;
 }
 
-/* ===================================================================
-   COMPREHENSIVE RESPONSIVE BREAKPOINTS
-   Tablet → Mobile → Small Mobile
-   =================================================================== */
 
-/* ----------- TABLET: 1024px ----------- */
+
+
 @media (max-width: 1024px) {
   .stat-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2203,9 +2200,9 @@ summary:hover {
   }
 }
 
-/* ----------- MOBILE: 768px ----------- */
+
 @media (max-width: 768px) {
-  /* Sidebar drawer behavior */
+  
   .sidebar {
     transform: translateX(-100%);
     transition: transform 0.3s var(--ease-out), visibility 0.3s;
@@ -2343,7 +2340,7 @@ summary:hover {
     flex: 1 1 calc(50% - 8px);
     min-width: 140px;
   }
-  /* Landing page mobile */
+  
   .neo-nav {
     padding: 14px 4vw;
   }
@@ -2423,7 +2420,7 @@ summary:hover {
     text-align: center;
     padding: 30px 5vw;
   }
-  /* Auth page mobile */
+  
   .auth-studio {
     padding: 0;
   }
@@ -2461,7 +2458,7 @@ summary:hover {
     gap: 8px;
     text-align: center;
   }
-  /* Inbox / Negotiations mobile */
+  
   .inbox {
     grid-template-columns: 1fr;
     gap: 16px;
@@ -2485,7 +2482,7 @@ summary:hover {
   .message {
     max-width: 92%;
   }
-  /* Conductor mobile */
+  
   .conductor-hero {
     flex-direction: column;
     gap: 20px;
@@ -2540,7 +2537,7 @@ summary:hover {
     flex-wrap: wrap;
     gap: 4px;
   }
-  /* AI flow visual */
+  
   .ai-flow-visual {
     flex-direction: column;
     gap: 8px;
@@ -2549,7 +2546,7 @@ summary:hover {
   .ai-arrow {
     transform: rotate(90deg);
   }
-  /* Pulse grid */
+  
   .pulse-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
@@ -2560,23 +2557,23 @@ summary:hover {
   .pulse-value {
     font-size: 28px;
   }
-  /* Forecast */
+  
   .forecast-grid {
     grid-template-columns: 1fr;
     gap: 12px;
   }
-  /* Pricing */
+  
   .pricing-range {
     flex-wrap: wrap;
     gap: 6px;
   }
-  /* Compare grid */
+  
   .compare-grid {
     grid-template-columns: 1fr;
   }
 }
 
-/* ----------- SMALL MOBILE: 480px ----------- */
+
 @media (max-width: 480px) {
   body {
     font-size: 14px;
@@ -2765,7 +2762,7 @@ summary:hover {
   .orbit-hub {
     font-size: 40px;
   }
-  /* Workspace footer mobile */
+  
   .workspace-footer {
     margin: 10px 12px;
     font-size: 9px;
@@ -2774,7 +2771,7 @@ summary:hover {
     gap: 10px;
     justify-content: center;
   }
-  /* conductor small mobile */
+  
   .conductor-pills {
     flex-wrap: wrap;
     gap: 6px;
@@ -2792,7 +2789,7 @@ summary:hover {
   .conductor-event-fields .form-grid {
     grid-template-columns: 1fr;
   }
-  /* Insights small mobile */
+  
   .ai-trust-note {
     flex-direction: column;
     text-align: center;
@@ -2811,14 +2808,14 @@ summary:hover {
     padding: 8px 10px;
     gap: 8px;
   }
-  /* Pulse small */
+  
   .pulse-grid {
     grid-template-columns: 1fr;
   }
   .pulse-value {
     font-size: 24px;
   }
-  /* Utilization ring */
+  
   .utilization-ring svg {
     width: 60px;
     height: 60px;
@@ -2826,7 +2823,7 @@ summary:hover {
   .utilization-ring span {
     font-size: 12px;
   }
-  /* Workflow trace */
+  
   .workflow-trace {
     gap: 8px;
   }
@@ -2840,7 +2837,7 @@ summary:hover {
     font-size: 14px;
     flex-shrink: 0;
   }
-  /* Resilience stat */
+  
   .resilience-stat strong {
     font-size: 36px;
   }
@@ -2848,29 +2845,29 @@ summary:hover {
     flex-direction: column;
     gap: 10px;
   }
-  /* Landing hero adjustments */
+  
   .hero-buttons .text-link {
     text-align: center;
   }
-  /* Role showcase */
+  
   .role-preview {
     border-radius: 16px;
   }
   .preview-metrics {
     grid-template-columns: 1fr;
   }
-  /* AI node mobile */
+  
   .ai-node {
     padding: 8px 12px;
     font-size: 12px;
     border-radius: 10px;
   }
-  /* Stars */
+  
   .stars {
     letter-spacing: 2px;
     font-size: 18px;
   }
-  /* Verification notice */
+  
   .business-verification-banner {
     padding: 14px;
     font-size: 13px;
@@ -2880,7 +2877,7 @@ summary:hover {
   }
 }
 
-/* ----------- Touch / mobile hover cleanup ----------- */
+
 @media (hover: none) and (pointer: coarse) {
   .panel:hover {
     transform: none;
@@ -2897,7 +2894,7 @@ summary:hover {
   }
 }
 
-/* ----------- Safe area / notch support ----------- */
+
 @supports (padding: env(safe-area-inset-bottom)) {
   .workspace-footer {
     padding-bottom: calc(14px + env(safe-area-inset-bottom));
