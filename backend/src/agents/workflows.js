@@ -13,6 +13,7 @@ import { recommendPrice as _recommendPrice } from "./smartPricingAgent.js";
 import { classifySentiment as _classifySentiment } from "./sentimentAnalysisAgent.js";
 import { computeUrgency as _computeUrgency } from "./urgencyScoringAgent.js";
 import { embed, invoke } from "./shared.js";
+import { summarizePlan } from "../services/planSummary.js";
 
 export { embed, cosine } from "./shared.js";
 
@@ -59,12 +60,15 @@ export async function workflow(user, raw) {
       filters: z.record(z.string(), z.unknown()).default({}),
     })
     .parse(raw);
+  const started = performance.now();
   const result = await graph.invoke({ ...input, user: { _id: user._id } });
   return {
     draft: result.draft,
     matches: result.matches,
     answer: result.answer,
     trace: result.trace,
+    summary: result.matches ? summarizePlan(result.matches) : undefined,
+    elapsedMs: Math.round(performance.now() - started),
   };
 }
 

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { Children, useState, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
 import Link from "next/link";
 
@@ -78,7 +78,11 @@ export function useData(path) {
 export function State({ resource, children }) {
   if (resource.loading && !resource.data)
     return (
-      <div className="skeleton-container" role="status" aria-label="Loading workspace data">
+      <div
+        className="skeleton-container"
+        role="status"
+        aria-label="Loading workspace data"
+      >
         <div className="skeleton-grid">
           <div className="skeleton-card" />
           <div className="skeleton-card" />
@@ -93,7 +97,12 @@ export function State({ resource, children }) {
   if (resource.error)
     return (
       <div className="panel state error-panel" role="alert">
-        <div className="empty-symbol" style={{ background: "#FF6B6B", color: "#20201e" }}>!</div>
+        <div
+          className="empty-symbol"
+          style={{ background: "#FF6B6B", color: "#20201e" }}
+        >
+          !
+        </div>
         <h3>Unable to load records</h3>
         <p>{resource.error}</p>
         <button onClick={resource.reload}>Retry connection ↺</button>
@@ -142,14 +151,27 @@ export function Heading({
 }
 
 export function Badge({ children, variant = "" }) {
-  const text = String(children || "").toLowerCase();
+  const label = Children.toArray(children).join("");
+  const text = label.toLowerCase();
   let badgeStyle = {};
 
-  if (text.includes("active") || text.includes("verified") || text.includes("confirmed") || text.includes("completed")) {
+  if (
+    ["active", "verified", "confirmed", "completed", "supply found"].includes(
+      text,
+    )
+  ) {
     badgeStyle = { background: "#A8E6CF", borderColor: "#20201e" };
-  } else if (text.includes("urgent") || text.includes("emergency") || text.includes("rejected")) {
+  } else if (
+    text.includes("urgent") ||
+    text.includes("emergency") ||
+    text.includes("rejected")
+  ) {
     badgeStyle = { background: "#FF85A1", borderColor: "#20201e" };
-  } else if (text.includes("pending") || text.includes("invited") || text.includes("offered")) {
+  } else if (
+    text.includes("pending") ||
+    text.includes("invited") ||
+    text.includes("offered")
+  ) {
     badgeStyle = { background: "#FFE66D", borderColor: "#20201e" };
   } else if (text.includes("in_progress") || text.includes("hold")) {
     badgeStyle = { background: "#FFB347", borderColor: "#20201e" };
@@ -157,7 +179,7 @@ export function Badge({ children, variant = "" }) {
 
   return (
     <span className={`badge ${variant}`} style={badgeStyle}>
-      {String(children || "").replaceAll("_", " ")}
+      {label.replaceAll("_", " ")}
     </span>
   );
 }
@@ -257,9 +279,13 @@ export function Flow({
   active = 0,
 }) {
   return (
-    <ol className="flow">
+    <ol className="flow" aria-label="Workflow progress">
       {steps.map((s, i) => (
-        <li key={s} className={i <= active ? "current" : ""}>
+        <li
+          key={s}
+          className={i <= active ? "current" : ""}
+          aria-current={i === active ? "step" : undefined}
+        >
           <span>{String(i + 1).padStart(2, "0")}</span>
           {s}
         </li>

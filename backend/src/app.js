@@ -4,7 +4,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import { csrf, isAllowedOrigin } from "./middlewares/auth.js";
-import { errorHandler } from "./middlewares/errors.js";
+import { ApiError, errorHandler } from "./middlewares/errors.js";
 import { api } from "./routes/api.js";
 export const app = express();
 app.disable("x-powered-by");
@@ -15,7 +15,7 @@ app.use(
       if (isAllowedOrigin(origin)) {
         callback(null, true);
       } else {
-        callback(new Error("CORS origin not allowed"), false);
+        callback(new ApiError(403, "Origin not allowed."), false);
       }
     },
     credentials: true,

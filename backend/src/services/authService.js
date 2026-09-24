@@ -49,7 +49,11 @@ export async function register(body) {
 export async function login(body) {
   const data = z
     .object({
-      email: z.email().transform((v) => v.toLowerCase()),
+      email: z
+        .string()
+        .trim()
+        .pipe(z.email())
+        .transform((v) => v.toLowerCase()),
       password: z.string().max(128),
       role: z.enum(["business", "admin"]),
       mode: z.enum(["provider", "seeker"]).optional(),

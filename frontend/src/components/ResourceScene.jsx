@@ -1,22 +1,31 @@
 "use client";
 import { useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { RoundedBox, Float, OrbitControls } from "@react-three/drei";
+import { RoundedBox, Float, OrbitControls, Edges } from "@react-three/drei";
 
-function CartoonObjects() {
+function CartoonObjects({ paused }) {
   const group = useRef();
   useFrame((_, delta) => {
-    if (group.current) {
+    if (group.current && !paused) {
       group.current.rotation.y += delta * 0.2;
     }
   });
 
   return (
     <group ref={group}>
-      <Float speed={1.8} rotationIntensity={0.4} floatIntensity={0.8}>
+      <Float
+        speed={paused ? 0 : 1.8}
+        rotationIntensity={0.3}
+        floatIntensity={0.6}
+      >
         {/* 1. Cartoon Banquet Table */}
-        <RoundedBox args={[2.8, 0.24, 1.6]} radius={0.1} position={[0, -0.2, 0]}>
-          <meshStandardMaterial color="#FFE66D" roughness={0.3} metalness={0.1} />
+        <RoundedBox
+          args={[2.8, 0.24, 1.6]}
+          radius={0.1}
+          position={[0, -0.2, 0]}
+        >
+          <meshToonMaterial color="#F8DC60" />
+          <Edges color="#171915" />
         </RoundedBox>
         {[-1.1, 1.1].flatMap((x) =>
           [-0.6, 0.6].map((z) => (
@@ -28,18 +37,28 @@ function CartoonObjects() {
             >
               <meshStandardMaterial color="#1E1E1E" roughness={0.8} />
             </RoundedBox>
-          ))
+          )),
         )}
 
         {/* 2. Floating Cyan Banquet Chair */}
         <group position={[-1.6, 0.7, -0.4]} rotation={[0.2, 0.4, -0.1]}>
           {/* Seat */}
-          <RoundedBox args={[0.9, 0.14, 0.9]} radius={0.06} position={[0, 0, 0]}>
-            <meshStandardMaterial color="#4ECDC4" roughness={0.3} />
+          <RoundedBox
+            args={[0.9, 0.14, 0.9]}
+            radius={0.06}
+            position={[0, 0, 0]}
+          >
+            <meshToonMaterial color="#79D9C5" />
+            <Edges color="#171915" />
           </RoundedBox>
           {/* Backrest */}
-          <RoundedBox args={[0.9, 0.9, 0.12]} radius={0.06} position={[0, 0.5, -0.4]}>
-            <meshStandardMaterial color="#4ECDC4" roughness={0.3} />
+          <RoundedBox
+            args={[0.9, 0.9, 0.12]}
+            radius={0.06}
+            position={[0, 0.5, -0.4]}
+          >
+            <meshToonMaterial color="#79D9C5" />
+            <Edges color="#171915" />
           </RoundedBox>
           {/* Chair Legs */}
           {[-0.35, 0.35].flatMap((cx) =>
@@ -52,14 +71,15 @@ function CartoonObjects() {
               >
                 <meshStandardMaterial color="#1E1E1E" />
               </RoundedBox>
-            ))
+            )),
           )}
         </group>
 
         {/* 3. Floating Audio Speaker Box (Comic Punchy Pink) */}
         <group position={[1.6, 0.6, 0.3]} rotation={[-0.1, -0.3, 0.15]}>
           <RoundedBox args={[1.0, 1.4, 0.8]} radius={0.1} position={[0, 0, 0]}>
-            <meshStandardMaterial color="#FF6B8B" roughness={0.4} />
+            <meshToonMaterial color="#F7A7C2" />
+            <Edges color="#171915" />
           </RoundedBox>
           {/* Speaker Woofer Cones */}
           <mesh position={[0, 0.3, 0.42]} rotation={[Math.PI / 2, 0, 0]}>
@@ -81,7 +101,12 @@ function CartoonObjects() {
         {/* 5. Golden Comic Star Prism */}
         <mesh position={[-0.4, 1.3, -0.5]} rotation={[0.4, 0.2, 0.8]}>
           <octahedronGeometry args={[0.65]} />
-          <meshStandardMaterial color="#FFD13B" roughness={0.15} metalness={0.3} flatShading />
+          <meshStandardMaterial
+            color="#FFD13B"
+            roughness={0.15}
+            metalness={0.3}
+            flatShading
+          />
         </mesh>
 
         {/* 6. Floating Lavender Sphere Accent */}
@@ -94,17 +119,27 @@ function CartoonObjects() {
   );
 }
 
-export default function ResourceScene() {
+export default function ResourceScene({ paused = false }) {
   return (
     <Canvas
       dpr={[1, 1.5]}
+      frameloop={paused ? "demand" : "always"}
+      fallback={
+        <div className="scene-placeholder">
+          ✳<small>Shared resources. Real possibilities.</small>
+        </div>
+      }
       camera={{ position: [5.2, 3.6, 6.2], fov: 42 }}
       aria-label="Interactive 3D comic hospitality resources sculpture"
     >
       <ambientLight intensity={2.2} />
       <directionalLight position={[4, 6, 5]} intensity={3.5} />
-      <directionalLight position={[-4, -2, -3]} intensity={1.2} color="#C3B1E1" />
-      <CartoonObjects />
+      <directionalLight
+        position={[-4, -2, -3]}
+        intensity={1.2}
+        color="#C3B1E1"
+      />
+      <CartoonObjects paused={paused} />
       <OrbitControls
         enableZoom={false}
         enablePan={false}

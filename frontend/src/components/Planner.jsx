@@ -2,11 +2,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import VoiceSummary from "./VoiceSummary";
+import PlanEvidence from "./PlanEvidence";
 import { api } from "@/lib/api";
 import { Heading, Field, ActionForm, Flow, Badge, money } from "./ui";
 export function PlannerPage() {
   const [result, setResult] = useState(null),
     [answer, setAnswer] = useState(null);
+  const [busy, setBusy] = useState(false);
   return (
     <>
       <Heading
@@ -18,6 +20,7 @@ export function PlannerPage() {
         steps={["Describe", "Decompose", "Retrieve", "Rank", "Review"]}
         active={result ? 4 : 0}
       />
+      <PlanEvidence result={result} busy={busy} />
       <div className="split-layout">
         <section className="panel" style={{ background: "#C3B1E1" }}>
           <h2>Event readiness planner</h2>
@@ -33,12 +36,19 @@ export function PlannerPage() {
                 start: new Date(data.start).toISOString(),
                 end: new Date(data.end).toISOString(),
               };
-              setResult(
-                await api("/ai/workflow", {
-                  method: "POST",
-                  body: { kind: "bundle", text: data.text, filters },
-                }),
-              );
+              if (new Date(filters.end) <= new Date(filters.start))
+                throw new Error("Choose an end time after the start time.");
+              setBusy(true);
+              try {
+                setResult(
+                  await api("/ai/workflow", {
+                    method: "POST",
+                    body: { kind: "bundle", text: data.text, filters },
+                  }),
+                );
+              } finally {
+                setBusy(false);
+              }
               return "Plan ready for review. No request or booking has been created.";
             }}
           >
@@ -49,6 +59,8 @@ export function PlannerPage() {
               rows={5}
               required
               minLength={5}
+              maxLength={4000}
+              placeholder="A workshop in Mumbai for 120 guests: a hall, 120 chairs and a projector. Show me what’s available nearby."
             />
             <div className="form-grid">
               <Field label="City" name="city" required />

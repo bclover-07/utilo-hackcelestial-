@@ -3,6 +3,7 @@ import { InferenceClient } from "@huggingface/inference";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { Annotation, StateGraph, START, END } from "@langchain/langgraph";
 import { assert, ApiError } from "../middlewares/errors.js";
+import { withDeadline } from "../services/deadline.js";
 
 export { Annotation, StateGraph, START, END };
 
@@ -20,9 +21,11 @@ export function llm() {
 export async function invokeModel(system, input, schema) {
   try {
     const model = schema ? llm().withStructuredOutput(schema) : llm();
-    const result = await model.invoke(
-      [new SystemMessage(system), new HumanMessage(JSON.stringify(input))],
-      { signal: AbortSignal.timeout(45000) },
+    const result = await withDeadline((signal) =>
+      model.invoke(
+        [new SystemMessage(system), new HumanMessage(JSON.stringify(input))],
+        { signal },
+      ),
     );
     return schema
       ? schema.parse(result)
@@ -61,15 +64,17 @@ export async function embed(text) {
   );
   try {
     const client = new InferenceClient(process.env.HF_TOKEN);
-    const vector = await client.featureExtraction(
-      {
-        model:
-          process.env.HF_EMBEDDING_MODEL ||
-          "sentence-transformers/all-MiniLM-L6-v2",
-        inputs: text,
-        provider: "hf-inference",
-      },
-      { signal: AbortSignal.timeout(45000) },
+    const vector = await withDeadline((signal) =>
+      client.featureExtraction(
+        {
+          model:
+            process.env.HF_EMBEDDING_MODEL ||
+            "sentence-transformers/all-MiniLM-L6-v2",
+          inputs: text,
+          provider: "hf-inference",
+        },
+        { signal },
+      ),
     );
     assert(
       Array.isArray(vector) &&

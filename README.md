@@ -49,8 +49,20 @@ Analytics aggregate persisted requests, listings, searches, reservations, bookin
 
 ## Verification and operational limits
 
-Integration tests cover authentication, CSRF, roles, ownership, conflicting reservations, quote versions, bundle isolation, cancellation, private threads, aggregation math and vector ranking. Production builds typecheck frontend routes. UI fixtures run only in a separate local replica set.
+The current nine tests cover authentication, CSRF, account roles, administrator invitations, mode persistence, password limits, peak reservation quantity, rental estimates and deterministic planner coverage and enforced AI deadlines. Auth integration tests use a separate local MongoDB replica set. Full transaction race, cancellation, private-thread and vector integration suites remain to be added. Production builds typecheck frontend routes.
 
 The app coordinates rental agreements and fulfillment. It does not collect money, process refunds or issue tax invoices. Chat polls periodically. Deployment, load testing and production email delivery remain operational steps.
 
 # utilo-hackcelestial-
+
+## Design and demo workspaces
+
+The shared `frontend/src/app/neo.css` theme applies cream surfaces, thick ink borders, rounded corners, coloured cards, focus and hover effects, responsive forms, chart styling and reduced-motion support across feature routes. The landing page includes a pausable Three.js scene and an interactive exchange workflow. The AI planner reports actual matched requirements and gaps; independent matches do not imply a reserved bundle.
+
+There are two dashboard roots: `/dashboard` for business accounts (seeker/provider toggle) and `/admin` for administrators. Login persona selection sends the backend account role plus the business mode. Administrator registration remains invitation-only. URL parameters select or fill a persona but never sign in automatically.
+
+Existing demo credentials: `seeker@utlio.com`, `provider@utlio.com`, `admin@utlio.com`, password `Password123!`. The login form fills the selected persona's credentials; submit explicitly to sign in. These accounts require the seed data on the target server. Do not seed a production database: the existing seed script updates shared demo accounts and marketplace records.
+
+This implementation targets [HackCelestial PS-1](https://www.tech.alegria.co.in/tracks): Hospitality Resource Exchange. Check the [official rules](https://www.tech.alegria.co.in/rules) and [Unstop listing](https://unstop.com/hackathons/hackcelestial-30-pillai-university-navi-mumbai-1737808/amp) before submission. The organizer lists a September 9 ideathon deadline and September 26–27 finale; Unstop also displays September 27 registration, so those dates should not be treated as interchangeable. The rules require original work developed during the hackathon; confirm how pre-existing work must be disclosed.
+
+For a focused demonstration: describe an event in the planner, inspect the supply gaps and workflow trace, create a reviewed request, show a provider quote, accept from the opposing party, then inspect booking status and quantity availability. Keep the external AI configured, and do not substitute sample results for a failed model call. A persuasive AI feature pairs [structured output and application validation](https://ai.google.dev/gemini-api/docs/generate-content/structured-output) with human review before booking.

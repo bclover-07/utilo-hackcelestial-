@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, Space_Grotesk } from "next/font/google";
 import "./workspace.css";
+import "./neo.css";
 import { AuthProvider } from "@/context/AuthContext";
 const dmSans = DM_Sans({
   subsets: ["latin"],

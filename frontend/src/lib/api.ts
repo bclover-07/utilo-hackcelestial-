@@ -4,12 +4,15 @@ export async function api<T = unknown>(
   options: Options = {},
 ): Promise<T> {
   let response: Response;
+  const deadline = AbortSignal.timeout(110000);
   try {
     response = await fetch(`/api${path}`, {
       method: options.method || "GET",
       credentials: "include",
       cache: "no-store",
-      signal: options.signal,
+      signal: options.signal
+        ? AbortSignal.any([options.signal, deadline])
+        : deadline,
       headers:
         options.body instanceof FormData
           ? { "X-Utlio-Request": "1" }
@@ -22,6 +25,10 @@ export async function api<T = unknown>(
             : JSON.stringify(options.body),
     });
   } catch {
+    if (deadline.aborted)
+      throw new Error(
+        "This request took too long. Please retry. Check your records before repeating a booking or other change.",
+      );
     throw new Error("Cannot reach Utlio. Check your connection and retry.");
   }
   const data = await response

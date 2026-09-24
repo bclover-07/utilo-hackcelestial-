@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import MarketIntelligence from "./MarketIntelligence";
+import ExchangeWorkflow from "./ExchangeWorkflow";
 import {
   ResponsiveContainer,
   BarChart,
@@ -9,6 +10,9 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -83,9 +87,20 @@ export function Overview({ admin = false }) {
                 <Flow />
                 <Link
                   className="button quiet"
-                  href={admin ? "/admin/verifications" : "/dashboard/planner"}
+                  href={
+                    admin
+                      ? "/admin/verifications"
+                      : dashboardRole === "provider"
+                        ? "/dashboard/listings/create"
+                        : "/dashboard/planner"
+                  }
                 >
-                  {admin ? "Review businesses" : "Plan an event with AI"} ↗
+                  {admin
+                    ? "Review businesses"
+                    : dashboardRole === "provider"
+                      ? "Share a resource"
+                      : "Plan an event with AI"}{" "}
+                  ↗
                 </Link>
                 <span className="hero-doodle" aria-hidden="true">
                   ✳
@@ -115,7 +130,17 @@ export function Overview({ admin = false }) {
                 </div>
               </section>
             </div>
+            <section className="panel">
+              <span className="eyebrow">
+                {admin ? "THE MARKETPLACE JOURNEY" : "YOUR NEXT POSSIBILITY"}
+              </span>
+              <h2 style={{ marginTop: 12 }}>
+                Every connection starts somewhere.
+              </h2>
+              <ExchangeWorkflow compact />
+            </section>
             <Trend data={data} />
+            <BookingMix data={data} />
           </>
         )}
       </State>
@@ -123,14 +148,25 @@ export function Overview({ admin = false }) {
   );
 }
 function Stats({ data, admin }) {
+  const { dashboardRole, user } = useAuth();
+  const seeker = !admin && dashboardRole === "seeker";
   return (
     <div className="stat-grid">
       {[
         [
-          admin ? "Businesses" : "My listings",
-          admin ? data.businesses : data.listings,
+          admin ? "Businesses" : seeker ? "Saved resources" : "My listings",
+          admin
+            ? data.businesses
+            : seeker
+              ? user.favorites?.length || 0
+              : data.listings,
         ],
-        ["Requests", data.requests],
+        [
+          !admin && !seeker ? "Bookings" : "Requests",
+          !admin && !seeker
+            ? data.bookings.reduce((sum, item) => sum + item.count, 0)
+            : data.requests,
+        ],
         ["Open negotiations", data.quotes],
         ["Agreed booking value", money(data.totalValue)],
       ].map(([label, value], i) => (
@@ -149,6 +185,70 @@ function Stats({ data, admin }) {
         </div>
       ))}
     </div>
+  );
+}
+function BookingMix({ data }) {
+  const total = data.bookings.reduce((sum, row) => sum + row.count, 0);
+  if (!total) return null;
+  return (
+    <section className="panel">
+      <div className="section-heading">
+        <div>
+          <span className="eyebrow">EVERY AGREEMENT HAS A JOURNEY</span>
+          <h2 style={{ marginTop: 10 }}>From confirmed to celebrated.</h2>
+        </div>
+        <Badge>{total} bookings</Badge>
+      </div>
+      <div className="booking-mix">
+        <div
+          className="booking-donut"
+          role="img"
+          aria-label={`Booking status breakdown: ${data.bookings.map((row) => `${row.count} ${row._id}`).join(", ")}`}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data.bookings}
+                dataKey="count"
+                nameKey="_id"
+                innerRadius="58%"
+                outerRadius="85%"
+                paddingAngle={4}
+                cornerRadius={8}
+                stroke="#171915"
+                strokeWidth={3}
+                isAnimationActive={false}
+              >
+                {data.bookings.map((row, index) => (
+                  <Cell key={row._id} fill={colors[index % colors.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="donut-label">
+            <strong>{total}</strong>
+            <small>agreements</small>
+          </div>
+        </div>
+        <div className="booking-legend">
+          {data.bookings.map((row, index) => (
+            <div key={row._id}>
+              <span
+                className="legend-swatch"
+                style={{ background: colors[index % colors.length] }}
+              />
+              <span>{row._id.replaceAll("_", " ")}</span>
+              <strong>{row.count}</strong>
+              <small>{Math.round((row.count / total) * 100)}%</small>
+            </div>
+          ))}
+          <p>
+            Counts reflect recorded booking status, including cancellations.
+          </p>
+        </div>
+      </div>
+    </section>
   );
 }
 function Trend({ data }) {

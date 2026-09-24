@@ -12,8 +12,10 @@ export const validRange = (value) => value.end > value.start;
 export const registerSchema = z.object({
   name: text,
   email: z
-    .email()
+    .string()
+    .trim()
     .max(254)
+    .pipe(z.email())
     .transform((v) => v.toLowerCase()),
   password: z
     .string()

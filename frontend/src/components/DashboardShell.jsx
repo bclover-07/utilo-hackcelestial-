@@ -98,8 +98,32 @@ export default function DashboardShell({ children, admin = false }) {
     router = useRouter(),
     path = usePathname(),
     [menu, setMenu] = useState(false);
+  const [switching, setSwitching] = useState(false);
+  const [switchError, setSwitchError] = useState("");
+  const switchMode = async (mode) => {
+    if (switching || mode === auth.dashboardRole) return;
+    setSwitching(true);
+    setSwitchError("");
+    try {
+      await auth.setDashboardRole(mode);
+      router.push("/dashboard");
+      setMenu(false);
+    } catch (error) {
+      setSwitchError(error.message);
+    } finally {
+      setSwitching(false);
+    }
+  };
 
   const base = admin ? "/admin" : "/dashboard";
+
+  useEffect(() => {
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setMenu(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, []);
 
   useEffect(() => {
     if (!auth.loading && !auth.error) {
@@ -128,6 +152,9 @@ export default function DashboardShell({ children, admin = false }) {
 
   return (
     <div className="workspace">
+      <a className="skip-link" href="#workspace-content">
+        Skip to workspace
+      </a>
       {/* Mobile Drawer Backdrop Overlay */}
       <div
         className={`sidebar-backdrop ${menu ? "is-open" : ""}`}
@@ -135,7 +162,10 @@ export default function DashboardShell({ children, admin = false }) {
         aria-hidden="true"
       />
 
-      <aside className={`sidebar ${menu ? "is-open" : ""}`}>
+      <aside
+        id="workspace-navigation"
+        className={`sidebar ${menu ? "is-open" : ""}`}
+      >
         <div className="sidebar-top-row">
           <Link className="brand" href="/" onClick={() => setMenu(false)}>
             <span>U</span>utlio<span className="brand-dot">✳</span>
@@ -162,7 +192,8 @@ export default function DashboardShell({ children, admin = false }) {
             className="sidebar-mode-badge"
             data-mode={auth.dashboardRole}
             style={{
-              background: auth.dashboardRole === "provider" ? "#FFE66D" : "#4ECDC4",
+              background:
+                auth.dashboardRole === "provider" ? "#FFE66D" : "#4ECDC4",
               border: "2.5px solid var(--ink)",
               borderRadius: "14px",
               padding: "10px 14px",
@@ -170,9 +201,17 @@ export default function DashboardShell({ children, admin = false }) {
               margin: "10px 0 16px",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
               <strong style={{ fontSize: "13px" }}>
-                {auth.dashboardRole === "provider" ? "↗ PROVIDER ACTIVE" : "⌕ SEEKER ACTIVE"}
+                {auth.dashboardRole === "provider"
+                  ? "↗ PROVIDER ACTIVE"
+                  : "⌕ SEEKER ACTIVE"}
               </strong>
               <button
                 type="button"
@@ -183,16 +222,24 @@ export default function DashboardShell({ children, admin = false }) {
                   fontSize: "10px",
                   padding: "2px 8px",
                 }}
+                disabled={switching}
                 onClick={() =>
-                  auth.setDashboardRole(
-                    auth.dashboardRole === "provider" ? "seeker" : "provider"
+                  switchMode(
+                    auth.dashboardRole === "provider" ? "seeker" : "provider",
                   )
                 }
               >
                 Switch ↺
               </button>
             </div>
-            <small style={{ display: "block", marginTop: "4px", color: "#36362f", fontSize: "11px" }}>
+            <small
+              style={{
+                display: "block",
+                marginTop: "4px",
+                color: "#36362f",
+                fontSize: "11px",
+              }}
+            >
               {auth.dashboardRole === "provider"
                 ? "Showing capacity monetization tools"
                 : "Showing resource discovery & RFQ tools"}
@@ -207,12 +254,14 @@ export default function DashboardShell({ children, admin = false }) {
               {section.links.map(([slug, label, icon]) => {
                 const target = `${base}${slug ? "/" + slug : ""}`;
                 const isActive =
-                  path === target || (slug && path.startsWith(`${base}/${slug}/`));
+                  path === target ||
+                  (slug && path.startsWith(`${base}/${slug}/`));
                 return (
                   <Link
                     key={slug}
                     onClick={() => setMenu(false)}
                     className={isActive ? "active" : ""}
+                    aria-current={isActive ? "page" : undefined}
                     href={target}
                   >
                     <span className="nav-icon">{icon}</span>
@@ -247,6 +296,8 @@ export default function DashboardShell({ children, admin = false }) {
             className="mobile-menu quiet"
             onClick={() => setMenu(!menu)}
             aria-label="Toggle navigation menu"
+            aria-expanded={menu}
+            aria-controls="workspace-navigation"
           >
             ☰
           </button>
@@ -260,7 +311,8 @@ export default function DashboardShell({ children, admin = false }) {
               <span
                 className={`top-mode-pill ${auth.dashboardRole}`}
                 style={{
-                  background: auth.dashboardRole === "provider" ? "#FFE66D" : "#4ECDC4",
+                  background:
+                    auth.dashboardRole === "provider" ? "#FFE66D" : "#4ECDC4",
                   fontWeight: 800,
                   border: "2px solid var(--ink)",
                   padding: "4px 10px",
@@ -268,7 +320,9 @@ export default function DashboardShell({ children, admin = false }) {
                   boxShadow: "2px 2px 0 var(--ink)",
                 }}
               >
-                {auth.dashboardRole === "provider" ? "↗ Provider Mode" : "⌕ Seeker Mode"}
+                {auth.dashboardRole === "provider"
+                  ? "↗ Provider Mode"
+                  : "⌕ Seeker Mode"}
               </span>
             )}
           </div>
@@ -276,13 +330,15 @@ export default function DashboardShell({ children, admin = false }) {
           {!admin && (
             <div className="segmented">
               {["provider", "seeker"].map((mode) => (
-                <Action
+                <button
                   key={mode}
                   className={auth.dashboardRole === mode ? "selected" : ""}
-                  run={() => auth.setDashboardRole(mode)}
+                  disabled={switching}
+                  aria-pressed={auth.dashboardRole === mode}
+                  onClick={() => switchMode(mode)}
                 >
                   {mode === "provider" ? "↗ Provider" : "⌕ Seeker"}
-                </Action>
+                </button>
               ))}
             </div>
           )}
@@ -296,7 +352,16 @@ export default function DashboardShell({ children, admin = false }) {
           </Link>
         </header>
 
-        <main className="dashboard-content" key={path}>
+        <main
+          id="workspace-content"
+          className="dashboard-content"
+          key={`${path}:${auth.dashboardRole}`}
+        >
+          {switchError && (
+            <p className="error" role="alert">
+              {switchError}
+            </p>
+          )}
           {children}
         </main>
 
@@ -306,8 +371,14 @@ export default function DashboardShell({ children, admin = false }) {
           </div>
           <div className="footer-links">
             <Link href="/">Home</Link>
-            <Link href="/dashboard/notifications">Alerts</Link>
-            <Link href="/dashboard/profile">Account</Link>
+            <Link
+              href={admin ? "/admin/verifications" : "/dashboard/notifications"}
+            >
+              {admin ? "Verifications" : "Alerts"}
+            </Link>
+            <Link href={admin ? "/admin/settings" : "/dashboard/profile"}>
+              {admin ? "Settings" : "Account"}
+            </Link>
           </div>
         </footer>
       </div>
