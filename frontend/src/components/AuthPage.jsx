@@ -182,9 +182,6 @@ function AuthForm({ register, initialPersona }) {
             </div></>}
             <p className="persona-caption">
               {personas[persona].detail}
-              {persona === "admin" && register
-                ? " An invitation is required."
-                : ""}
             </p>
             {role === "business" && <p className="business-approval-note">One account and one business approval cover both modes. Switch between seeking and providing in your dashboard. {register ? "Explore and plan after signup; complete your business profile for admin approval before publishing resources or creating requests." : "Your selected mode changes the workspace tools, not your account permissions."}</p>}
           </fieldset>
@@ -265,21 +262,11 @@ function AuthForm({ register, initialPersona }) {
                       <option value="restaurant">Restaurant</option>
                     </Field>
                   ) : (
-                    <>
-                      <input
-                        type="hidden"
-                        name="category"
-                        value="platform_operations"
-                      />
-                      <Field
-                        label="Administrator invitation"
-                        name="inviteCode"
-                        type="password"
-                        autoComplete="off"
-                        placeholder="Your private invitation code"
-                        required
-                      />
-                    </>
+                    <input
+                      type="hidden"
+                      name="category"
+                      value="platform_operations"
+                    />
                   )}
                 </>
               )}

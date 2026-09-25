@@ -7,7 +7,6 @@ import mongoose from "mongoose";
 process.env.JWT_SECRET = "isolated-test-secret-with-at-least-32-characters";
 process.env.NODE_ENV = "test";
 process.env.FRONTEND_ORIGIN = "http://localhost:3000";
-process.env.ADMIN_INVITE_CODE = "isolated-test-admin-invitation-32";
 for (const name of ["GEMINI_API_KEY", "HF_TOKEN", "SMTP_HOST", "ELEVENLABS_API_KEY", "DNS_SERVERS"]) process.env[name] = "";
 process.env.MONGODB_URI = "mongodb://127.0.0.1:1/never-connect";
 const { app } = await import("../src/app.js");
@@ -29,7 +28,7 @@ test("Real HTTP marketplace and agent contracts on an isolated replica set", { t
       return { status:response.status,data,cookie:response.headers.get("set-cookie")?.split(";")[0] };
     }
     async function account(name, role="business") {
-      const result=await call("/auth/register",{method:"POST",body:{name,email:`${name}@test.invalid`,password:"TestPassword123!",role,mode:"seeker",city:"Mumbai",category:"venue",phone:"9999999999",...(role==="admin"?{inviteCode:process.env.ADMIN_INVITE_CODE}:{})}});
+      const result=await call("/auth/register",{method:"POST",body:{name,email:`${name}@test.invalid`,password:"TestPassword123!",role,mode:"seeker",city:"Mumbai",category:"venue",phone:"9999999999"}});
       assert.equal(result.status,200,JSON.stringify(result.data));
       return result;
     }

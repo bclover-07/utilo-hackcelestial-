@@ -29,18 +29,7 @@ export function session(res, user) {
 }
 export async function register(body) {
   const data = registerSchema.parse(body);
-  if (data.role === "admin") {
-    const expected = Buffer.from(process.env.ADMIN_INVITE_CODE || "");
-    const actual = Buffer.from(data.inviteCode || "");
-    assert(
-      expected.length >= 24 &&
-        actual.length === expected.length &&
-        timingSafeEqual(actual, expected),
-      403,
-      "A valid administrator invitation is required.",
-    );
-  }
-  const { password, inviteCode, ...fields } = data;
+  const { password, ...fields } = data;
   return BusinessProfile.create({
     ...fields,
     passwordHash: await bcrypt.hash(password, 12),

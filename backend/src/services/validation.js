@@ -30,7 +30,6 @@ export const registerSchema = z.object({
   city: text,
   category: text,
   phone: text,
-  inviteCode: z.string().optional(),
 });
 export const profileSchema = z
   .object({
