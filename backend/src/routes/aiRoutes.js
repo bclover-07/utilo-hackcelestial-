@@ -3,6 +3,7 @@ import rateLimit from "express-rate-limit";
 import { aiController as c } from "../controllers/aiController.js";
 import { conductorController as conductor } from "../controllers/conductorController.js";
 import { verifiedBusiness } from "../middlewares/auth.js";
+import { agentStudioController } from "../controllers/agentStudioController.js";
 
 export const aiRoutes = Router();
 
@@ -14,6 +15,7 @@ const aiLimit = rateLimit({
 });
 
 aiRoutes.post("/ai/workflow", aiLimit, c.workflow);
+aiRoutes.get("/ai/studio", agentStudioController.overview);
 aiRoutes.post("/ai/knowledge", aiLimit, c.rag);
 aiRoutes.post("/ai/speech", aiLimit, c.speech);
 aiRoutes.post("/ai/forecast", aiLimit, c.demandForecast);

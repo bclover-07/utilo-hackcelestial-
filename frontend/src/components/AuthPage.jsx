@@ -20,19 +20,16 @@ const personas = {
     icon: Search,
     title: "Seeker",
     detail: "Find your next great setup.",
-    email: "seeker@utlio.com",
   },
   provider: {
     icon: Package,
     title: "Provider",
     detail: "Put your spare capacity to work.",
-    email: "provider@utlio.com",
   },
   admin: {
     icon: ShieldCheck,
     title: "Admin",
     detail: "Keep the exchange in good hands.",
-    email: "admin@utlio.com",
   },
 };
 export default function AuthPage({ register = false }) {
@@ -46,31 +43,25 @@ export default function AuthPage({ register = false }) {
 }
 function AuthQuery({ register }) {
   const query = useSearchParams();
-  const requested = query.get("demo") || query.get("role");
+  const requested = query.get("role");
   const initialPersona = Object.hasOwn(personas, requested)
     ? requested
     : "seeker";
-  const initialDemo =
-    !register && query.has("demo") && Object.hasOwn(personas, requested);
   return (
     <AuthForm
-      key={`${register}:${initialPersona}:${initialDemo}`}
+      key={`${register}:${initialPersona}`}
       register={register}
       initialPersona={initialPersona}
-      initialDemo={initialDemo}
     />
   );
 }
-function AuthForm({ register, initialPersona, initialDemo }) {
+function AuthForm({ register, initialPersona }) {
   const [persona, setPersona] = useState(initialPersona);
-  const [email, setEmail] = useState(
-    initialDemo ? personas[initialPersona].email : "",
-  );
-  const [password, setPassword] = useState(initialDemo ? "Password123!" : "");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [visible, setVisible] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [demo, setDemo] = useState(initialDemo);
   const auth = useAuth();
   const router = useRouter();
   const role = persona === "admin" ? "admin" : "business";
@@ -89,7 +80,6 @@ function AuthForm({ register, initialPersona, initialDemo }) {
   function selectPersona(next) {
     setPersona(next);
     setError("");
-    if (demo) setEmail(personas[next].email);
   }
   if (auth.loading || auth.user)
     return (
@@ -301,7 +291,6 @@ function AuthForm({ register, initialPersona, initialDemo }) {
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
-                  setDemo(false);
                 }}
                 placeholder="you@yourbusiness.com"
                 maxLength={254}
@@ -315,7 +304,6 @@ function AuthForm({ register, initialPersona, initialDemo }) {
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
-                    setDemo(false);
                   }}
                   autoComplete={register ? "new-password" : "current-password"}
                   placeholder={
@@ -355,37 +343,6 @@ function AuthForm({ register, initialPersona, initialDemo }) {
               <ArrowUpRight size={20} />
             </button>
           </form>
-          {!register && (
-            <div className="demo-drawer">
-              <div>
-                <span className="eyebrow">TAKE A LOOK AROUND</span>
-                <strong>Meet your {persona} demo.</strong>
-              </div>
-              <button
-                type="button"
-                className="quiet"
-                disabled={busy}
-                onClick={() => {
-                  setEmail(personas[persona].email);
-                  setPassword("Password123!");
-                  setDemo(true);
-                  setError("");
-                }}
-              >
-                Fill demo credentials <ArrowUpRight size={15} />
-              </button>
-              {demo && (
-                <div className="demo-credentials" role="status">
-                  <code>{personas[persona].email}</code>
-                  <code>Password123!</code>
-                  <small>
-                    Demo accounts must be seeded on this server. Select “Let’s
-                    go” to sign in.
-                  </small>
-                </div>
-              )}
-            </div>
-          )}
           <p className="auth-switch">
             {register
               ? "Already part of the neighbourhood?"

@@ -1,10 +1,14 @@
 import { Router } from "express";
 import { admin } from "../middlewares/auth.js";
 import { adminController as c } from "../controllers/adminController.js";
+import rateLimit from "express-rate-limit";
+import { agentStudioController } from "../controllers/agentStudioController.js";
 
 export const adminRoutes = Router();
 
 adminRoutes.use(admin);
+adminRoutes.get("/agents", agentStudioController.overview);
+adminRoutes.post("/agents/brief", rateLimit({ windowMs: 60000, limit: 8, keyGenerator: req => String(req.user._id), message: { error: "AI request limit reached. Try again in one minute." } }), agentStudioController.operations);
 adminRoutes.get("/verifications", c.verifications);
 adminRoutes.patch("/verifications/:id", c.verify);
 adminRoutes.post("/categories", c.createCategory);

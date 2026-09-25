@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import AgentAction from "./AgentAction";
+import AgentDecision from "./AgentDecision";
 import {
   useData,
   State,
@@ -209,7 +210,7 @@ function QuoteDetail({ q, reload }) {
             required
           />
         </ActionForm>
-        {advice && <p className="ai-answer">{advice.answer}</p>}
+        {advice && <AgentDecision decision={advice.decision} />}
       </section>
       <section className="panel">
         <h3>Conversation</h3>

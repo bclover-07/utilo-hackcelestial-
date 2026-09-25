@@ -19,6 +19,14 @@ export function SearchPage() {
   const categories = useData("/categories"),
     [result, setResult] = useState(null),
     [filters, setFilters] = useState(null);
+  const [paging, setPaging] = useState(false), [pageError, setPageError] = useState("");
+  async function changePage(page) {
+    if (paging) return;
+    setPaging(true); setPageError("");
+    try { setResult(await api("/search", { method: "POST", body: { ...filters, page } })); }
+    catch (error) { setPageError(error.message); }
+    finally { setPaging(false); }
+  }
   return (
     <>
       <Heading
@@ -35,6 +43,7 @@ export function SearchPage() {
             <ActionForm
               label="Find my resources →"
               onSubmit={async (form) => {
+                setPageError("");
                 const body = Object.fromEntries(
                   [...form].filter(([, v]) => v !== ""),
                 );
@@ -186,11 +195,10 @@ export function SearchPage() {
             />
           )}
           {result.total > 24 && (
-            <p>
-              Showing the first 24 ranked matches. Narrow your filters for more
-              precise results.
-            </p>
+            <nav className="search-pagination" aria-label="Resource results pages"><button className="quiet" disabled={paging || result.page <= 1} onClick={() => changePage(result.page - 1)}>← Previous</button><span role="status">{paging ? "Loading results…" : `Page ${result.page} of ${Math.ceil(result.total / 24)}`}</span><button className="quiet" disabled={paging || result.page >= Math.ceil(result.total / 24)} onClick={() => changePage(result.page + 1)}>Next →</button></nav>
           )}
+          {pageError && <p className="error" role="alert">{pageError}</p>}
+          <p className="hint">Ranked within up to {result.candidateLimit} candidates. Dates are checked only when supplied.</p>
         </>
       )}
     </>
@@ -296,6 +304,7 @@ export function ResourceDetail({ id }) {
   );
 }
 export function ComparePage() {
+  const [rerun, setRerun] = useState(null);
   const favorites = useData("/favorites"),
     saved = useData("/saved-searches");
   return (
@@ -367,6 +376,8 @@ export function ComparePage() {
                 <article className="panel" key={s._id}>
                   <h3>{s.name}</h3>
                   <p>Matching new listings trigger in-app notifications.</p>
+                  <p className="hint">{s.filters.city || "All cities"} · {s.filters.category?.replaceAll("_", " ") || "All categories"} · {s.filters.quantity || 1} units</p>
+                  <Action className="quiet" run={async () => { setRerun(null); const response = await api("/search", { method: "POST", body: { ...s.filters, page: 1 } }); setRerun({ ...response, name: s.name }); }}>Run saved search</Action>
                   <Action
                     className="quiet"
                     run={async () => {
@@ -386,6 +397,7 @@ export function ComparePage() {
           )
         }
       </State>
+      {rerun && <section className="panel"><h2>{rerun.name}: {rerun.total} current matches</h2><p>Saved filters were checked again against current records. Edit dates in Discover if the saved event has passed.</p>{rerun.items.length ? <div className="card-grid">{rerun.items.map((listing, index) => <ListingCard listing={listing} index={index} key={listing._id}><Link href={`/dashboard/resources/${listing._id}`}>View resource →</Link></ListingCard>)}</div> : <p>No resources currently match these saved filters.</p>}{rerun.total > rerun.items.length && <p>Showing {rerun.items.length} of {rerun.total}. <Link href="/dashboard/search">Use Discover to refine and paginate results.</Link></p>}</section>}
     </>
   );
 }

@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import ExchangeWorkflow from "./ExchangeWorkflow";
+import AgentShowcase from "./AgentShowcase";
 const Scene = dynamic(() => import("./ResourceScene"), {
   ssr: false,
   loading: () => (
@@ -348,9 +349,9 @@ export default function Landing() {
             </div>
             <Link
               className="text-link"
-              href={user ? home : `/login?demo=${mode}`}
+              href={user ? home : `/login?role=${mode}`}
             >
-              Explore the {mode} demo <ArrowUpRight size={18} />
+              Open the {mode} workspace <ArrowUpRight size={18} />
             </Link>
           </div>
           <div className={`role-preview ${mode}`} key={mode}>
@@ -449,11 +450,12 @@ export default function Landing() {
               Recommendations are grounded in marketplace records. Missing
               information stays visible. Bookings always need your approval.
             </p>
-            <Link href={user ? home : "/login?demo=seeker"}>
+            <Link href={user ? home : "/login?role=seeker"}>
               Meet your copilot <ArrowUpRight size={19} />
             </Link>
           </div>
         </motion.section>
+        <AgentShowcase destination={user ? home : "/login?role=seeker"} />
         <motion.section className="landing-section final-invite" {...reveal}>
           <span className="invite-spark" aria-hidden="true">
             ✳

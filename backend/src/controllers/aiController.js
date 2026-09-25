@@ -1,8 +1,9 @@
 import * as ai from "../agents/workflows.js";
 import { speak } from "../services/speechService.js";
 import { id } from "../services/validation.js";
+import { trackAgent } from "../services/agentRuntime.js";
 
-const send = (fn) => async (req, res) => res.json(await fn(req, res));
+const send = (fn) => async (req, res) => res.json(await trackAgent(req.user, req.route.path, () => fn(req, res)));
 const recordId = (req) => id.parse(req.params.id);
 
 export const aiController = {
@@ -11,7 +12,7 @@ export const aiController = {
   rag: send((req) => ai.rag(req.user, req.body)),
 
   speech: async (req, res) =>
-    res.type("audio/mpeg").send(await speak(req.body)),
+    res.type("audio/mpeg").send(await trackAgent(req.user, "speech", () => speak(req.body))),
 
   negotiation: send((req) =>
     ai.negotiation(req.user, recordId(req), req.body),

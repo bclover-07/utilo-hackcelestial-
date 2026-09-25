@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -76,6 +77,7 @@ export function BookingsPage() {
                     </div>
                   </div>
                   <p>{b.conditions}</p>
+                  <BookingRecord id={b._id} />
                   <div className="actions">
                     <a
                       className="button quiet"
@@ -89,6 +91,7 @@ export function BookingsPage() {
                     {b.provider._id === user._id &&
                       ["confirmed", "in_progress"].includes(b.status) && (
                         <Action
+                          disabled={new Date(b.status === "confirmed" ? b.start : b.end) > new Date()}
                           run={async () => {
                             await api(`/bookings/${b._id}/status`, {
                               method: "PATCH",
@@ -204,6 +207,10 @@ export function BookingsPage() {
       </State>
     </>
   );
+}
+function BookingRecord({ id }) {
+  const [record, setRecord] = useState(null);
+  return <details className="booking-record"><summary>Inspect agreement & offer history</summary><Action className="quiet" run={async () => setRecord(await api(`/bookings/${id}/summary`))}>Load latest agreement</Action>{record && <div className="studio-result"><dl className="spec-list"><div><dt>Booking reference</dt><dd>{record.booking._id}</dd></div><div><dt>Agreed rental</dt><dd>{money(record.booking.price)}</dd></div><div><dt>Deposit</dt><dd>{money(record.booking.deposit)}</dd></div><div><dt>Terms</dt><dd>{record.booking.conditions || "No additional terms recorded"}</dd></div><div><dt>Cancellation notice</dt><dd>{record.booking.cancellationHours} hours</dd></div></dl><h4>Recorded offers</h4><ol>{record.offers.map((offer, index) => <li key={offer._id || index}>{money(offer.price)} · {offer.conditions || "No additional terms"}</li>)}</ol><small>Agreement record only. Payments are arranged directly between businesses.</small></div>}</details>;
 }
 export function ReviewsPage() {
   const resource = useData("/reviews"),

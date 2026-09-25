@@ -4,6 +4,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { Annotation, StateGraph, START, END } from "@langchain/langgraph";
 import { assert, ApiError } from "../middlewares/errors.js";
 import { withDeadline } from "../services/deadline.js";
+import { measureStep } from "../services/agentRuntime.js";
 
 export { Annotation, StateGraph, START, END };
 
@@ -18,17 +19,20 @@ export function llm() {
   });
 }
 
-export async function invokeModel(system, input, schema) {
+export async function invokeModel(system, input, schema, name = "Model response") {
+  return measureStep(name, async (step) => {
   try {
-    const model = schema ? llm().withStructuredOutput(schema, { method: "jsonSchema" }) : llm();
+    const model = schema ? llm().withStructuredOutput(schema, { method: "jsonSchema", includeRaw: true }) : llm();
     const result = await withDeadline((signal) =>
       model.invoke(
         [new SystemMessage(system), new HumanMessage(JSON.stringify(input))],
         { signal },
       ),
     );
+    const usage = (schema ? result.raw : result)?.usage_metadata;
+    if (usage) { step.inputTokens = usage.input_tokens; step.outputTokens = usage.output_tokens; }
     return schema
-      ? schema.parse(result)
+      ? schema.parse(result.parsed)
       : typeof result.content === "string"
         ? result.content
         : result.content
@@ -42,17 +46,18 @@ export async function invokeModel(system, input, schema) {
     throw new ApiError(
       503,
       schema
-        ? "AI could not produce a valid requirement draft. Retry or enter and confirm the requirements manually; no request was created."
+        ? "AI could not produce a valid structured response. Retry or review the available records manually."
         : "AI could not complete this response. Retry shortly; no generated result was saved.",
     );
   }
+  }, { model: process.env.GEMINI_MODEL || "gemini-3.6-flash" });
 }
 
-export async function invoke(system, input, schema) {
+export async function invoke(system, input, schema, name) {
   const state = Annotation.Root({ answer: Annotation() });
   const agent = new StateGraph(state)
     .addNode("reason", async () => ({
-      answer: await invokeModel(system, input, schema),
+      answer: await invokeModel(system, input, schema, name),
     }))
     .addEdge(START, "reason")
     .addEdge("reason", END)
@@ -61,6 +66,7 @@ export async function invoke(system, input, schema) {
 }
 
 export async function embed(text) {
+  return measureStep("Embed resource text", async () => {
   assert(
     process.env.HF_TOKEN,
     503,
@@ -95,6 +101,7 @@ export async function embed(text) {
       "Hugging Face embeddings are unavailable. Check token permissions, model and inference quota.",
     );
   }
+  }, { model: process.env.HF_EMBEDDING_MODEL || "sentence-transformers/all-MiniLM-L6-v2" });
 }
 
 export function cosine(a, b) {

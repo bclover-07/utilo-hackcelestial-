@@ -17,6 +17,7 @@ export default function VoiceSummary({ text }) {
           const response = await fetch("/api/ai/speech", {
             method: "POST",
             credentials: "include",
+            signal: AbortSignal.timeout(45000),
             headers: {
               "Content-Type": "application/json",
               "X-Utlio-Request": "1",
@@ -24,7 +25,8 @@ export default function VoiceSummary({ text }) {
             body: JSON.stringify({ text: text.slice(0, 1500) }),
           });
           if (!response.ok) {
-            const body = await response.json();
+            if (response.status === 401) window.dispatchEvent(new Event("utlio:session-expired"));
+            const body = await response.json().catch(() => ({}));
             throw new Error(body.error || "Voice playback unavailable.");
           }
           setUrl(URL.createObjectURL(await response.blob()));

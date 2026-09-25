@@ -12,13 +12,13 @@ export const searchController = {
   search: send((req) => search(req.body, req.user, { log: true })),
 
   favorites: send((req) =>
-    Listing.find({ _id: { $in: req.user.favorites }, status: "active" }).lean(),
+    Listing.find({ _id: { $in: req.user.favorites }, status: "active", moderationHold: { $ne: true } }).select("-embedding").lean(),
   ),
 
   favorite: send(async (req) => {
     const listing = recordId(req);
     assert(
-      await Listing.exists({ _id: listing, status: "active" }),
+      await Listing.exists({ _id: listing, status: "active", moderationHold: { $ne: true } }),
       404,
       "Listing not found.",
     );

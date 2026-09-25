@@ -3,6 +3,7 @@ import { DM_Sans, Space_Grotesk } from "next/font/google";
 import "./workspace.css";
 import "./neo.css";
 import "./conductor.css";
+import "./agents.css";
 import { AuthProvider } from "@/context/AuthContext";
 import MotionExperience from "@/components/MotionExperience";
 const dmSans = DM_Sans({

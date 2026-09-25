@@ -2,7 +2,7 @@
 import { useEffect, useRef } from "react";
 import { animate, MotionConfig, useReducedMotion } from "framer-motion";
 
-
+const targets = ".panel,.resource-card,.stat-card,.conductor-package,.conductor-allocation,.page-heading,.forecast-card,.heatmap-cell,.agent-directory-card,.cited-claim,.offer-timeline>div,.message,.decision-action,.intelligence-card,.agent-feature-card";
 
 export default function MotionExperience({ children }) {
   const root = useRef(null);
@@ -14,16 +14,27 @@ export default function MotionExperience({ children }) {
       let stagger = 0;
       for (const entry of entries) if (entry.isIntersecting) {
         observer.unobserve(entry.target);
-        const control = animate(entry.target, { opacity: [0.55, 1], y: [12, 0] }, { duration: 0.38, delay: Math.min(stagger++ * 0.035, 0.14), ease: [0.22, 1, 0.36, 1] });
+        // Opacity only: leave CSS hover transforms and chart geometry untouched.
+        const control = animate(entry.target, { opacity: [.35, 1] }, { duration: .32, delay: Math.min(stagger++ * .025, .12) });
         animations.add(control);
         control.then(() => animations.delete(control));
       }
-    }, { threshold: 0.06 });
-    const scan = () => root.current?.querySelectorAll(".panel,.resource-card,.stat-card,.conductor-package,.conductor-allocation,.page-heading").forEach(element => {
-      if (!seen.has(element)) { seen.add(element); observer.observe(element); }
-    });
-    scan();
-    const mutation = new MutationObserver(scan);
+    }, { threshold: .04 });
+    const scan = node => {
+      if (!(node instanceof Element)) return;
+      const observe = element => { if (!seen.has(element)) { seen.add(element); observer.observe(element); } };
+      if (node.matches(targets)) observe(node);
+      node.querySelectorAll(targets).forEach(observe);
+    };
+    scan(root.current);
+    const mutation = new MutationObserver(records => records.forEach(record => {
+      record.addedNodes.forEach(scan);
+      record.removedNodes.forEach(node => {
+        if (!(node instanceof Element)) return;
+        observer.unobserve(node);
+        node.querySelectorAll(targets).forEach(element => observer.unobserve(element));
+      });
+    }));
     mutation.observe(root.current, { childList: true, subtree: true });
     return () => { mutation.disconnect(); observer.disconnect(); animations.forEach(control => control.complete()); };
   }, [reduced]);

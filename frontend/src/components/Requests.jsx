@@ -132,6 +132,7 @@ function RequestForm({ categories }) {
       <div className="split-layout">
         <section className="panel">
           <ActionForm
+            key={repeat?._id || "new-request"}
             label="Broadcast request →"
             onSubmit={async (form) => {
               const data = Object.fromEntries(form);
@@ -245,12 +246,13 @@ function RequestForm({ categories }) {
               <Field
                 label="City"
                 name="city"
-                defaultValue={user.city}
+                defaultValue={repeat?.city || user.city}
                 required
               />
               <Field
                 label="Event latitude"
                 name="latitude"
+                defaultValue={repeat?.location?.coordinates?.[1]}
                 type="number"
                 min="-90"
                 max="90"
@@ -260,6 +262,7 @@ function RequestForm({ categories }) {
               <Field
                 label="Event longitude"
                 name="longitude"
+                defaultValue={repeat?.location?.coordinates?.[0]}
                 type="number"
                 min="-180"
                 max="180"
@@ -272,17 +275,17 @@ function RequestForm({ categories }) {
                 type="number"
                 min="1"
                 max="300"
-                defaultValue="25"
+                defaultValue={repeat?.radiusKm || 25}
                 required
               />
-              <Field label="Priority" name="urgency" as="select">
+              <Field label="Priority" name="urgency" as="select" defaultValue={repeat?.urgency || "routine"}>
                 <option value="routine">Routine</option>
                 <option value="urgent">Time-sensitive</option>
                 <option value="emergency">Emergency</option>
               </Field>
             </div>
             <label className="check">
-              <input name="delivery" type="checkbox" /> Delivery required
+              <input name="delivery" type="checkbox" defaultChecked={repeat?.delivery} /> Delivery required
             </label>
             <p className="hint">
               An RFQ invites offers. Review price, specifications and conditions

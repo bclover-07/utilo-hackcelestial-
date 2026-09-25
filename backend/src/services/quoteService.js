@@ -97,7 +97,7 @@ export async function accept(user, id, raw) {
     
     
     const l = await Listing.findOneAndUpdate(
-      { _id: q.listing, status: "active" },
+      { _id: q.listing, status: "active", moderationHold: { $ne: true } },
       { $inc: { revision: 1 } },
       { new: true, session },
     );

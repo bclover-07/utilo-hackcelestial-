@@ -15,6 +15,7 @@ import {
   PolarRadiusAxis,
 } from "recharts";
 import { api } from "@/lib/api";
+import AgentDecision from "./AgentDecision";
 import {
   useData,
   State,
@@ -33,17 +34,17 @@ export function DemandForecastPage() {
     <>
       <Heading
         eyebrow="AI DEMAND INTELLIGENCE"
-        title="See what the market needs next."
-        description="AI analyzes real search patterns, request volumes, and supply gaps to predict upcoming demand."
+        title="Understand today's demand."
+        description="Explore current open requests and recorded utilization, with suggested actions grounded in marketplace evidence."
       />
       <div className="split-layout">
         <section className="panel" style={{ background: "#C3B1E1" }}>
-          <Badge>LANGGRAPH DEMAND FORECASTER</Badge>
-          <h2>Forecast demand by market</h2>
+          <Badge>LANGGRAPH DEMAND ANALYST</Badge>
+          <h2>Inspect demand by market</h2>
           <State resource={categories}>
             {(cats) => (
               <ActionForm
-                label="Generate forecast ✳"
+                label="Analyze demand ✳"
                 onSubmit={async (form) => {
                   setResult(null);
                   const data = Object.fromEntries(
@@ -52,7 +53,7 @@ export function DemandForecastPage() {
                   setResult(
                     await api("/ai/forecast", { method: "POST", body: data }),
                   );
-                  return "Forecast generated from real marketplace data.";
+                  return "Demand snapshot reviewed.";
                 }}
               >
                 <Field
@@ -92,7 +93,7 @@ export function DemandForecastPage() {
             </div>
             <span className="ai-arrow">→</span>
             <div className="ai-node" style={{ background: "#FF85A1" }}>
-              📈 Forecast
+              📈 Observations
             </div>
           </div>
           <p>
@@ -105,8 +106,10 @@ export function DemandForecastPage() {
       {result && (
         <>
           <section className="panel">
-            <h2>AI Forecast</h2>
+            <h2>Demand observations</h2>
             <p className="ai-answer">{result.forecast}</p>
+            <AgentDecision decision={result.decision} generation={result.generation} hideSummary />
+            <p className="agent-review-note">Current snapshot, not a predictive forecast. {result.evidence?.demandGroups} demand groups reviewed.</p>
             {result.trace && (
               <div className="workflow-trace">
                 {result.trace.map((t, i) => (

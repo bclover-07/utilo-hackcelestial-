@@ -5,6 +5,7 @@ import { Booking } from "../models/Booking.js";
 import { Category } from "../models/Category.js";
 import { demandHeatmap } from "../services/aggregationPipelines.js";
 import { assert } from "../middlewares/errors.js";
+import { adviceSchema, adviceInstruction, pricingEvidence, optionalAdvice } from "../services/agentContracts.js";
 
 export async function recommendPrice(user, raw) {
   const { listingId, category } = z
@@ -34,6 +35,7 @@ export async function recommendPrice(user, raw) {
       $match: {
         category,
         status: "active",
+        moderationHold: { $ne: true },
         owner: { $ne: user._id },
         ...(listing ? { city: listing.city, unit: listing.unit } : {}),
       },
@@ -65,7 +67,7 @@ export async function recommendPrice(user, raw) {
       },
     },
     { $unwind: "$listingDoc" },
-    { $match: { "listingDoc.category": category } },
+    { $match: { "listingDoc.category": category, ...(listing ? { "listingDoc.city": listing.city, "listingDoc.unit": listing.unit } : {}) } },
     {
       $group: {
         _id: null,
@@ -77,23 +79,27 @@ export async function recommendPrice(user, raw) {
     },
   ]);
 
-  const heatmap = await demandHeatmap({ category });
+  const heatmap = await demandHeatmap({ category, ...(listing ? { city: listing.city } : {}) });
+  const evidence = pricingEvidence(comparables);
 
-  const advice = await invoke(
-    "You are a B2B pricing advisor for hospitality resources. Using the market data below (comparable listings, recent booking prices, and demand signals), Distinguish per-unit listing rates from total booking amounts, which depend on quantity and duration. Do not compare those as equivalent. Recommend a price range only when comparable unit rates support it. Never invent data. If comparables are sparse, say so.",
+  const output = await optionalAdvice(() => invoke(
+    "You are a B2B pricing advisor for hospitality resources. Distinguish per-unit listing rates from total booking amounts, which depend on quantity and duration. Do not compare those as equivalent. Keep rental units separate. Suggest a range only when suggestedRangeAvailable is true, within that unit's observed range. Acknowledge differences in capacity and specifications. Listing rates are asking prices, not accepted deals." + adviceInstruction,
     {
       currentListing: listing
         ? { title: listing.title, price: listing.price, unit: listing.unit }
         : null,
       category,
+      evidence,
       comparableListings: comparables,
       recentBookingPrices: recentBookings[0] || null,
       demandSignals: heatmap.slice(0, 5),
-    },
-  );
+    }, adviceSchema, "Review comparable pricing",
+  ));
 
   return {
-    advice,
+    ...output,
+    advice: output.decision?.summary || output.generation.message,
+    evidence,
     comparables,
     recentBookings: recentBookings[0] || null,
     demandSignals: heatmap.slice(0, 5),
@@ -101,7 +107,7 @@ export async function recommendPrice(user, raw) {
       "Smart pricing: gathered comparable listings",
       "Smart pricing: analyzed recent booking prices",
       "Smart pricing: factored demand signals",
-      "Gemini: generated pricing recommendation",
+      output.decision ? "Gemini: generated structured pricing advice" : "AI advice unavailable; observed rates retained",
     ],
   };
 }

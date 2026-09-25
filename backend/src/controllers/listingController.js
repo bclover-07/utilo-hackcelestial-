@@ -11,17 +11,19 @@ export const listingController = {
 
   listings: send((req) =>
     Listing.find({ owner: req.user._id, status: { $ne: "archived" } })
+      .select("-embedding")
       .sort({ createdAt: -1 })
       .lean(),
   ),
 
   listing: send(async (req) => {
     const l = await Listing.findById(recordId(req))
+      .select("-embedding")
       .populate("owner", "name verification city")
       .lean();
     assert(
       l &&
-        (l.status === "active" || String(l.owner._id) === String(req.user._id)),
+        ((l.status === "active" && !l.moderationHold) || String(l.owner?._id) === String(req.user._id)),
       404,
       "Listing not found.",
     );

@@ -3,6 +3,7 @@ import { invoke } from "./shared.js";
 import { Request as RequestModel } from "../models/Request.js";
 import { search } from "../services/matchingService.js";
 import { assert } from "../middlewares/errors.js";
+import { adviceSchema, adviceInstruction, optionalAdvice } from "../services/agentContracts.js";
 
 export async function computeUrgency(user, raw) {
   const { requestId } = z
@@ -97,8 +98,8 @@ export async function computeUrgency(user, raw) {
     ),
   );
 
-  const explanation = await invoke(
-    "Briefly explain this deterministic urgency heuristic using only supplied factors. Supply is counted independently for each unbooked item, capped at 200 candidates per search; counts are not unique providers or guaranteed bookable bundles. Scarcity uses the least-covered item. This score is not a probability or market forecast. Never invent additional urgency.",
+  const output = await optionalAdvice(() => invoke(
+    "Briefly explain this deterministic urgency heuristic using only supplied factors. Supply is counted independently for each unbooked item, capped at 200 candidates per search; counts are not unique providers or guaranteed bookable bundles. Scarcity uses the least-covered item. This score is not a probability or market forecast. Never invent additional urgency." + adviceInstruction,
     {
       score: rawScore,
       hoursUntilStart,
@@ -108,8 +109,8 @@ export async function computeUrgency(user, raw) {
       leastCoveredItem,
       competingRequests,
       itemCount: request.items.length,
-    },
-  );
+    }, adviceSchema, "Explain urgency factors",
+  ));
 
   return {
     score: rawScore,
@@ -123,12 +124,14 @@ export async function computeUrgency(user, raw) {
       hoursUntilStart:
         hoursUntilStart !== null ? Math.round(hoursUntilStart) : null,
     },
-    explanation,
+    ...output,
+    explanation: output.decision?.summary || output.generation.message,
+    calculation: { timeScore, urgencyMultiplier, supplyScarcity, competitionPressure, formula: "min(100, round(time × urgency multiplier + scarcity + competition))" },
     trace: [
       "Urgency scorer: computed time proximity score",
       "Urgency scorer: assessed supply scarcity",
       "Urgency scorer: factored competition pressure",
-      "Gemini: generated plain-English explanation",
+      output.decision ? "Gemini: generated structured explanation" : "AI explanation unavailable; deterministic score retained",
     ],
   };
 }

@@ -1,5 +1,6 @@
 import { Annotation, StateGraph, START, END } from "@langchain/langgraph";
 import { solvePackages } from "../services/packageSolver.js";
+import { measureStep } from "../services/agentRuntime.js";
 
 
 
@@ -8,7 +9,9 @@ export async function runConductorGraph(input, loadCandidates, { stress = true, 
   const node = (name, work) => async s => {
     onProgress?.({ step: name, status: "running" });
     const start = performance.now();
-    const update = await work(s);
+    let update;
+    try { update = await measureStep(name, () => work(s)); }
+    catch (error) { onProgress?.({ step: name, status: "failed" }); throw error; }
     const elapsedMs = Math.round(performance.now() - start);
     onProgress?.({ step: name, status: "complete", elapsedMs });
     return { ...update, trace: [{ step: name, detail: update.detail, elapsedMs }] };

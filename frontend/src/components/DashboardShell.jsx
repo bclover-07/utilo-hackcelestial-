@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Action } from "./ui";
+import { motion, useReducedMotion } from "framer-motion";
+import { Bot } from "lucide-react";
 
 const providerSections = [
   {
@@ -12,6 +14,7 @@ const providerSections = [
       ["listings", "My listings", "▦"],
       ["calendar", "Availability & Calendar", "▤"],
       ["smart-pricing", "Smart pricing advisor", "₹"],
+      ["agents", "Agent Studio", "ai"],
       ["forecast", "Demand outlook & trends", "↟"],
       ["performance", "Provider performance", "☆"],
     ],
@@ -48,6 +51,7 @@ const seekerSections = [
     links: [
       ["search", "Discover resources", "⌕"],
       ["planner", "AI Conductor", "✳"],
+      ["agents", "Agent Studio", "ai"],
       ["requests", "My requirements (RFQs)", "↗"],
       ["compare", "Saved & compare", "♡"],
     ],
@@ -89,11 +93,13 @@ const adminSections = [
       ["categories", "Categories taxonomy", "▦"],
       ["analytics", "Marketplace liquidity", "↟"],
       ["settings", "Policies & integrations", "⚙"],
+      ["agents", "AI operations & agents", "ai"],
     ],
   },
 ];
 
 export default function DashboardShell({ children, admin = false }) {
+  const reduced = useReducedMotion();
   const auth = useAuth(),
     router = useRouter(),
     path = usePathname(),
@@ -264,7 +270,7 @@ export default function DashboardShell({ children, admin = false }) {
                     aria-current={isActive ? "page" : undefined}
                     href={target}
                   >
-                    <span className="nav-icon">{icon}</span>
+                    <span className="nav-icon">{icon === "ai" ? <Bot size={18} /> : icon}</span>
                     <span className="nav-label">{label}</span>
                   </Link>
                 );
@@ -352,7 +358,10 @@ export default function DashboardShell({ children, admin = false }) {
           </Link>
         </header>
 
-        <main
+        <motion.main
+          initial={{ opacity: 0.6, y: reduced ? 0 : 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: reduced ? 0 : .25 }}
           id="workspace-content"
           className="dashboard-content"
           key={`${path}:${auth.dashboardRole}`}
@@ -364,7 +373,7 @@ export default function DashboardShell({ children, admin = false }) {
           )}
           {!admin && auth.user.verification !== "verified" && <div className="notice business-verification-banner"><strong>{auth.user.verification === "rejected" ? "Business verification needs an update." : "Your business approval is pending."}</strong><p>One approval covers seeker and provider modes. Explore and plan now; approval is required to publish resources, request quotes or confirm bookings.</p><Link href="/dashboard/profile">Complete your business profile →</Link></div>}
           {children}
-        </main>
+        </motion.main>
 
         <footer className="workspace-footer">
           <div>

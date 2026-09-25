@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { api } from "@/lib/api";
+import AgentDecision from "./AgentDecision";
 import {
   useData,
   State,
@@ -118,6 +119,8 @@ export function SmartPricingPage() {
           <section className="panel">
             <h2>AI pricing recommendation</h2>
             <p className="ai-answer">{result.advice}</p>
+            <AgentDecision decision={result.decision} generation={result.generation} hideSummary />
+            <div className="pricing-evidence">{result.evidence?.map(row => <div className="notice" key={row.unit}><strong>{row.samples} comparable {row.unit} rates · {row.support}</strong><p>{row.suggestedRangeAvailable ? "Observed asking-price range supports a reviewable recommendation." : "Too few comparable rates to support a suggested range."}</p></div>)}</div>
             {result.trace && (
               <div className="workflow-trace">
                 {result.trace.map((t, i) => (

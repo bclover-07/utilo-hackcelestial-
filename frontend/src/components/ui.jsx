@@ -1,5 +1,7 @@
 "use client";
-import { Children, useState, useEffect, useCallback } from "react";
+import { Children, useState, useEffect, useCallback, useRef } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { CheckCircle2, CircleAlert, LoaderCircle } from "lucide-react";
 import { api } from "@/lib/api";
 import Link from "next/link";
 
@@ -36,43 +38,38 @@ export const colors = [
 ];
 
 export function useData(path) {
-  const [data, setData] = useState(null),
-    [error, setError] = useState(""),
-    [loading, setLoading] = useState(true);
-
-  const reload = useCallback(async () => {
-    setLoading(true);
+  const [snapshot, setSnapshot] = useState({ path, data: null, error: "", loading: true });
+  const version = useRef(0), controller = useRef(null);
+  const load = useCallback(async () => {
+    const request = ++version.current;
+    controller.current?.abort();
+    const current = new AbortController();
+    controller.current = current;
     try {
-      setData(await api(path));
-      setError("");
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
+      const data = await api(path, { signal: current.signal });
+      if (request === version.current && !current.signal.aborted) setSnapshot({ path, data, error: "", loading: false });
+    } catch (error) {
+      if (request === version.current && !current.signal.aborted) setSnapshot({ path, data: null, error: error.message, loading: false });
     }
   }, [path]);
-
   useEffect(() => {
-    let active = true;
-    api(path)
-      .then((d) => {
-        if (active) {
-          setData(d);
-          setError("");
-        }
-      })
-      .catch((e) => {
-        if (active) setError(e.message);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
+    const request = ++version.current;
+    const pending = new AbortController();
+    controller.current?.abort();
+    controller.current = pending;
+    api(path, { signal: pending.signal }).then(data => {
+      if (request === version.current && !pending.signal.aborted) setSnapshot({ path, data, error: "", loading: false });
+    }).catch(error => {
+      if (request === version.current && !pending.signal.aborted) setSnapshot({ path, data: null, error: error.message, loading: false });
+    });
+    return () => pending.abort();
   }, [path]);
-
-  return { data, error, loading, reload, setData };
+  const reload = useCallback(() => {
+    setSnapshot(previous => ({ path, data: previous.path === path ? previous.data : null, error: "", loading: true }));
+    return load();
+  }, [load, path]);
+  const current = snapshot.path === path ? snapshot : { data: null, error: "", loading: true };
+  return { ...current, reload };
 }
 
 export function State({ resource, children }) {
@@ -187,7 +184,7 @@ export function Badge({ children, variant = "" }) {
 export function Field({ label, as = "input", children, ...props }) {
   const Tag = as;
   return (
-    <label className="field">
+    <label className="field interactive-field">
       <span>{label}</span>
       <Tag {...props}>{children}</Tag>
     </label>
@@ -203,12 +200,17 @@ export function ActionForm({
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [success, setSuccess] = useState("");
+  const submitting = useRef(false);
+  const reduced = useReducedMotion();
 
   return (
     <form
       className={`form-stack ${className}`}
+      aria-busy={busy}
       onSubmit={async (e) => {
         e.preventDefault();
+        if (submitting.current) return;
+        submitting.current = true;
         setBusy(true);
         setError("");
         setSuccess("");
@@ -220,29 +222,23 @@ export function ActionForm({
         } catch (e) {
           setError(e.message);
         } finally {
+          submitting.current = false;
           setBusy(false);
         }
       }}
     >
       {children}
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
-      {success && (
-        <p className="success" role="status">
-          {success}
-        </p>
-      )}
-      <button disabled={busy} type="submit">
-        {busy ? "Working…" : label}
-      </button>
+      <AnimatePresence initial={false}>
+        {(error || success) && <motion.p key={error ? "error" : "success"} className={`${error ? "error" : "success"} form-feedback`} role={error ? "alert" : "status"} initial={{ opacity: 0, y: reduced ? 0 : 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: reduced ? 0 : .18 }}>{error ? <CircleAlert size={18} /> : <CheckCircle2 size={18} />}{error || success}</motion.p>}
+      </AnimatePresence>
+      <motion.button disabled={busy} type="submit" whileTap={reduced ? undefined : { scale: .98 }}>
+        {busy ? <><LoaderCircle className="busy-spinner" size={18} aria-hidden="true" /> Working…</> : label}
+      </motion.button>
     </form>
   );
 }
 
-export function Action({ run, children, className = "" }) {
+export function Action({ run, children, className = "", disabled = false }) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
 
@@ -250,7 +246,7 @@ export function Action({ run, children, className = "" }) {
     <span className="action-wrap">
       <button
         className={className}
-        disabled={busy}
+        disabled={busy || disabled}
         onClick={async () => {
           setBusy(true);
           setError("");

@@ -45,16 +45,17 @@ export const analyticsController = {
   bundleCoverage: send((req) => pipelines.bundleCoverage(req.user._id)),
 
   intelligence: send(async (req) => {
+    const market = filters(req);
     const owner = req.user.role === "admin" ? undefined : req.user._id;
     const [demand, supply, liquidity, clusters, coverage, revenue] =
       await Promise.all([
-        pipelines.demandHeatmap(),
-        pipelines.supplyUtilization(owner),
-        pipelines.liquidityRatios(),
-        pipelines.geoClusters(),
+        pipelines.demandHeatmap(market),
+        pipelines.supplyUtilization(owner, market),
+        pipelines.liquidityRatios(market),
+        pipelines.geoClusters(market),
         pipelines.bundleCoverage(owner),
         pipelines.revenueTrend(owner, accountMode(req)),
       ]);
-    return { demand, supply, liquidity, clusters, coverage, revenue };
+    return { demand, supply, liquidity, clusters, coverage, revenue, filters: market, checkedAt: new Date().toISOString() };
   }),
 };

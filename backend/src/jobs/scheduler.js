@@ -2,6 +2,7 @@ import cron from "node-cron";
 import { BusinessProfile, Booking } from "../models/index.js";
 import { generateInsight } from "../agents/workflows.js";
 import { deliverEmails, notify } from "../services/notificationService.js";
+import { trackAgent } from "../services/agentRuntime.js";
 export function startJobs() {
   cron.schedule(
     "0 2 * * *",
@@ -10,7 +11,7 @@ export function startJobs() {
         role: "business",
       }).cursor()) {
         try {
-          await generateInsight(user);
+          await trackAgent(user, "provider-digest", () => generateInsight(user));
         } catch {
           console.warn("Nightly insight unavailable for a business.");
         }
