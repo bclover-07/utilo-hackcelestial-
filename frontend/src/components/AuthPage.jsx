@@ -187,7 +187,7 @@ function AuthForm({ register, initialPersona }) {
             <p className="persona-caption">
               {personas[persona].detail}
             </p>
-            {role === "business" && <p className="business-approval-note">One account and one business approval cover both modes. Switch between seeking and providing in your dashboard. {register ? "Explore and plan after signup; complete your business profile for admin approval before publishing resources or creating requests." : "Your selected mode changes the workspace tools, not your account permissions."}</p>}
+            {role === "business" && <p className="business-approval-note">One business account gives you full access to both modes. Switch between seeking and providing anytime in your workspace. Start monetizing idle capacity or discover verified venue and equipment setups immediately.</p>}
           </fieldset>
           <form
             className="form-stack"

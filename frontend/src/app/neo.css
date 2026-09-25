@@ -22,9 +22,33 @@
   background: var(--pink);
   color: var(--ink);
 }
+
+/* Custom Cartoon Comic Neo-Brutalist Scrollbars */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track {
+  background: var(--paper, #fff9eb);
+  border-left: 2px solid var(--ink);
+  border-top: 2px solid var(--ink);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--yellow, #f8dc60);
+  border: 2.5px solid var(--ink);
+  border-radius: 8px;
+  box-shadow: 1px 1px 0 var(--ink);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--pink, #f7a7c2);
+}
+::-webkit-scrollbar-corner {
+  background: var(--paper, #fff9eb);
+}
+
 body {
-  background-image: radial-gradient(#272b1818 0.8px, transparent 0.8px);
-  background-size: 20px 20px;
+  background-image: radial-gradient(#272b1820 1px, transparent 1px);
+  background-size: 22px 22px;
 }
 h1,
 h2,
@@ -304,30 +328,240 @@ summary:hover {
 .sidebar-section-title {
   color: #57584e;
 }
+/* Comic Neo-Brutalist Workspace Top Navigation */
 .workspace-top {
   position: sticky;
   top: 12px;
-  z-index: 20;
+  z-index: 40;
   margin: 12px 22px 0;
-  padding: 12px 22px;
-  border: 3px solid var(--ink);
+  padding: 10px 18px;
+  border: var(--border-comic);
   border-radius: 20px;
   box-shadow: 4px 5px 0 var(--ink);
-  background: #fffdf3f5;
+  background: #fffdf5f8;
   backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   height: auto;
-  min-height: 74px;
+  min-height: 68px;
 }
-.workspace-top .workspace-tagline {
+
+.workspace-top-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.workspace-brand-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  padding: 6px 12px;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.workspace-title-text {
+  font-family: var(--font-space), monospace;
+  font-size: 13px;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+
+.workspace-doodle-star {
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.workspace-subtag {
+  font-size: 11px;
+  color: #555;
+  font-weight: 600;
+  border-left: 1.5px solid #d0ccbc;
+  padding-left: 8px;
+  margin-left: 2px;
+}
+
+/* Comic Role Switch Toggle */
+.comic-role-switch-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.comic-role-switch {
+  display: inline-flex;
+  align-items: center;
+  background: white;
+  border: 2.5px solid var(--ink);
+  border-radius: 16px;
+  padding: 3.5px;
+  box-shadow: 3px 3px 0 var(--ink);
+  gap: 4px;
+}
+
+.role-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 800;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  background: none;
+  box-shadow: none;
+  transition: all 160ms var(--ease-out);
+  color: var(--ink);
+}
+
+.role-btn.active.provider-role {
+  background: var(--yellow);
+  border-color: var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  transform: translate(-1px, -1px);
+}
+
+.role-btn.active.seeker-role {
+  background: var(--teal);
+  border-color: var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  transform: translate(-1px, -1px);
+}
+
+.role-btn:not(.active):hover {
+  background: #f4f2e8;
+  transform: none;
+  box-shadow: none;
+}
+
+.role-icon {
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.role-text {
+  letter-spacing: 0.02em;
+}
+
+.role-active-spark {
   font-size: 12px;
+  font-weight: 900;
+  color: var(--ink);
 }
-.avatar {
+
+.role-mode-caption {
+  font-size: 10px;
+  font-weight: 750;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.workspace-top-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.comic-avatar {
   width: 40px;
   height: 40px;
   flex-shrink: 0;
-  border: 3px solid var(--ink);
+  border: 2.5px solid var(--ink);
   border-radius: 14px;
-  box-shadow: 2px 3px 0 var(--ink);
+  background: var(--pink);
+  box-shadow: 2.5px 2.5px 0 var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 16px;
+  text-decoration: none;
+  color: var(--ink);
+  transition: transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
+}
+
+.comic-avatar:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+/* Sidebar Role Card */
+.sidebar-role-card {
+  margin: 10px 0 16px;
+  background: white;
+  border: 2.5px solid var(--ink);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 3px 3px 0 var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-role-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sidebar-role-label {
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.comic-pill-badge {
+  font-size: 11px;
+  font-weight: 850;
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  padding: 2px 8px;
+  box-shadow: 1.5px 1.5px 0 var(--ink);
+}
+
+.sidebar-role-desc {
+  font-size: 11.5px;
+  color: #444;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.sidebar-role-toggle-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--ink);
+  transition: all 160ms ease;
+}
+
+.sidebar-role-toggle-btn:hover {
+  background: var(--yellow);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--ink);
 }
 .dashboard-content {
   gap: 28px;
@@ -454,32 +688,55 @@ summary:hover {
 }
 @media (max-width: 860px) {
   .workspace-top {
-    margin: 10px 12px 0;
-    padding: 10px 14px;
+    margin: 8px 12px 0;
+    padding: 8px 12px;
     gap: 10px;
   }
-  .dashboard-content {
-    padding: 25px 18px;
+  .desktop-only {
+    display: none !important;
   }
-  .workspace-top .top-mode-pill {
-    display: none;
+  .dashboard-content {
+    padding: 24px 16px;
   }
 }
-@media (max-width: 520px) {
+@media (max-width: 580px) {
+  .workspace-top {
+    margin: 6px 8px 0;
+    padding: 6px 10px;
+    gap: 6px;
+    border-radius: 16px;
+    min-height: 58px;
+  }
+  .workspace-brand-badge {
+    padding: 4px 8px;
+  }
+  .workspace-title-text {
+    font-size: 11px;
+  }
+  .comic-role-switch {
+    padding: 2px;
+    border-radius: 12px;
+  }
+  .role-btn {
+    padding: 4px 8px;
+    font-size: 11px;
+    gap: 4px;
+    border-radius: 8px;
+  }
+  .comic-avatar {
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
+    border-radius: 10px;
+  }
   .form-grid {
     grid-template-columns: 1fr;
   }
   .panel {
-    padding: 20px;
+    padding: 18px;
   }
   .listing-card {
     padding: 0;
-  }
-  .workspace-top-title {
-    display: none;
-  }
-  .workspace-top .segmented {
-    margin-left: auto;
   }
   .page-heading {
     align-items: start;
@@ -3609,4 +3866,231 @@ body {
     min-height: auto;
   }
 }
+
+/* -------------------------------------------------------------
+   CARTOON COMIC NEO-BRUTALIST DASHBOARD VISUALS & METRICS
+---------------------------------------------------------------- */
+
+/* Activity Pipeline Section */
+.activity-pipeline-deck {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin: 10px 0 24px;
+}
+
+.pipeline-card {
+  background: white;
+  border: var(--border-comic);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 4px 4px 0 var(--ink);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  transition: transform 180ms var(--ease-out), box-shadow 180ms var(--ease-out);
+}
+
+.pipeline-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--ink);
+}
+
+.pipeline-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pipeline-step-badge {
+  font-size: 10px;
+  font-weight: 850;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  background: var(--paper);
+}
+
+.pipeline-val {
+  font-family: var(--font-space), monospace;
+  font-size: 26px;
+  font-weight: 850;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.pipeline-label {
+  font-size: 12.5px;
+  font-weight: 750;
+  color: #333;
+}
+
+.pipeline-meter-bar {
+  height: 6px;
+  background: #eae7da;
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.pipeline-meter-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+/* Command Deck Grid (Role-specific visual shortcuts) */
+.command-deck-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin: 20px 0 28px;
+}
+
+.command-card {
+  border: var(--border-comic);
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: 4px 4px 0 var(--ink);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  transition: transform 180ms var(--ease-out), box-shadow 180ms var(--ease-out);
+}
+
+.command-card:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 7px 7px 0 var(--ink);
+}
+
+.command-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.command-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 2px solid var(--ink);
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.command-pill {
+  font-size: 10px;
+  font-weight: 850;
+  padding: 3px 8px;
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  background: white;
+  text-transform: uppercase;
+}
+
+.command-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.command-desc {
+  font-size: 13px;
+  color: #333;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.command-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 9px 14px;
+  background: white;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  font-size: 12.5px;
+  font-weight: 800;
+  text-decoration: none;
+  color: var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  transition: all 150ms ease;
+}
+
+.command-action-btn:hover {
+  background: var(--paper);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+/* Visual Liquidity / Trend Card */
+.visual-chart-deck {
+  display: grid;
+  grid-template-columns: 1.3fr 0.7fr;
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.chart-panel-neo {
+  background: white;
+  border: var(--border-comic);
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+.chart-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.chart-kpi-sub {
+  font-size: 12px;
+  font-weight: 750;
+  color: #666;
+}
+
+/* Doodle / Comic Halftone Badges */
+.comic-doodle-sparkle {
+  display: inline-block;
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--ink);
+  animation: doodle-bob 2.5s ease-in-out infinite;
+}
+
+@keyframes doodle-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(6deg); }
+}
+
+@media (max-width: 900px) {
+  .activity-pipeline-deck {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .command-deck-grid {
+    grid-template-columns: 1fr;
+  }
+  .visual-chart-deck {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 540px) {
+  .activity-pipeline-deck {
+    grid-template-columns: 1fr;
+  }
+}
+
 

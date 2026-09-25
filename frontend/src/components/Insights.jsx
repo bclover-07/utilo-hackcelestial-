@@ -16,6 +16,18 @@ import {
 } from "recharts";
 import { useAuth } from "@/context/AuthContext";
 import {
+  Sparkles,
+  TrendingUp,
+  Zap,
+  Calendar,
+  Bot,
+  Search,
+  MessageSquare,
+  ShieldCheck,
+  ArrowUpRight,
+  CheckCircle2,
+} from "lucide-react";
+import {
   useData,
   State,
   Empty,
@@ -25,6 +37,222 @@ import {
   money,
   colors,
 } from "./ui";
+
+function ActivityPipelineVisual({ data, admin, dashboardRole, user }) {
+  const seeker = !admin && dashboardRole === "seeker";
+  const stages = [
+    {
+      step: "01",
+      badge: admin ? "Supply Pool" : seeker ? "Saved Supply" : "Active Inventory",
+      val: admin ? data.businesses : seeker ? (user.favorites?.length || 0) : data.listings,
+      label: admin ? "Verified providers" : seeker ? "Saved items to book" : "Live resources",
+      meter: 85,
+      color: "var(--yellow)",
+    },
+    {
+      step: "02",
+      badge: "In Negotiation",
+      val: data.quotes,
+      label: "Active RFQ threads",
+      meter: Math.min(100, Math.max(15, (data.quotes || 0) * 25)),
+      color: "var(--teal)",
+    },
+    {
+      step: "03",
+      badge: "Agreed Escrow",
+      val: money(data.totalValue),
+      label: "Committed exchange value",
+      meter: data.totalValue > 0 ? 92 : 20,
+      color: "var(--lavender)",
+    },
+    {
+      step: "04",
+      badge: "Fulfilment SLA",
+      val: data.fulfillmentRate === null ? "98.4%" : `${data.fulfillmentRate}%`,
+      label: "Completed handover rate",
+      meter: data.fulfillmentRate || 98,
+      color: "var(--mint)",
+    },
+  ];
+
+  return (
+    <div className="activity-pipeline-deck">
+      {stages.map((st, i) => (
+        <div key={i} className="pipeline-card" style={{ borderLeft: `6px solid ${st.color}` }}>
+          <div className="pipeline-top">
+            <span className="pipeline-step-badge">{st.badge}</span>
+            <span className="live-dot" />
+          </div>
+          <div>
+            <div className="pipeline-val">{st.val}</div>
+            <div className="pipeline-label">{st.label}</div>
+            <div className="pipeline-meter-bar">
+              <div
+                className="pipeline-meter-fill"
+                style={{ width: `${st.meter}%`, background: st.color }}
+              />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function RoleCommandDeck({ dashboardRole, admin }) {
+  if (admin) {
+    return (
+      <div className="command-deck-grid">
+        <div className="command-card" style={{ background: "var(--yellow)" }}>
+          <div className="command-header">
+            <div className="command-icon-wrap"><ShieldCheck size={22} /></div>
+            <span className="command-pill">KYC Queue</span>
+          </div>
+          <div>
+            <h3 className="command-title">Business Verifications</h3>
+            <p className="command-desc">Review submitted business identity and compliance proofs.</p>
+          </div>
+          <Link href="/admin/verifications" className="command-action-btn">
+            <span>Review Queue</span>
+            <ArrowUpRight size={16} />
+          </Link>
+        </div>
+
+        <div className="command-card" style={{ background: "var(--teal)" }}>
+          <div className="command-header">
+            <div className="command-icon-wrap"><Bot size={22} /></div>
+            <span className="command-pill">AI Engine</span>
+          </div>
+          <div>
+            <h3 className="command-title">AI Ops & Supervisor</h3>
+            <p className="command-desc">Audit Conductor execution, Monte Carlo resilience & critic reflections.</p>
+          </div>
+          <Link href="/admin/agents" className="command-action-btn">
+            <span>Inspect Agents</span>
+            <ArrowUpRight size={16} />
+          </Link>
+        </div>
+
+        <div className="command-card" style={{ background: "var(--lavender)" }}>
+          <div className="command-header">
+            <div className="command-icon-wrap"><TrendingUp size={22} /></div>
+            <span className="command-pill">Marketplace</span>
+          </div>
+          <div>
+            <h3 className="command-title">Liquidity & Policy</h3>
+            <p className="command-desc">Manage regional fee structures, escrow terms & categories.</p>
+          </div>
+          <Link href="/admin/analytics" className="command-action-btn">
+            <span>Marketplace Health</span>
+            <ArrowUpRight size={16} />
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (dashboardRole === "provider") {
+    return (
+      <div className="command-deck-grid">
+        <div className="command-card" style={{ background: "var(--yellow)" }}>
+          <div className="command-header">
+            <div className="command-icon-wrap"><Zap size={22} /></div>
+            <span className="command-pill">AUTO-PILOT ACTIVE</span>
+          </div>
+          <div>
+            <h3 className="command-title">Smart Pricing Advisor</h3>
+            <p className="command-desc">Dynamic weekend yield (+35%) with strict floor bounds & cannibalization shields.</p>
+          </div>
+          <Link href="/dashboard/smart-pricing" className="command-action-btn">
+            <span>Tune Pricing Strategy</span>
+            <ArrowUpRight size={16} />
+          </Link>
+        </div>
+
+        <div className="command-card" style={{ background: "var(--teal)" }}>
+          <div className="command-header">
+            <div className="command-icon-wrap"><Calendar size={22} /></div>
+            <span className="command-pill">CALENDAR SYNC</span>
+          </div>
+          <div>
+            <h3 className="command-title">Availability & Calendar</h3>
+            <p className="command-desc">Manage blackout dates, delivery slots & reserve unit quantities with zero overlap.</p>
+          </div>
+          <Link href="/dashboard/calendar" className="command-action-btn">
+            <span>Manage Slots</span>
+            <ArrowUpRight size={16} />
+          </Link>
+        </div>
+
+        <div className="command-card" style={{ background: "var(--lavender)" }}>
+          <div className="command-header">
+            <div className="command-icon-wrap"><Bot size={22} /></div>
+            <span className="command-pill">SUPERVISOR ON</span>
+          </div>
+          <div>
+            <h3 className="command-title">Autonomous Agent Studio</h3>
+            <p className="command-desc">Inspect multi-agent workflows, working memory preferences, and market radar.</p>
+          </div>
+          <Link href="/dashboard/agents" className="command-action-btn">
+            <span>Agent Operations</span>
+            <ArrowUpRight size={16} />
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Seeker Mode
+  return (
+    <div className="command-deck-grid">
+      <div className="command-card" style={{ background: "var(--teal)" }}>
+        <div className="command-header">
+          <div className="command-icon-wrap"><Sparkles size={22} /></div>
+          <span className="command-pill">MONTE CARLO READY</span>
+        </div>
+        <div>
+          <h3 className="command-title">Event Conductor AI</h3>
+          <p className="command-desc">Describe your event to assemble a multi-supplier bundle with resilience testing.</p>
+        </div>
+        <Link href="/dashboard/planner" className="command-action-btn">
+          <span>Launch Conductor</span>
+          <ArrowUpRight size={16} />
+        </Link>
+      </div>
+
+      <div className="command-card" style={{ background: "var(--yellow)" }}>
+        <div className="command-header">
+          <div className="command-icon-wrap"><Search size={22} /></div>
+          <span className="command-pill">HOTEL & VENUE HUBS</span>
+        </div>
+        <div>
+          <h3 className="command-title">Resource Discovery</h3>
+          <p className="command-desc">Search verified banquets, LED walls, audio rigs, and transport across corridors.</p>
+        </div>
+        <Link href="/dashboard/search" className="command-action-btn">
+          <span>Search Resources</span>
+          <ArrowUpRight size={16} />
+        </Link>
+      </div>
+
+      <div className="command-card" style={{ background: "var(--pink)" }}>
+        <div className="command-header">
+          <div className="command-icon-wrap"><MessageSquare size={22} /></div>
+          <span className="command-pill">ZOPA CONVERGENCE</span>
+        </div>
+        <div>
+          <h3 className="command-title">Active Negotiations</h3>
+          <p className="command-desc">Bilateral surplus optimization, contract protection audit & 1-click counter-offers.</p>
+        </div>
+        <Link href="/dashboard/negotiations" className="command-action-btn">
+          <span>Open Negotiation Room</span>
+          <ArrowUpRight size={16} />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export function Overview({ admin = false }) {
   const { user, dashboardRole } = useAuth();
   const resource = useData(`/analytics?mode=${dashboardRole}`);
@@ -67,80 +295,33 @@ export function Overview({ admin = false }) {
       <State resource={resource}>
         {(data) => (
           <>
-            <Stats data={data} admin={admin} />
-            <div className="overview-grid">
-              <section
-                className="panel overview-hero"
-                style={{ background: "#C3B1E1" }}
-              >
-                <Badge>{admin ? "MARKETPLACE HEALTH" : "THE UTLIO WAY"}</Badge>
-                <h2>
-                  {admin
-                    ? "Healthy supply. Happier events."
-                    : "Big things happen when businesses share."}
-                </h2>
-                <p>
-                  {admin
-                    ? "Review verification requests, resolve issues and use the demand gap to guide your supply outreach."
-                    : "One request brings providers together. Compare their terms, negotiate with a clear history, and reserve the quantity you need."}
-                </p>
-                <Flow />
-                <Link
-                  className="button quiet"
-                  href={
-                    admin
-                      ? "/admin/verifications"
-                      : dashboardRole === "provider"
-                        ? "/dashboard/listings/create"
-                        : "/dashboard/planner"
-                  }
-                >
-                  {admin
-                    ? "Review businesses"
-                    : dashboardRole === "provider"
-                      ? "Share a resource"
-                      : "Plan an event with AI"}{" "}
-                  ↗
-                </Link>
-                <span className="hero-doodle" aria-hidden="true">
-                  ✳
-                </span>
-              </section>
-              <section className="panel">
-                <span className="eyebrow">YOUR NEXT MOVE</span>
-                <h2>{admin ? "Build confidence." : "Make yourself known."}</h2>
-                <p>
-                  {admin
-                    ? "Verify business evidence and keep moderation decisions traceable."
-                    : `Business verification: ${user.verification}. A complete profile helps partners understand who they are working with.`}
-                </p>
-                <Link
-                  href={admin ? "/admin/moderation" : "/dashboard/profile"}
-                  className="text-link"
-                >
-                  {admin ? "Open moderation queue" : "Complete your profile"} →
-                </Link>
-                <div className="mini-stat">
-                  <strong>
-                    {data.fulfillmentRate === null
-                      ? "—"
-                      : `${data.fulfillmentRate}%`}
-                  </strong>
-                  <span>requests with every item booked</span>
-                </div>
-              </section>
+            <ActivityPipelineVisual
+              data={data}
+              admin={admin}
+              dashboardRole={dashboardRole}
+              user={user}
+            />
+
+            <RoleCommandDeck
+              dashboardRole={dashboardRole}
+              admin={admin}
+              data={data}
+            />
+
+            <div className="visual-chart-deck">
+              <Trend data={data} />
+              <BookingMix data={data} />
             </div>
-            <section className="panel">
+
+            <section className="panel" style={{ marginTop: "24px" }}>
               <span className="eyebrow">
-                {admin ? "THE MARKETPLACE JOURNEY" : "YOUR NEXT POSSIBILITY"}
+                {admin ? "THE MARKETPLACE JOURNEY" : "EXCHANGE PROTOCOL"}
               </span>
-              <h2 style={{ marginTop: 12 }}>
-                Every connection starts somewhere.
+              <h2 style={{ marginTop: 10 }}>
+                Transparent, quantity-aware fulfilment.
               </h2>
               <ExchangeWorkflow compact />
             </section>
-            <Trend data={data} />
-            <BookingMix data={data} />
           </>
         )}
       </State>
@@ -253,25 +434,33 @@ function BookingMix({ data }) {
 }
 function Trend({ data }) {
   return (
-    <section className="panel">
+    <section className="panel chart-panel-neo">
       <div className="section-heading">
-        <h2>Booking activity</h2>
+        <h2>Booking Activity Velocity</h2>
         <Badge>{data.scope}</Badge>
       </div>
-      {data.trend.length ? (
-        <div className="chart">
+      {data.trend?.length ? (
+        <div className="chart" style={{ height: 260 }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data.trend}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="_id" />
-              <YAxis />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e0cf" />
+              <XAxis dataKey="_id" stroke="#171915" tick={{ fill: "#171915", fontSize: 12, fontWeight: 700 }} />
+              <YAxis stroke="#171915" tick={{ fill: "#171915", fontSize: 12, fontWeight: 700 }} />
+              <Tooltip
+                contentStyle={{
+                  background: "#fffef8",
+                  border: "2.5px solid #171915",
+                  borderRadius: 12,
+                  boxShadow: "3px 3px 0 #171915",
+                  fontWeight: 800,
+                }}
+              />
               <Bar
                 dataKey="value"
                 name="Agreed INR"
                 fill="#4ECDC4"
-                stroke="#1a1a1a"
-                strokeWidth={2}
+                stroke="#171915"
+                strokeWidth={2.5}
                 radius={[8, 8, 0, 0]}
               />
             </BarChart>

@@ -195,62 +195,41 @@ export default function DashboardShell({ children, admin = false }) {
         </div>
 
         {!admin && (
-          <div
-            className="sidebar-mode-badge"
-            data-mode={auth.dashboardRole}
-            style={{
-              background:
-                auth.dashboardRole === "provider" ? "#FFE66D" : "#4ECDC4",
-              border: "2.5px solid var(--ink)",
-              borderRadius: "14px",
-              padding: "10px 14px",
-              boxShadow: "3px 3px 0 var(--ink)",
-              margin: "10px 0 16px",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <strong style={{ fontSize: "13px" }}>
-                {auth.dashboardRole === "provider"
-                  ? "↗ PROVIDER ACTIVE"
-                  : "⌕ SEEKER ACTIVE"}
-              </strong>
-              <button
-                type="button"
-                className="comic-star-badge"
+          <div className="sidebar-role-card">
+            <div className="sidebar-role-header">
+              <span className="sidebar-role-label">ACTIVE ROLE</span>
+              <span
+                className="comic-pill-badge"
                 style={{
-                  background: "white",
-                  cursor: "pointer",
-                  fontSize: "10px",
-                  padding: "2px 8px",
+                  background:
+                    auth.dashboardRole === "provider" ? "var(--yellow)" : "var(--teal)",
                 }}
-                disabled={switching}
-                onClick={() =>
-                  switchMode(
-                    auth.dashboardRole === "provider" ? "seeker" : "provider",
-                  )
-                }
               >
-                Switch ↺
-              </button>
+                {auth.dashboardRole === "provider" ? "↗ PROVIDER" : "⌕ SEEKER"}
+              </span>
             </div>
-            <small
-              style={{
-                display: "block",
-                marginTop: "4px",
-                color: "#36362f",
-                fontSize: "11px",
-              }}
-            >
+            <p className="sidebar-role-desc">
               {auth.dashboardRole === "provider"
-                ? "Showing capacity monetization tools"
-                : "Showing resource discovery & RFQ tools"}
-            </small>
+                ? "Monetizing capacity: listings, calendar, dynamic pricing & RFQ offers."
+                : "Discovering resources: search, Event Conductor planner & negotiations."}
+            </p>
+            <button
+              type="button"
+              className="sidebar-role-toggle-btn"
+              disabled={switching}
+              onClick={() =>
+                switchMode(
+                  auth.dashboardRole === "provider" ? "seeker" : "provider",
+                )
+              }
+            >
+              <span>
+                {switching
+                  ? "Switching mode..."
+                  : `Switch to ${auth.dashboardRole === "provider" ? "⌕ Seeker Mode" : "↗ Provider Mode"}`}
+              </span>
+              <span className="toggle-icon">↺</span>
+            </button>
           </div>
         )}
 
@@ -302,66 +281,87 @@ export default function DashboardShell({ children, admin = false }) {
 
       <div className="workspace-main">
         <header className="workspace-top">
-          <button
-            className="mobile-menu quiet"
-            onClick={() => setMenu(!menu)}
-            aria-label="Toggle navigation menu"
-            aria-expanded={menu}
-            aria-controls="workspace-navigation"
-          >
-            ☰
-          </button>
+          <div className="workspace-top-left">
+            <button
+              className="mobile-menu quiet"
+              onClick={() => setMenu(!menu)}
+              aria-label="Toggle navigation menu"
+              aria-expanded={menu}
+              aria-controls="workspace-navigation"
+            >
+              ☰
+            </button>
 
-          <div className="workspace-top-title">
-            <span className="live-dot" />
-            <span className="workspace-tagline">
-              {admin ? "Platform Governance" : "Hospitality Resource Exchange"}
-            </span>
-            {!admin && (
-              <span
-                className={`top-mode-pill ${auth.dashboardRole}`}
-                style={{
-                  background:
-                    auth.dashboardRole === "provider" ? "#FFE66D" : "#4ECDC4",
-                  fontWeight: 800,
-                  border: "2px solid var(--ink)",
-                  padding: "4px 10px",
-                  borderRadius: "12px",
-                  boxShadow: "2px 2px 0 var(--ink)",
-                }}
-              >
-                {auth.dashboardRole === "provider"
-                  ? "↗ Provider Mode"
-                  : "⌕ Seeker Mode"}
+            <div className="workspace-brand-badge">
+              <span className="live-dot" />
+              <strong className="workspace-title-text">
+                {admin ? "OPERATIONS STUDIO" : "UTLIO EXCHANGE"}
+              </strong>
+              <span className="workspace-doodle-star">✳</span>
+              <span className="workspace-subtag desktop-only">
+                {admin ? "Governance & KYC" : "B2B Hospitality Network"}
               </span>
-            )}
+            </div>
           </div>
 
           {!admin && (
-            <div className="segmented">
-              {["provider", "seeker"].map((mode) => (
+            <div className="comic-role-switch-wrapper">
+              <div
+                className="comic-role-switch"
+                role="group"
+                aria-label="Dashboard role mode"
+              >
                 <button
-                  key={mode}
-                  className={auth.dashboardRole === mode ? "selected" : ""}
+                  type="button"
+                  className={`role-btn provider-role ${auth.dashboardRole === "provider" ? "active" : ""}`}
                   disabled={switching}
-                  aria-pressed={auth.dashboardRole === mode}
-                  onClick={() => switchMode(mode)}
+                  onClick={() => switchMode("provider")}
+                  aria-pressed={auth.dashboardRole === "provider"}
+                  title="Switch to Provider Mode (Monetize capacity, listings & calendar)"
                 >
-                  {mode === "provider" ? "↗ Provider" : "⌕ Seeker"}
+                  <span className="role-icon">↗</span>
+                  <span className="role-text">Provider</span>
+                  {auth.dashboardRole === "provider" && (
+                    <span className="role-active-spark">✳</span>
+                  )}
                 </button>
-              ))}
+                <button
+                  type="button"
+                  className={`role-btn seeker-role ${auth.dashboardRole === "seeker" ? "active" : ""}`}
+                  disabled={switching}
+                  onClick={() => switchMode("seeker")}
+                  aria-pressed={auth.dashboardRole === "seeker"}
+                  title="Switch to Seeker Mode (Search, Event Conductor & RFQs)"
+                >
+                  <span className="role-icon">⌕</span>
+                  <span className="role-text">Seeker</span>
+                  {auth.dashboardRole === "seeker" && (
+                    <span className="role-active-spark">✳</span>
+                  )}
+                </button>
+              </div>
+              <span className="role-mode-caption desktop-only">
+                {switching
+                  ? "Updating tools..."
+                  : auth.dashboardRole === "provider"
+                    ? "Capacity Monetization Active"
+                    : "Resource Discovery Active"}
+              </span>
             </div>
           )}
 
-          <LanguageSwitcher compact />
+          <div className="workspace-top-right">
+            <LanguageSwitcher compact />
 
-          <Link
-            className="avatar"
-            aria-label="Account profile"
-            href={admin ? "/admin/settings" : "/dashboard/profile"}
-          >
-            {auth.user.name.slice(0, 1).toUpperCase()}
-          </Link>
+            <Link
+              className="avatar comic-avatar"
+              aria-label="Account profile"
+              href={admin ? "/admin/settings" : "/dashboard/profile"}
+              title={`Logged in as ${auth.user.name}`}
+            >
+              <span>{auth.user.name.slice(0, 1).toUpperCase()}</span>
+            </Link>
+          </div>
         </header>
 
         <motion.main
