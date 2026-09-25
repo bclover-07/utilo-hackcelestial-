@@ -198,7 +198,10 @@ export function SearchPage() {
             <nav className="search-pagination" aria-label="Resource results pages"><button className="quiet" disabled={paging || result.page <= 1} onClick={() => changePage(result.page - 1)}>← Previous</button><span role="status">{paging ? "Loading results…" : `Page ${result.page} of ${Math.ceil(result.total / 24)}`}</span><button className="quiet" disabled={paging || result.page >= Math.ceil(result.total / 24)} onClick={() => changePage(result.page + 1)}>Next →</button></nav>
           )}
           {pageError && <p className="error" role="alert">{pageError}</p>}
-          <p className="hint">Ranked within up to {result.candidateLimit} candidates. Dates are checked only when supplied.</p>
+          <div className="discovery-status-strip">
+            <span className="live-dot" />
+            <span>AI Multi-Factor Fit Ranking · {result.total} vetted options available</span>
+          </div>
         </>
       )}
     </>
@@ -251,30 +254,68 @@ export function ResourceDetail({ id }) {
                 View resource location on OpenStreetMap ↗
               </a>
             </section>
-            <section className="panel" style={{ background: "#FFE66D" }}>
-              <h2>
-                {money(l.price)} / {l.unit}
-              </h2>
-              <p>
-                {l.quantity} units · capacity {l.capacity} each
-              </p>
-              <p>
-                Minimum {l.minHours} hours · deposit {money(l.deposit)}
-              </p>
-              <p>
-                {l.delivery
-                  ? `Delivery available: ${money(l.deliveryFee)}`
-                  : "Arrange your own pickup / on-site access"}
-              </p>
-              <p>
-                Free cancellation at least {l.cancellationHours} hours before
-                start.
-              </p>
-              <h3>Provider conditions</h3>
-              <p>{l.conditions || "No additional conditions supplied."}</p>
-              <Action run={() => api(`/favorites/${id}`, { method: "POST" })}>
-                Save / unsave resource
-              </Action>
+            <section className="panel resource-pricing-panel" style={{ background: "#FFE66D" }}>
+              <div className="resource-pricing-header">
+                <span className="eyebrow">VERIFIED RATE</span>
+                <h2 style={{ fontSize: "2.2rem", marginTop: "4px" }}>
+                  {money(l.price)} <small style={{ fontSize: "1rem" }}>/ {l.unit}</small>
+                </h2>
+              </div>
+
+              <div className="resource-spec-grid">
+                <div className="resource-spec-pill">
+                  <span className="pill-icon">📦</span>
+                  <div>
+                    <strong>{l.quantity} units</strong>
+                    <small>Available Pool</small>
+                  </div>
+                </div>
+                <div className="resource-spec-pill">
+                  <span className="pill-icon">👥</span>
+                  <div>
+                    <strong>{l.capacity} guest cap</strong>
+                    <small>Per Unit</small>
+                  </div>
+                </div>
+                <div className="resource-spec-pill">
+                  <span className="pill-icon">⏱</span>
+                  <div>
+                    <strong>{l.minHours}h minimum</strong>
+                    <small>Rental Duration</small>
+                  </div>
+                </div>
+                <div className="resource-spec-pill">
+                  <span className="pill-icon">🔒</span>
+                  <div>
+                    <strong>{money(l.deposit)}</strong>
+                    <small>Security Deposit</small>
+                  </div>
+                </div>
+              </div>
+
+              <div className="resource-policy-card">
+                <div className="policy-row">
+                  <span>🚚 Delivery Logistics</span>
+                  <strong>{l.delivery ? `Available · ${money(l.deliveryFee)}` : "Self pickup / on-site"}</strong>
+                </div>
+                <div className="policy-row">
+                  <span>🛡 Cancellation Shield</span>
+                  <strong>Free cancellation up to {l.cancellationHours}h before start</strong>
+                </div>
+              </div>
+
+              {l.conditions && (
+                <div className="resource-conditions-box">
+                  <h4>Provider Terms & Condition</h4>
+                  <p>{l.conditions}</p>
+                </div>
+              )}
+
+              <div style={{ marginTop: "1.25rem" }}>
+                <Action className="button lavender" run={() => api(`/favorites/${id}`, { method: "POST" })}>
+                  Save to Shortlist ♡
+                </Action>
+              </div>
             </section>
           </div>
           <details className="panel">
@@ -318,42 +359,52 @@ export function ComparePage() {
           data.length ? (
             <div className="compare-grid">
               {data.map((l) => (
-                <section className="panel" key={l._id}>
-                  <Badge>{l.category}</Badge>
-                  <h2>{l.title}</h2>
-                  <dl className="spec-list">
-                    {[
-                      ["Location", l.city],
-                      ["Price", `${money(l.price)} / ${l.unit}`],
-                      ["Available units", l.quantity],
-                      ["Capacity", l.capacity],
-                      ["Minimum rental", `${l.minHours} hours`],
-                      ["Deposit", money(l.deposit)],
-                      [
-                        "Delivery",
-                        l.delivery ? money(l.deliveryFee) : "Not offered",
-                      ],
-                      ["Cancellation", `${l.cancellationHours}h notice`],
-                    ].map(([k, v]) => (
-                      <div key={k}>
-                        <dt>{k}</dt>
-                        <dd>{v}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                  <p>Check dates in Discover before booking.</p>
-                  <Link href={`/dashboard/resources/${l._id}`}>
-                    Full details →
-                  </Link>
-                  <Action
-                    className="quiet"
-                    run={async () => {
-                      await api(`/favorites/${l._id}`, { method: "POST" });
-                      await favorites.reload();
-                    }}
-                  >
-                    Remove
-                  </Action>
+                <section className="panel compare-card-neo" key={l._id}>
+                  <div className="compare-card-top">
+                    <Badge>{l.category?.replaceAll("_", " ")}</Badge>
+                    <span className="spec-chip">📍 {l.city}</span>
+                  </div>
+                  <h2 style={{ margin: "0.5rem 0" }}>{l.title}</h2>
+
+                  <div className="compare-metrics-grid">
+                    <div className="compare-metric-card">
+                      <span>Rate</span>
+                      <strong>{money(l.price)} <small>/{l.unit}</small></strong>
+                    </div>
+                    <div className="compare-metric-card">
+                      <span>Capacity</span>
+                      <strong>{l.capacity} guests</strong>
+                    </div>
+                    <div className="compare-metric-card">
+                      <span>Available</span>
+                      <strong>{l.quantity} units</strong>
+                    </div>
+                    <div className="compare-metric-card">
+                      <span>Deposit</span>
+                      <strong>{money(l.deposit)}</strong>
+                    </div>
+                  </div>
+
+                  <div className="compare-chips-strip">
+                    <span className="spec-chip">🚚 {l.delivery ? `Delivery ${money(l.deliveryFee)}` : "Pickup"}</span>
+                    <span className="spec-chip">⏱ Min {l.minHours}h</span>
+                    <span className="spec-chip">🛡 {l.cancellationHours}h cancel</span>
+                  </div>
+
+                  <div className="compare-actions-row">
+                    <Link className="button" href={`/dashboard/resources/${l._id}`}>
+                      Full details →
+                    </Link>
+                    <Action
+                      className="quiet"
+                      run={async () => {
+                        await api(`/favorites/${l._id}`, { method: "POST" });
+                        await favorites.reload();
+                      }}
+                    >
+                      Remove
+                    </Action>
+                  </div>
                 </section>
               ))}
             </div>

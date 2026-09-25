@@ -6,6 +6,15 @@ import AgentAction from "./AgentAction";
 import AgentDecision from "./AgentDecision";
 import LocalAi, { conversationText } from "./LocalAi";
 import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from "recharts";
+import {
   useData,
   State,
   Empty,
@@ -17,6 +26,51 @@ import {
   money,
   date,
 } from "./ui";
+
+function OfferConvergenceChart({ offers }) {
+  if (!offers || offers.length < 2) return null;
+  const data = offers.map((o, i) => ({
+    round: `R${i + 1}`,
+    price: o.price,
+    by: o.by?.name || "Participant",
+    conditions: o.conditions,
+  }));
+  return (
+    <div style={{ margin: "1rem 0 1.25rem", padding: "1rem", background: "#FAF8F5", borderRadius: "16px", border: "2px solid #20201e", boxShadow: "3px 3px 0 #20201e" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.6rem" }}>
+        <div>
+          <span className="eyebrow" style={{ color: "#7B61A8" }}>PRICE CONVERGENCE</span>
+          <h4 style={{ margin: "2px 0 0", fontSize: "1rem" }}>Offer Trajectory ({offers.length} Rounds)</h4>
+        </div>
+        <span className="badge" style={{ background: "#A8E6CF", border: "2px solid #20201e" }}>
+          {money(offers[0].price)} → {money(offers.at(-1).price)}
+        </span>
+      </div>
+      <div style={{ width: "100%", height: 160 }}>
+        <ResponsiveContainer>
+          <LineChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E0CF" />
+            <XAxis dataKey="round" tick={{ fontSize: 11, fontWeight: 700, fill: "#20201e" }} />
+            <YAxis tick={{ fontSize: 10, fill: "#555" }} tickFormatter={(val) => `₹${val >= 1000 ? `${(val/1000).toFixed(0)}k` : val}`} domain={["dataMin - 100", "dataMax + 100"]} />
+            <Tooltip
+              formatter={(val) => [money(val), "Offer Price"]}
+              labelFormatter={(label) => label}
+              contentStyle={{ background: "#fffef8", border: "2px solid #20201e", borderRadius: 10, fontWeight: 700 }}
+            />
+            <Line
+              type="monotone"
+              dataKey="price"
+              stroke="#20201e"
+              strokeWidth={3}
+              dot={{ r: 5, fill: "#FFE66D", stroke: "#20201e", strokeWidth: 2 }}
+              activeDot={{ r: 7, fill: "#4ECDC4" }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
 export function NegotiationsPage() {
   const resource = useData("/quotes"),
     [selected, setSelected] = useState("");
@@ -100,17 +154,23 @@ function QuoteDetail({ q, reload }) {
           <h2>{q.listing?.title}</h2>
           <Badge>{q.status}</Badge>
         </div>
-        <p>
-          {q.provider?.name} ↔ {q.seeker?.name}
-        </p>
-        <p>
-          {q.request?.title} · {date(q.request?.start)} → {date(q.request?.end)}
-        </p>
-        <p>
-          Requested: {q.request?.items[q.itemIndex]?.quantity} units ·{" "}
-          {q.request?.items[q.itemIndex]?.specs ||
-            "No additional specifications"}
-        </p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", margin: "10px 0 16px" }}>
+          <span className="badge" style={{ background: "#89CFF040", border: "1.5px solid #20201e" }}>
+            👤 Provider: <strong>{q.provider?.name}</strong>
+          </span>
+          <span className="badge" style={{ background: "#FFE66D40", border: "1.5px solid #20201e" }}>
+            🤝 Seeker: <strong>{q.seeker?.name}</strong>
+          </span>
+          <span className="badge" style={{ background: "#C3B1E140", border: "1.5px solid #20201e" }}>
+            📅 {date(q.request?.start)} → {date(q.request?.end)}
+          </span>
+          <span className="badge" style={{ background: "#A8E6CF40", border: "1.5px solid #20201e" }}>
+            📦 {q.request?.items[q.itemIndex]?.quantity || 1} units requested
+          </span>
+        </div>
+
+        <OfferConvergenceChart offers={q.offers} />
+
         <div className="offer-timeline">
           {q.offers.map((o, i) => (
             <div key={o._id}>

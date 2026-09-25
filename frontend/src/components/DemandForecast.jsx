@@ -510,8 +510,8 @@ export function ProviderPerformancePage() {
                     me.acceptanceRate == null ? "—" : `${me.acceptanceRate}%`,
                     "#A8E6CF",
                   ],
-                  ["Average rating", me.avgRating || "—", "#FFB347"],
-                  ["Total bookings", me.totalBookings, "#89CFF0"],
+                  ["Average rating", me.avgRating ? `${me.avgRating} ★` : "—", "#FFB347"],
+                  ["Total bookings", me.totalBookings || 0, "#89CFF0"],
                 ].map(([label, value, bg]) => (
                   <div
                     className="panel stat"
@@ -520,18 +520,25 @@ export function ProviderPerformancePage() {
                   >
                     <span>{label}</span>
                     <strong>{value}</strong>
-                    <small>From marketplace records</small>
                   </div>
                 ))}
               </div>
               <section className="panel">
-                <h2>Performance radar</h2>
-                <p>
-                  Derived indicators: response = 100 − twice hours; rating =
-                  stars × 20; volume = bookings × 10 (capped at 100). Missing
-                  values remain blank.
-                </p>
-                <div className="chart" style={{ height: 320 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                  <h2 style={{ margin: 0 }}>Performance radar</h2>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                    <span className="badge" style={{ background: "#A8E6CF", border: "1.5px solid #20201e" }}>
+                      ⚡ Response Speed
+                    </span>
+                    <span className="badge" style={{ background: "#FFE66D", border: "1.5px solid #20201e" }}>
+                      🎯 Acceptance
+                    </span>
+                    <span className="badge" style={{ background: "#FFB347", border: "1.5px solid #20201e" }}>
+                      ★ Reputation
+                    </span>
+                  </div>
+                </div>
+                <div className="chart" style={{ height: 320, marginTop: "1rem" }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart data={radarData}>
                       <PolarGrid stroke="#d4d1c8" />

@@ -34,62 +34,81 @@ export function RequestsPage() {
         {(data) =>
           data.length ? (
             <div className="stack">
-              {data.map((r) => (
-                <article className="panel" key={r._id}>
-                  <div className="section-heading">
-                    <h2>{r.title}</h2>
-                    <Badge>{r.status}</Badge>
-                  </div>
-                  <p>
-                    {date(r.start)} → {date(r.end)} · {r.city} ·{" "}
-                    {money(r.budget)} budget
-                  </p>
-                  <div className="bundle-items">
-                    {r.items.map((item, i) => (
-                      <div key={i} className={item.booking ? "fulfilled" : ""}>
-                        <span>{item.booking ? "✓" : "○"}</span>
-                        <strong>
-                          {item.quantity} × {item.category.replaceAll("_", " ")}
-                        </strong>
-                        <small>
-                          {item.booking ? "Booked" : "Awaiting agreement"}
-                        </small>
+              {data.map((r) => {
+                const bookedCount = r.items.filter((item) => item.booking).length;
+                const totalCount = r.items.length || 1;
+                const progressRatio = Math.round((bookedCount / totalCount) * 100);
+
+                return (
+                  <article className="panel request-tracking-card" key={r._id}>
+                    <div className="section-heading">
+                      <div>
+                        <h2>{r.title}</h2>
+                        <div className="spec-chip-strip" style={{ marginTop: 6 }}>
+                          <span className="spec-chip">📅 {date(r.start)} → {date(r.end)}</span>
+                          <span className="spec-chip">📍 {r.city}</span>
+                          <span className="spec-chip">💰 Budget: {money(r.budget)}</span>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                  <div className="actions">
-                    {["open", "partial"].includes(r.status) && (
-                      <AgentAction
-                        endpoint="/ai/urgency"
-                        body={{ requestId: r._id }}
-                        label="Analyze urgency ✳"
-                      />
-                    )}
-                    <Link
-                      className="button quiet"
-                      href="/dashboard/negotiations"
-                    >
-                      View offers
-                    </Link>
-                    {r.status === "open" && (
-                      <Action
-                        className="quiet"
-                        run={async () => {
-                          await api(`/requests/${r._id}/cancel`, {
-                            method: "POST",
-                          });
-                          await resource.reload();
-                        }}
+                      <div style={{ textAlign: "right", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+                        <Badge>{r.status}</Badge>
+                        <span className="bundle-progress-text">{bookedCount} of {totalCount} Secured ({progressRatio}%)</span>
+                      </div>
+                    </div>
+
+                    <div className="request-progress-bar-wrap">
+                      <div className="request-progress-bar-fill" style={{ width: `${progressRatio}%` }} />
+                    </div>
+
+                    <div className="bundle-items-visual-grid">
+                      {r.items.map((item, i) => (
+                        <div key={i} className={`bundle-item-card ${item.booking ? "fulfilled" : "pending"}`}>
+                          <div className="bundle-item-top">
+                            <span className="bundle-status-icon">{item.booking ? "✓" : "○"}</span>
+                            <span className="bundle-qty">{item.quantity} units</span>
+                          </div>
+                          <strong>{item.category.replaceAll("_", " ")}</strong>
+                          <span className={`bundle-status-tag ${item.booking ? "tag-booked" : "tag-pending"}`}>
+                            {item.booking ? "Confirmed" : "In Negotiation"}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="actions" style={{ marginTop: "1rem" }}>
+                      {["open", "partial"].includes(r.status) && (
+                        <AgentAction
+                          endpoint="/ai/urgency"
+                          body={{ requestId: r._id }}
+                          label="Analyze urgency ✳"
+                        />
+                      )}
+                      <Link
+                        className="button lavender"
+                        href="/dashboard/negotiations"
                       >
-                        Cancel request
-                      </Action>
-                    )}
-                    <Link href={`/dashboard/requests/create?repeat=${r._id}`}>
-                      Repeat with new dates →
-                    </Link>
-                  </div>
-                </article>
-              ))}
+                        View offers →
+                      </Link>
+                      {r.status === "open" && (
+                        <Action
+                          className="quiet"
+                          run={async () => {
+                            await api(`/requests/${r._id}/cancel`, {
+                              method: "POST",
+                            });
+                            await resource.reload();
+                          }}
+                        >
+                          Cancel request
+                        </Action>
+                      )}
+                      <Link href={`/dashboard/requests/create?repeat=${r._id}`} className="button quiet">
+                        Repeat with new dates ↗
+                      </Link>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           ) : (
             <Empty

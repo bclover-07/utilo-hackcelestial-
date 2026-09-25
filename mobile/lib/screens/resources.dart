@@ -545,11 +545,55 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
               ...records(data).map(
                 (b) => Panel(
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      DataView(b),
-                      if (b['booking'] == null)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: b['booking'] != null ? teal : yellow,
+                              border: Border.all(color: ink, width: 1.5),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              b['booking'] != null
+                                  ? 'CONFIRMED BOOKING'
+                                  : 'OWNER BLOCK',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '${b['quantity']} units',
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        '${b['reason'] ?? 'Reserved date range'}',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '${b['start'] != null ? DateTime.tryParse('${b['start']}')?.toLocal().toString().split(' ')[0] : ''} → ${b['end'] != null ? DateTime.tryParse('${b['end']}')?.toLocal().toString().split(' ')[0] : ''}',
+                        style: const TextStyle(fontSize: 13, color: Colors.black87),
+                      ),
+                      if (b['booking'] == null) ...[
+                        const SizedBox(height: 10),
                         AsyncButton(
                           text: 'Remove block',
+                          icon: Icons.delete_outline,
                           run: () async {
                             await widget.session.api.call(
                               '/listings/$selected/availability/${b['_id']}',
@@ -559,6 +603,7 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
                             return 'Block removed.';
                           },
                         ),
+                      ],
                     ],
                   ),
                 ),
@@ -772,7 +817,83 @@ class ListingDetail extends StatelessWidget {
           builder: (data, _) => Column(
             children: [
               ListingCard(listing: Map<String, dynamic>.from(data)),
-              Panel(child: DataView(data)),
+              Panel(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Specifications & Terms',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 12),
+                    for (final spec in [
+                      ('Location', '${data['city'] ?? ''}'),
+                      ('Price', '₹${data['price']} / ${data['unit']}'),
+                      ('Available units', '${data['quantity']} units'),
+                      ('Capacity per unit', '${data['capacity']} people'),
+                      ('Minimum rental', '${data['minHours'] ?? 1} hours'),
+                      ('Security deposit', '₹${data['deposit'] ?? 0}'),
+                      (
+                        'Delivery',
+                        data['delivery'] == true
+                            ? 'Offered (₹${data['deliveryFee'] ?? 0})'
+                            : 'Not offered',
+                      ),
+                      (
+                        'Cancellation notice',
+                        '${data['cancellationHours'] ?? 24} hours',
+                      ),
+                      if (data['address'] != null)
+                        ('Address', '${data['address']}'),
+                      if (data['provider'] is Map)
+                        (
+                          'Provider',
+                          '${data['provider']['name']} (${data['provider']['category'] ?? 'Business'})',
+                        ),
+                    ])
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              spec.$1,
+                              style: const TextStyle(
+                                color: Colors.black54,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                spec.$2,
+                                textAlign: TextAlign.right,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    if (data['conditions'] != null &&
+                        '${data['conditions']}'.isNotEmpty) ...[
+                      const Divider(height: 20),
+                      const Text(
+                        'Rental conditions:',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${data['conditions']}',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
               FilledButton(
                 onPressed: () => openScreen(
                   context,

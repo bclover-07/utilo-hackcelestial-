@@ -28,7 +28,7 @@ export default function GoogleTranslateScript() {
       const script = document.createElement("script");
       script.id = scriptId;
       script.type = "text/javascript";
-      script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+      script.src = "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
       script.async = true;
       document.body.appendChild(script);
     }
@@ -37,8 +37,19 @@ export default function GoogleTranslateScript() {
   return (
     <div
       id="google_translate_element"
-      style={{ display: "none", position: "absolute", zIndex: -9999, opacity: 0, pointerEvents: "none" }}
+      style={{
+        position: "fixed",
+        left: "-9999px",
+        top: "-9999px",
+        width: "1px",
+        height: "1px",
+        overflow: "hidden",
+        opacity: 0.01,
+        pointerEvents: "none",
+        zIndex: -9999,
+      }}
       aria-hidden="true"
     />
   );
 }
+

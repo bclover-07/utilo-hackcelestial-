@@ -39,9 +39,18 @@ export function BookingsPage() {
                     <h2>{b.listing?.title}</h2>
                     <Badge>{b.status}</Badge>
                   </div>
-                  <p>
-                    {b.provider?.name} ↔ {b.seeker?.name}
-                  </p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", margin: "8px 0 14px" }}>
+                    <span className="badge" style={{ background: "#89CFF040", border: "1.5px solid #20201e" }}>
+                      🏢 Provider: <strong>{b.provider?.name}</strong>
+                    </span>
+                    <span className="badge" style={{ background: "#FFE66D40", border: "1.5px solid #20201e" }}>
+                      🎯 Renter: <strong>{b.seeker?.name}</strong>
+                    </span>
+                    <span className="badge" style={{ background: "#C3B1E140", border: "1.5px solid #20201e" }}>
+                      📦 {b.quantity} Units
+                    </span>
+                  </div>
+
                   <Flow
                     steps={[
                       "Confirmed",
@@ -57,6 +66,23 @@ export function BookingsPage() {
                           : 0
                     }
                   />
+
+                  <div style={{ margin: "1rem 0", padding: "1rem", background: "#FFFDF8", border: "2px solid #20201e", borderRadius: "14px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", boxShadow: "2px 2px 0 #20201e" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ fontSize: "1.6rem" }}>🔐</span>
+                      <div>
+                        <span className="eyebrow" style={{ color: "#7B61A8" }}>SECURITY HANDOVER PASS</span>
+                        <div style={{ fontFamily: "monospace", fontSize: "1.15rem", fontWeight: 900, letterSpacing: "1.5px", color: "#20201e" }}>
+                          {b.handoverCode || "VERIFIED-FULFILMENT"}
+                        </div>
+                        <small style={{ color: "#555" }}>Verify code upon physical exchange</small>
+                      </div>
+                    </div>
+                    <span className="badge" style={{ background: "#A8E6CF", border: "1.5px solid #20201e" }}>
+                      ✓ Verified Logistics
+                    </span>
+                  </div>
+
                   <div className="booking-facts">
                     <div>
                       <small>WHEN</small>
@@ -71,12 +97,17 @@ export function BookingsPage() {
                       </span>
                     </div>
                     <div>
-                      <small>HANDOVER</small>
+                      <small>HANDOVER & LOGISTICS</small>
                       <strong>{b.logistics}</strong>
-                      <span>Payment arranged directly</span>
+                      <span>Direct settlement</span>
                     </div>
                   </div>
-                  <p>{b.conditions}</p>
+
+                  {b.conditions && (
+                    <div style={{ margin: "0.75rem 0", padding: "0.6rem 0.8rem", background: "#FFF9C430", borderLeft: "4px solid #FFB347", borderRadius: "6px", fontSize: "0.88rem" }}>
+                      <strong>Fulfilment terms:</strong> {b.conditions}
+                    </div>
+                  )}
                   <BookingRecord id={b._id} />
                   <div className="actions">
                     <a

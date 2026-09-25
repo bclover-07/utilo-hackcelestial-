@@ -208,13 +208,284 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   valueKey: 'count',
                 ),
               ],
-              Panel(child: DataView(data)),
+              if (section == 'market-pulse') ...[
+                if (data['snapshot'] != null)
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      _PulseMetricCard(
+                        icon: Icons.search,
+                        label: 'Searches today',
+                        value: '${data['snapshot']['searchesToday'] ?? 0}',
+                        color: yellow,
+                      ),
+                      _PulseMetricCard(
+                        icon: Icons.assignment_outlined,
+                        label: 'Requests today',
+                        value: '${data['snapshot']['requestsToday'] ?? 0}',
+                        color: sky,
+                      ),
+                      _PulseMetricCard(
+                        icon: Icons.check_circle_outline,
+                        label: 'Bookings today',
+                        value: '${data['snapshot']['bookingsToday'] ?? 0}',
+                        color: teal,
+                      ),
+                      _PulseMetricCard(
+                        icon: Icons.business_outlined,
+                        label: 'Active businesses',
+                        value: '${data['snapshot']['activeBusinesses'] ?? 0}',
+                        color: const Color(0xFFC3B1E1),
+                      ),
+                    ],
+                  ),
+                const SizedBox(height: 18),
+                if (records(data['trendingCategories']).isNotEmpty)
+                  Bars(
+                    title: 'Trending categories (Search velocity)',
+                    rows: records(data['trendingCategories']),
+                    nameKey: 'category',
+                    valueKey: 'searchVelocity',
+                  ),
+                if (records(data['priceMovement']).isNotEmpty)
+                  Panel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text('Recent price movements', style: Theme.of(context).textTheme.titleLarge),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: [
+                            for (final p in records(data['priceMovement']))
+                              Container(
+                                width: 200,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: card,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: ink, width: 1.5),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Chip(label: Text(label('${p['category']}'))),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      '₹${p['avgPrice'] ?? 0}',
+                                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                                    ),
+                                    Text(
+                                      'Avg from ${p['bookingCount'] ?? 0} bookings',
+                                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+              if (section == 'performance') ...[
+                Builder(
+                  builder: (context) {
+                    final item = data is List && data.isNotEmpty
+                        ? data[0] as Map
+                        : (data is Map ? data : {});
+                    if (item.isEmpty) {
+                      return const Empty(
+                        text: 'No performance data available yet. Complete bookings to build your scorecard.',
+                      );
+                    }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: [
+                            _PulseMetricCard(
+                              icon: Icons.timer_outlined,
+                              label: 'Response time',
+                              value: item['avgResponseHours'] != null ? '${item['avgResponseHours']}h' : '—',
+                              color: yellow,
+                            ),
+                            _PulseMetricCard(
+                              icon: Icons.check_circle_outline,
+                              label: 'Acceptance rate',
+                              value: item['acceptanceRate'] != null ? '${item['acceptanceRate']}%' : '—',
+                              color: teal,
+                            ),
+                            _PulseMetricCard(
+                              icon: Icons.star,
+                              label: 'Average rating',
+                              value: item['avgRating'] != null ? '${item['avgRating']} ★' : '—',
+                              color: const Color(0xFFFFB347),
+                            ),
+                            _PulseMetricCard(
+                              icon: Icons.inventory_2_outlined,
+                              label: 'Total bookings',
+                              value: '${item['totalBookings'] ?? 0}',
+                              color: sky,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 18),
+                        Panel(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text('Performance Indicators', style: Theme.of(context).textTheme.titleLarge),
+                              const SizedBox(height: 14),
+                              _ScoreIndicator(
+                                label: 'Response Score',
+                                percent: item['avgResponseHours'] != null
+                                    ? ((100 - (item['avgResponseHours'] as num) * 2).clamp(0, 100)) / 100
+                                    : 0.8,
+                                displayValue: item['avgResponseHours'] != null ? '${item['avgResponseHours']}h avg' : 'N/A',
+                                color: teal,
+                              ),
+                              _ScoreIndicator(
+                                label: 'Acceptance Rate',
+                                percent: item['acceptanceRate'] != null ? ((item['acceptanceRate'] as num) / 100).clamp(0.0, 1.0) : 0.0,
+                                displayValue: item['acceptanceRate'] != null ? '${item['acceptanceRate']}%' : 'N/A',
+                                color: yellow,
+                              ),
+                              _ScoreIndicator(
+                                label: 'Rating Score',
+                                percent: item['avgRating'] != null ? (((item['avgRating'] as num) * 20).clamp(0, 100)) / 100 : 0.0,
+                                displayValue: item['avgRating'] != null ? '${item['avgRating']} / 5.0' : 'N/A',
+                                color: const Color(0xFFFFB347),
+                              ),
+                              _ScoreIndicator(
+                                label: 'Completion Rate',
+                                percent: item['completionRate'] != null ? ((item['completionRate'] as num) / 100).clamp(0.0, 1.0) : 0.0,
+                                displayValue: item['completionRate'] != null ? '${item['completionRate']}%' : 'N/A',
+                                color: sky,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+              ExpansionTile(
+                title: const Text(
+                  'Raw record telemetry',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                children: [
+                  Panel(child: DataView(data)),
+                ],
+              ),
             ],
           ),
         ),
       ],
     );
   }
+}
+
+class _PulseMetricCard extends StatelessWidget {
+  const _PulseMetricCard({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+  final IconData icon;
+  final String label, value;
+  final Color color;
+  @override
+  Widget build(BuildContext context) => Container(
+    width: MediaQuery.sizeOf(context).width < 400 ? double.infinity : 200,
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: ink, width: 2),
+      boxShadow: const [BoxShadow(color: ink, offset: Offset(3, 3))],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 24, color: ink),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: ink),
+        ),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: ink),
+        ),
+        Row(
+          children: [
+            Container(
+              width: 7,
+              height: 7,
+              decoration: const BoxDecoration(
+                color: Color(0xFF0F766E),
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 5),
+            const Text(
+              'Last 24 hours',
+              style: TextStyle(fontSize: 10, color: Colors.black54, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+class _ScoreIndicator extends StatelessWidget {
+  const _ScoreIndicator({
+    required this.label,
+    required this.percent,
+    required this.displayValue,
+    required this.color,
+  });
+  final String label, displayValue;
+  final double percent;
+  final Color color;
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+            Text(displayValue, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+          ],
+        ),
+        const SizedBox(height: 6),
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: percent.clamp(0.0, 1.0)),
+          duration: const Duration(milliseconds: 650),
+          curve: Curves.easeOutQuart,
+          builder: (context, animValue, _) => LinearProgressIndicator(
+            value: animValue,
+            minHeight: 12,
+            backgroundColor: Colors.grey.shade300,
+            color: color,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class Bars extends StatelessWidget {
@@ -491,18 +762,240 @@ class _AgentScreenState extends State<AgentScreen> {
           ),
         if (result != null)
           Panel(
-            color: teal,
+            color: widget.section == 'smart-pricing'
+                ? yellow
+                : widget.section == 'forecast'
+                ? sky
+                : teal,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  'Results & evidence',
-                  style: Theme.of(context).textTheme.titleLarge,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      widget.section == 'smart-pricing'
+                          ? 'AI Pricing Recommendation'
+                          : widget.section == 'forecast'
+                          ? 'Demand Intelligence Snapshot'
+                          : 'Intelligence & Evidence',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: paper,
+                        border: Border.all(color: ink, width: 1.5),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Text(
+                        'GEMINI AI',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                DataView(result),
-                if (result['sources'] is List)
+                const SizedBox(height: 12),
+
+                // Advice Text
+                if (result['advice'] != null)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: card,
+                      border: Border.all(color: ink, width: 1.5),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${result['advice']}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+
+                // AutoPilot Recommendation Card for Smart Pricing
+                if (result['autoPilotRecommendation'] != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xffe8f5e9),
+                      border: Border.all(color: ink, width: 2),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'DYNAMIC PRICING AUTO-PILOT',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.04,
+                            color: Color(0xff2e7d32),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Suggested Dynamic Rate: ₹${result['autoPilotRecommendation']['recommendedDynamicPrice']}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Surge Multiplier: ${result['autoPilotRecommendation']['surgeMultiplier']}x • Floor: ₹${result['autoPilotRecommendation']['floorPrice']} • Ceiling: ₹${result['autoPilotRecommendation']['ceilingPrice']}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                // Cannibalization Risk Alert
+                if (result['cannibalization'] != null &&
+                    result['cannibalization']['detected'] == true) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xffffebee),
+                      border: Border.all(color: ink, width: 2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          '⚠️ CANNIBALIZATION RISK DETECTED',
+                          style: TextStyle(
+                            color: Color(0xffc62828),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 11,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        for (final w
+                            in records(result['cannibalization']['warnings']))
+                          Text(
+                            '• ${w['warning']}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                // Comparables for Smart Pricing
+                if (result['comparables'] != null &&
+                    (result['comparables'] as List).isNotEmpty) ...[
+                  const Text(
+                    'Market Comparables',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                  ),
+                  const SizedBox(height: 8),
+                  for (final c in records(result['comparables']))
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: card,
+                        border: Border.all(color: ink, width: 1.5),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${c['_id'] ?? 'Category sample'} (${c['count']} listings)',
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          Text(
+                            'Avg: ₹${(c['avgPrice'] is num) ? (c['avgPrice'] as num).round() : c['avgPrice']}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xff2e7d32),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+
+                // Observations & Trends for Demand Forecast
+                if (result['observations'] != null) ...[
+                  const Text(
+                    'Market Observations',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                  ),
+                  const SizedBox(height: 6),
+                  if (result['observations'] is List)
+                    for (final obs in result['observations'])
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text(
+                          '• $obs',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      )
+                  else
+                    Text(
+                      '${result['observations']}',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  const SizedBox(height: 10),
+                ],
+
+                if (result['recommendations'] != null &&
+                    result['recommendations'] is List) ...[
+                  const Text(
+                    'Actionable Recommendations',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                  ),
+                  const SizedBox(height: 6),
+                  for (final rec in result['recommendations'])
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 6),
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: card,
+                        border: Border.all(color: ink, width: 1.5),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '💡 $rec',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                ],
+
+                // Fallback details if not smart-pricing or forecast
+                if (widget.section != 'smart-pricing' &&
+                    widget.section != 'forecast')
+                  DataView(result),
+
+                if (result['sources'] is List) ...[
+                  const SizedBox(height: 10),
                   ...records(result['sources']).map(
-                    (source) => TextButton(
+                    (source) => TextButton.icon(
+                      icon: const Icon(Icons.open_in_new, size: 16),
                       onPressed: () => openScreen(
                         context,
                         ListingDetail(
@@ -513,9 +1006,10 @@ class _AgentScreenState extends State<AgentScreen> {
                           },
                         ),
                       ),
-                      child: Text('Inspect source: ${source['title']}'),
+                      label: Text('Inspect source: ${source['title']}'),
                     ),
                   ),
+                ],
               ],
             ),
           ),
@@ -523,6 +1017,7 @@ class _AgentScreenState extends State<AgentScreen> {
     );
   }
 }
+
 
 class MemoryPanel extends StatelessWidget {
   const MemoryPanel({super.key, required this.api});
@@ -819,9 +1314,111 @@ class _PlanResultState extends State<PlanResult> {
           '${widget.plan['input']['title']} • Version ${widget.plan['version']}',
           style: Theme.of(context).textTheme.titleLarge,
         ),
-        DataView(widget.plan['result']),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              '${widget.plan['result']['summary']}',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        const SizedBox(height: 10),
+        const Text(
+          'Engineered Packages',
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+        ),
+        const SizedBox(height: 8),
+        for (final p in records(widget.plan['result']?['alternatives']))
+          Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: card,
+              border: Border.all(color: ink, width: 2),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: const [BoxShadow(color: ink, offset: Offset(2, 2))],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${p['label'] ?? p['id']}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: p['feasible'] == true ? teal : lavender,
+                        border: Border.all(color: ink, width: 1.5),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        p['feasible'] == true ? 'FEASIBLE' : 'LIMITATIONS',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Total Package: ₹${p['total']}',
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xff2e7d32),
+                  ),
+                ),
+                if (p['items'] is List) ...[
+                  const SizedBox(height: 8),
+                  for (final it in records(p['items']))
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Text(
+                        '• ${it['quantity']}× ${it['category']} — ${identity(it['listing'])} (₹${it['price'] ?? 0})',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                ],
+                if (p['notes'] != null) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    '${p['notes']}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
         if (widget.plan['request'] != null)
-          Text('RFQ created: ${widget.plan['request']}')
+          Container(
+            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+              color: card,
+              border: Border.all(color: ink, width: 1.5),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              '✅ RFQ created: ${widget.plan['request']}',
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          )
+
         else ...[
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,

@@ -115,17 +115,31 @@ export function Empty({
   href,
   label,
 }) {
+  const reduced = useReducedMotion();
   return (
-    <div className="panel empty">
-      <span className="empty-symbol">↗</span>
+    <motion.div
+      className="panel empty"
+      initial={{ opacity: 0, scale: reduced ? 1 : 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <motion.span
+        className="empty-symbol"
+        animate={reduced ? undefined : { y: [0, -5, 0] }}
+        transition={{ repeat: Infinity, duration: 2.4, ease: "easeInOut" }}
+      >
+        ↗
+      </motion.span>
       <h3>{title}</h3>
       <p>{text}</p>
       {href && (
-        <Link className="button" href={href}>
-          {label || "Get started"}
-        </Link>
+        <motion.div whileHover={reduced ? undefined : { scale: 1.03 }} whileTap={reduced ? undefined : { scale: 0.97 }}>
+          <Link className="button" href={href}>
+            {label || "Get started"}
+          </Link>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }
 
@@ -135,19 +149,39 @@ export function Heading({
   description,
   children,
 }) {
+  const reduced = useReducedMotion();
   return (
     <header className="page-heading">
-      <div>
+      <motion.div
+        initial={{ opacity: 0, y: reduced ? 0 : 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+      >
         <span className="eyebrow">{eyebrow}</span>
-        <h1>{title}</h1>
-        {description && <p>{description}</p>}
-      </div>
+        <motion.h1
+          initial={{ opacity: 0, x: reduced ? 0 : -6 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.35, delay: 0.04, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {title}
+        </motion.h1>
+        {description && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.08 }}
+          >
+            {description}
+          </motion.p>
+        )}
+      </motion.div>
       <div className="actions">{children}</div>
     </header>
   );
 }
 
 export function Badge({ children, variant = "" }) {
+  const reduced = useReducedMotion();
   const label = Children.toArray(children).join("");
   const text = label.toLowerCase();
   let badgeStyle = {};
@@ -175,19 +209,28 @@ export function Badge({ children, variant = "" }) {
   }
 
   return (
-    <span className={`badge ${variant}`} style={badgeStyle}>
+    <motion.span
+      className={`badge ${variant}`}
+      style={badgeStyle}
+      whileHover={reduced ? undefined : { scale: 1.06, y: -1 }}
+      transition={{ type: "spring", stiffness: 450, damping: 20 }}
+    >
       {label.replaceAll("_", " ")}
-    </span>
+    </motion.span>
   );
 }
 
 export function Field({ label, as = "input", children, ...props }) {
   const Tag = as;
   return (
-    <label className="field interactive-field">
+    <motion.label
+      className="field interactive-field"
+      whileFocus={{ scale: 1.01 }}
+      transition={{ duration: 0.15 }}
+    >
       <span>{label}</span>
       <Tag {...props}>{children}</Tag>
-    </label>
+    </motion.label>
   );
 }
 
@@ -229,10 +272,35 @@ export function ActionForm({
     >
       {children}
       <AnimatePresence initial={false}>
-        {(error || success) && <motion.p key={error ? "error" : "success"} className={`${error ? "error" : "success"} form-feedback`} role={error ? "alert" : "status"} initial={{ opacity: 0, y: reduced ? 0 : 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: reduced ? 0 : .18 }}>{error ? <CircleAlert size={18} /> : <CheckCircle2 size={18} />}{error || success}</motion.p>}
+        {(error || success) && (
+          <motion.p
+            key={error ? "error" : "success"}
+            className={`${error ? "error" : "success"} form-feedback`}
+            role={error ? "alert" : "status"}
+            initial={{ opacity: 0, y: reduced ? 0 : 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reduced ? 0 : 0.18 }}
+          >
+            {error ? <CircleAlert size={18} /> : <CheckCircle2 size={18} />}
+            {error || success}
+          </motion.p>
+        )}
       </AnimatePresence>
-      <motion.button disabled={busy} type="submit" whileTap={reduced ? undefined : { scale: .98 }}>
-        {busy ? <><LoaderCircle className="busy-spinner" size={18} aria-hidden="true" /> Working…</> : label}
+      <motion.button
+        disabled={busy}
+        type="submit"
+        whileHover={reduced || busy ? undefined : { y: -2, boxShadow: "5px 6px 0px #20201e" }}
+        whileTap={reduced || busy ? undefined : { scale: 0.97, y: 1, boxShadow: "1px 1px 0px #20201e" }}
+        transition={{ type: "spring", stiffness: 450, damping: 25 }}
+      >
+        {busy ? (
+          <>
+            <LoaderCircle className="busy-spinner" size={18} aria-hidden="true" /> Working…
+          </>
+        ) : (
+          label
+        )}
       </motion.button>
     </form>
   );
@@ -240,15 +308,20 @@ export function ActionForm({
 
 export function Action({ run, children, className = "", disabled = false }) {
   const [busy, setBusy] = useState(false),
-    [error, setError] = useState(""), [success, setSuccess] = useState("");
+    [error, setError] = useState(""),
+    [success, setSuccess] = useState("");
   const running = useRef(false);
+  const reduced = useReducedMotion();
 
   return (
     <span className="action-wrap">
-      <button
+      <motion.button
         type="button"
         className={className}
         disabled={busy || disabled}
+        whileHover={reduced || disabled || busy ? undefined : { y: -2, boxShadow: "5px 6px 0px #20201e" }}
+        whileTap={reduced || disabled || busy ? undefined : { scale: 0.97, y: 1, boxShadow: "1px 1px 0px #20201e" }}
+        transition={{ type: "spring", stiffness: 450, damping: 25 }}
         onClick={async () => {
           if (running.current || disabled) return;
           running.current = true;
@@ -266,14 +339,38 @@ export function Action({ run, children, className = "", disabled = false }) {
           }
         }}
       >
-        {busy ? <><LoaderCircle className="busy-spinner" size={16} aria-hidden="true" /> Working…</> : children}
-      </button>
-      {error && (
-        <small role="alert" className="error">
-          {error}
-        </small>
-      )}
-      {success && <small className="action-success" role="status"><CheckCircle2 size={13} aria-hidden="true" /> {success}</small>}
+        {busy ? (
+          <>
+            <LoaderCircle className="busy-spinner" size={16} aria-hidden="true" /> Working…
+          </>
+        ) : (
+          children
+        )}
+      </motion.button>
+      <AnimatePresence>
+        {error && (
+          <motion.small
+            role="alert"
+            className="error"
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+          >
+            {error}
+          </motion.small>
+        )}
+        {success && (
+          <motion.small
+            className="action-success"
+            role="status"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <CheckCircle2 size={13} aria-hidden="true" /> {success}
+          </motion.small>
+        )}
+      </AnimatePresence>
     </span>
   );
 }

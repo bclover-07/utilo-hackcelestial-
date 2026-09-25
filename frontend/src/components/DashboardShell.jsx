@@ -1,84 +1,117 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Action } from "./ui";
 import { motion, useReducedMotion } from "framer-motion";
-import { Bot } from "lucide-react";
+import {
+  Bot,
+  Search,
+  Calendar,
+  Sparkles,
+  Inbox,
+  BookmarkCheck,
+  Package,
+  DollarSign,
+  TrendingUp,
+  Award,
+  MessageSquare,
+  CalendarCheck,
+  Star,
+  ShieldAlert,
+  Activity,
+  BarChart3,
+  Bell,
+  User,
+  LayoutDashboard,
+  ShieldCheck,
+  CheckCircle,
+  Sliders,
+  ArrowLeftRight,
+} from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher";
+import { useTranslation } from "@/lib/i18n";
 
 const providerSections = [
   {
-    title: "PROVIDER TOOLS",
+    title: "INVENTORY & YIELD",
+    categoryKey: "inventory",
     links: [
-      ["listings", "My listings", "▦"],
-      ["calendar", "Availability & Calendar", "▤"],
-      ["smart-pricing", "Smart pricing advisor", "₹"],
-      ["agents", "Agent Studio", "ai"],
-      ["forecast", "Demand outlook & trends", "↟"],
-      ["performance", "Provider performance", "☆"],
+      ["listings", "My listings", <Package size={17} key="listings" />],
+      ["calendar", "Availability & Calendar", <Calendar size={17} key="calendar" />],
+      ["smart-pricing", "Smart pricing advisor", <DollarSign size={17} key="pricing" />],
+      ["forecast", "Demand outlook & trends", <TrendingUp size={17} key="forecast" />],
+      ["performance", "Provider performance", <Award size={17} key="performance" />],
     ],
   },
   {
     title: "DEALS & FULFILMENT",
+    categoryKey: "deals",
     links: [
-      ["negotiations", "Incoming RFQs & Chat", "↔"],
-      ["bookings", "Confirmed bookings", "▣"],
-      ["reviews", "Reviews & reputation", "☆"],
-      ["disputes", "Disputes & mediation", "⚑"],
+      ["negotiations", "Incoming RFQs & Chat", <MessageSquare size={17} key="negotiations" />],
+      ["bookings", "Confirmed bookings", <CalendarCheck size={17} key="bookings" />],
+      ["reviews", "Reviews & reputation", <Star size={17} key="reviews" />],
+      ["disputes", "Disputes & mediation", <ShieldAlert size={17} key="disputes" />],
     ],
   },
   {
     title: "MARKET INTELLIGENCE",
+    categoryKey: "intelligence",
     links: [
-      ["market-pulse", "Live market pulse", "◉"],
-      ["analytics", "Market analytics", "↟"],
+      ["agents", "Agent Studio", <Bot size={17} key="agents" />],
+      ["market-pulse", "Live market pulse", <Activity size={17} key="pulse" />],
+      ["analytics", "Market analytics", <BarChart3 size={17} key="analytics" />],
     ],
   },
   {
     title: "ACCOUNT & SETTINGS",
+    categoryKey: "account",
     links: [
-      ["", "Overview summary", "◈"],
-      ["notifications", "Alerts & updates", "◉"],
-      ["profile", "Business profile & KYC", "◎"],
+      ["", "Overview summary", <LayoutDashboard size={17} key="overview" />],
+      ["notifications", "Alerts & updates", <Bell size={17} key="notifications" />],
+      ["profile", "Business profile & KYC", <User size={17} key="profile" />],
     ],
   },
 ];
 
 const seekerSections = [
   {
-    title: "SEEKER TOOLS",
+    title: "DISCOVER & PLAN",
+    categoryKey: "discovery",
     links: [
-      ["search", "Discover resources", "⌕"],
-      ["planner", "AI Conductor", "✳"],
-      ["agents", "Agent Studio", "ai"],
-      ["requests", "My requirements (RFQs)", "↗"],
-      ["compare", "Saved & compare", "♡"],
+      ["search", "Discover resources", <Search size={17} key="search" />],
+      ["planner", "AI Conductor", <Sparkles size={17} key="planner" />],
+      ["requests", "My requirements (RFQs)", <Inbox size={17} key="requests" />],
+      ["compare", "Saved & compare", <BookmarkCheck size={17} key="compare" />],
     ],
   },
   {
     title: "DEALS & BOOKINGS",
+    categoryKey: "deals",
     links: [
-      ["negotiations", "Active quotes & chat", "↔"],
-      ["bookings", "My bookings & calendar", "▣"],
-      ["reviews", "Reviews given & received", "☆"],
-      ["disputes", "Disputes & claims", "⚑"],
+      ["negotiations", "Active quotes & chat", <MessageSquare size={17} key="negotiations" />],
+      ["bookings", "My bookings & calendar", <CalendarCheck size={17} key="bookings" />],
+      ["reviews", "Reviews given & received", <Star size={17} key="reviews" />],
+      ["disputes", "Disputes & claims", <ShieldAlert size={17} key="disputes" />],
     ],
   },
   {
     title: "MARKET INTELLIGENCE",
+    categoryKey: "intelligence",
     links: [
-      ["market-pulse", "Live market pulse", "◉"],
-      ["analytics", "Market analytics", "↟"],
+      ["agents", "Agent Studio", <Bot size={17} key="agents" />],
+      ["market-pulse", "Live market pulse", <Activity size={17} key="pulse" />],
+      ["analytics", "Market analytics", <BarChart3 size={17} key="analytics" />],
     ],
   },
   {
     title: "ACCOUNT & SETTINGS",
+    categoryKey: "account",
     links: [
-      ["", "Overview summary", "◈"],
-      ["notifications", "Alerts & updates", "◉"],
-      ["profile", "Business profile & KYC", "◎"],
+      ["", "Overview summary", <LayoutDashboard size={17} key="overview" />],
+      ["notifications", "Alerts & updates", <Bell size={17} key="notifications" />],
+      ["profile", "Business profile & KYC", <User size={17} key="profile" />],
     ],
   },
 ];
@@ -86,27 +119,30 @@ const seekerSections = [
 const adminSections = [
   {
     title: "OPERATIONS STUDIO",
+    categoryKey: "admin",
     links: [
-      ["", "Platform overview", "◈"],
-      ["verifications", "Business KYC verifications", "✓"],
-      ["disputes", "Dispute arbitration", "⚑"],
-      ["moderation", "Content moderation", "◉"],
-      ["categories", "Categories taxonomy", "▦"],
-      ["analytics", "Marketplace liquidity", "↟"],
-      ["settings", "Policies & integrations", "⚙"],
-      ["agents", "AI operations & agents", "ai"],
+      ["", "Platform overview", <LayoutDashboard size={17} key="overview" />],
+      ["verifications", "Business KYC verifications", <CheckCircle size={17} key="verifications" />],
+      ["disputes", "Dispute arbitration", <ShieldAlert size={17} key="disputes" />],
+      ["moderation", "Content moderation", <ShieldCheck size={17} key="moderation" />],
+      ["categories", "Categories taxonomy", <Package size={17} key="categories" />],
+      ["analytics", "Marketplace liquidity", <BarChart3 size={17} key="analytics" />],
+      ["settings", "Policies & integrations", <Sliders size={17} key="settings" />],
+      ["agents", "AI operations & agents", <Bot size={17} key="agents" />],
     ],
   },
 ];
 
 export default function DashboardShell({ children, admin = false }) {
   const reduced = useReducedMotion();
-  const auth = useAuth(),
-    router = useRouter(),
-    path = usePathname(),
-    [menu, setMenu] = useState(false);
+  const auth = useAuth();
+  const router = useRouter();
+  const path = usePathname();
+  const [menu, setMenu] = useState(false);
   const [switching, setSwitching] = useState(false);
   const [switchError, setSwitchError] = useState("");
+  const { t } = useTranslation();
+
   const switchMode = async (mode) => {
     if (switching || mode === auth.dashboardRole) return;
     setSwitching(true);
@@ -140,6 +176,23 @@ export default function DashboardShell({ children, admin = false }) {
     }
   }, [auth.loading, auth.error, auth.user, admin, router, path]);
 
+  const sections = useMemo(() => {
+    if (admin) return adminSections;
+    return auth.dashboardRole === "provider" ? providerSections : seekerSections;
+  }, [admin, auth.dashboardRole]);
+
+  // Current active page title for the breadcrumb
+  const currentTitle = useMemo(() => {
+    const currentSlug = path.replace(/^\/dashboard\/?/, "").replace(/^\/admin\/?/, "");
+    for (const section of sections) {
+      for (const [slug, label] of section.links) {
+        if (slug === currentSlug) return label;
+        if (slug && currentSlug.startsWith(slug)) return label;
+      }
+    }
+    return "Overview summary";
+  }, [path, sections]);
+
   if (auth.loading) return <div className="state">Checking your session…</div>;
   if (auth.error)
     return (
@@ -151,24 +204,20 @@ export default function DashboardShell({ children, admin = false }) {
   if (!auth.user || (auth.user.role === "admin") !== admin)
     return <div className="state">Redirecting…</div>;
 
-  const sections = admin
-    ? adminSections
-    : auth.dashboardRole === "provider"
-      ? providerSections
-      : seekerSections;
-
   return (
     <div className="workspace">
       <a className="skip-link" href="#workspace-content">
         Skip to workspace
       </a>
-      { }
+
+      {/* Backdrop for mobile sidebar */}
       <div
         className={`sidebar-backdrop ${menu ? "is-open" : ""}`}
         onClick={() => setMenu(false)}
         aria-hidden="true"
       />
 
+      {/* Sidebar Navigation */}
       <aside
         id="workspace-navigation"
         className={`sidebar ${menu ? "is-open" : ""}`}
@@ -186,54 +235,59 @@ export default function DashboardShell({ children, admin = false }) {
           </button>
         </div>
 
-        <div className="workspace-label">
-          {admin
-            ? "OPERATIONS STUDIO"
-            : auth.dashboardRole === "provider"
-              ? "PROVIDER DASHBOARD"
-              : "SEEKER DASHBOARD"}
-        </div>
-
-        {!admin && (
-          <div className="sidebar-role-card">
-            <div className="sidebar-role-header">
-              <span className="sidebar-role-label">ACTIVE ROLE</span>
+        {/* Sidebar Role Switcher / Status Banner */}
+        {!admin ? (
+          <div className="sidebar-role-panel">
+            <div className="sidebar-role-badge-row">
+              <span className="sidebar-role-indicator">
+                <span
+                  className="role-status-dot"
+                  style={{
+                    background:
+                      auth.dashboardRole === "provider" ? "var(--yellow)" : "var(--teal)",
+                  }}
+                />
+                {auth.dashboardRole === "provider" ? "PROVIDER MODE" : "SEEKER MODE"}
+              </span>
               <span
-                className="comic-pill-badge"
+                className="role-tag-pill"
                 style={{
                   background:
                     auth.dashboardRole === "provider" ? "var(--yellow)" : "var(--teal)",
                 }}
               >
-                {auth.dashboardRole === "provider" ? "↗ PROVIDER" : "⌕ SEEKER"}
+                {auth.dashboardRole === "provider" ? "↗ Host" : "⌕ Guest"}
               </span>
             </div>
             <p className="sidebar-role-desc">
               {auth.dashboardRole === "provider"
-                ? "Monetizing capacity: listings, calendar, dynamic pricing & RFQ offers."
-                : "Discovering resources: search, Event Conductor planner & negotiations."}
+                ? "Listing inventory, setting prices, managing calendar & responding to incoming RFQs."
+                : "Searching venues, equipment, planning with AI Conductor & submitting RFQs."}
             </p>
             <button
               type="button"
-              className="sidebar-role-toggle-btn"
+              className="sidebar-role-swap-btn"
               disabled={switching}
               onClick={() =>
-                switchMode(
-                  auth.dashboardRole === "provider" ? "seeker" : "provider",
-                )
+                switchMode(auth.dashboardRole === "provider" ? "seeker" : "provider")
               }
             >
+              <ArrowLeftRight size={14} className={switching ? "spin" : ""} />
               <span>
                 {switching
                   ? "Switching mode..."
-                  : `Switch to ${auth.dashboardRole === "provider" ? "⌕ Seeker Mode" : "↗ Provider Mode"}`}
+                  : `Switch to ${auth.dashboardRole === "provider" ? "Seeker (Buy / Rent)" : "Provider (Sell / Monetize)"}`}
               </span>
-              <span className="toggle-icon">↺</span>
             </button>
+          </div>
+        ) : (
+          <div className="workspace-label">
+            {t("OPERATIONS STUDIO")}
           </div>
         )}
 
-        <nav aria-label="Dashboard navigation">
+        {/* Feature Navigation Sections */}
+        <nav aria-label="Dashboard navigation" className="sidebar-nav">
           {sections.map((section) => (
             <div key={section.title} className="sidebar-section">
               <span className="sidebar-section-title">{section.title}</span>
@@ -250,8 +304,8 @@ export default function DashboardShell({ children, admin = false }) {
                     aria-current={isActive ? "page" : undefined}
                     href={target}
                   >
-                    <span className="nav-icon">{icon === "ai" ? <Bot size={18} /> : icon}</span>
-                    <span className="nav-label">{label}</span>
+                    <span className="nav-icon">{icon}</span>
+                    <span className="nav-label">{t(label)}</span>
                   </Link>
                 );
               })}
@@ -259,8 +313,10 @@ export default function DashboardShell({ children, admin = false }) {
           ))}
         </nav>
 
+        {/* Sidebar Footer with Language Switcher and User Info */}
         <div className="sidebar-bottom">
-          <div style={{ marginBottom: "12px" }}>
+          <div className="sidebar-lang-box">
+            <span className="sidebar-lang-label">Language:</span>
             <LanguageSwitcher />
           </div>
           <div className="sidebar-user-info">
@@ -268,7 +324,7 @@ export default function DashboardShell({ children, admin = false }) {
             <small>{auth.user.email}</small>
           </div>
           <Action
-            className="quiet"
+            className="quiet sidebar-logout-btn"
             run={async () => {
               await auth.logout();
               router.replace("/login");
@@ -279,8 +335,11 @@ export default function DashboardShell({ children, admin = false }) {
         </div>
       </aside>
 
+      {/* Main Content Area */}
       <div className="workspace-main">
+        {/* Top Navbar */}
         <header className="workspace-top">
+          {/* Left: Mobile Toggle & Brand / Breadcrumb */}
           <div className="workspace-top-left">
             <button
               className="mobile-menu quiet"
@@ -294,65 +353,94 @@ export default function DashboardShell({ children, admin = false }) {
 
             <div className="workspace-brand-badge">
               <span className="live-dot" />
-              <strong className="workspace-title-text">
-                {admin ? "OPERATIONS STUDIO" : "UTLIO EXCHANGE"}
-              </strong>
-              <span className="workspace-doodle-star">✳</span>
-              <span className="workspace-subtag desktop-only">
-                {admin ? "Governance & KYC" : "B2B Hospitality Network"}
+              <Link href="/" className="workspace-title-link">
+                <strong>UTLIO</strong>
+                <span className="workspace-doodle-star">✳</span>
+              </Link>
+              <span className="workspace-nav-divider">/</span>
+              <span className="workspace-active-tag">
+                {admin
+                  ? "Admin"
+                  : auth.dashboardRole === "provider"
+                  ? "Provider"
+                  : "Seeker"}
+              </span>
+              <span className="workspace-nav-divider desktop-only">/</span>
+              <span className="workspace-current-page desktop-only">
+                {t(currentTitle)}
               </span>
             </div>
           </div>
 
+          {/* Center: Redesigned Segmented Role Toggle */}
           {!admin && (
-            <div className="comic-role-switch-wrapper">
+            <div className="top-role-toggle-container">
               <div
-                className="comic-role-switch"
+                className="top-role-toggle"
                 role="group"
                 aria-label="Dashboard role mode"
               >
                 <button
                   type="button"
-                  className={`role-btn provider-role ${auth.dashboardRole === "provider" ? "active" : ""}`}
-                  disabled={switching}
-                  onClick={() => switchMode("provider")}
-                  aria-pressed={auth.dashboardRole === "provider"}
-                  title="Switch to Provider Mode (Monetize capacity, listings & calendar)"
-                >
-                  <span className="role-icon">↗</span>
-                  <span className="role-text">Provider</span>
-                  {auth.dashboardRole === "provider" && (
-                    <span className="role-active-spark">✳</span>
-                  )}
-                </button>
-                <button
-                  type="button"
-                  className={`role-btn seeker-role ${auth.dashboardRole === "seeker" ? "active" : ""}`}
+                  className={`top-role-btn seeker-btn ${
+                    auth.dashboardRole === "seeker" ? "active" : ""
+                  }`}
                   disabled={switching}
                   onClick={() => switchMode("seeker")}
                   aria-pressed={auth.dashboardRole === "seeker"}
-                  title="Switch to Seeker Mode (Search, Event Conductor & RFQs)"
+                  title="Seeker Mode: Discover resources, plan with AI Conductor & submit RFQs"
                 >
-                  <span className="role-icon">⌕</span>
-                  <span className="role-text">Seeker</span>
+                  <Search size={14} className="role-icon" />
+                  <span className="role-btn-title">Seeker</span>
+                  <span className="role-btn-badge desktop-only">Rent</span>
                   {auth.dashboardRole === "seeker" && (
-                    <span className="role-active-spark">✳</span>
+                    <span className="role-active-dot" />
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  className={`top-role-btn provider-btn ${
+                    auth.dashboardRole === "provider" ? "active" : ""
+                  }`}
+                  disabled={switching}
+                  onClick={() => switchMode("provider")}
+                  aria-pressed={auth.dashboardRole === "provider"}
+                  title="Provider Mode: Monetize capacity, manage listings & receive RFQs"
+                >
+                  <Package size={14} className="role-icon" />
+                  <span className="role-btn-title">Provider</span>
+                  <span className="role-btn-badge desktop-only">List</span>
+                  {auth.dashboardRole === "provider" && (
+                    <span className="role-active-dot" />
                   )}
                 </button>
               </div>
-              <span className="role-mode-caption desktop-only">
-                {switching
-                  ? "Updating tools..."
-                  : auth.dashboardRole === "provider"
-                    ? "Capacity Monetization Active"
-                    : "Resource Discovery Active"}
-              </span>
+
+              {switching && (
+                <span className="top-role-loading-indicator">Switching...</span>
+              )}
             </div>
           )}
 
+          {/* Right: Language Switcher, Alerts & User Profile */}
           <div className="workspace-top-right">
-            <LanguageSwitcher compact />
+            {/* Top Language Switcher */}
+            <div className="top-language-container">
+              <LanguageSwitcher compact={false} />
+            </div>
 
+            {/* Quick Link to Notifications */}
+            <Link
+              href={admin ? "/admin/disputes" : "/dashboard/notifications"}
+              className="top-icon-btn"
+              title="Alerts & Notifications"
+              aria-label="Alerts & Notifications"
+            >
+              <Bell size={18} />
+            </Link>
+
+            {/* User Profile Avatar */}
             <Link
               className="avatar comic-avatar"
               aria-label="Account profile"
@@ -364,10 +452,36 @@ export default function DashboardShell({ children, admin = false }) {
           </div>
         </header>
 
+        {/* Features Sub-Navbar (Horizontal Quick-Nav for Desktop & Tablets) */}
+        {!admin && (
+          <nav className="features-sub-navbar" aria-label="Quick feature navigation">
+            <div className="features-nav-scroll">
+              {sections.flatMap((section) => section.links).map(([slug, label, icon]) => {
+                const target = `${base}${slug ? "/" + slug : ""}`;
+                const isActive =
+                  path === target ||
+                  (slug && path.startsWith(`${base}/${slug}/`));
+                return (
+                  <Link
+                    key={slug}
+                    href={target}
+                    className={`features-nav-chip ${isActive ? "active" : ""}`}
+                    aria-current={isActive ? "page" : undefined}
+                  >
+                    <span className="chip-icon">{icon}</span>
+                    <span className="chip-text">{t(label)}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </nav>
+        )}
+
+        {/* Main Viewport Content */}
         <motion.main
           initial={{ opacity: 0.6, y: reduced ? 0 : 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: reduced ? 0 : .25 }}
+          transition={{ duration: reduced ? 0 : 0.2 }}
           id="workspace-content"
           className="dashboard-content"
           key={`${path}:${auth.dashboardRole}`}
@@ -377,6 +491,7 @@ export default function DashboardShell({ children, admin = false }) {
               {switchError}
             </p>
           )}
+
           {!admin && auth.user?.verification === "rejected" && (
             <div className="notice business-verification-banner">
               <strong>Business verification restricted.</strong>
@@ -386,18 +501,18 @@ export default function DashboardShell({ children, admin = false }) {
               <Link href="/dashboard/profile">Complete your business profile →</Link>
             </div>
           )}
+
           {children}
         </motion.main>
 
+        {/* Footer */}
         <footer className="workspace-footer">
           <div>
             UTLIO B2B EXCHANGE <span>· Less idle. More possible.</span>
           </div>
           <div className="footer-links">
             <Link href="/">Home</Link>
-            <Link
-              href={admin ? "/admin/verifications" : "/dashboard/notifications"}
-            >
+            <Link href={admin ? "/admin/verifications" : "/dashboard/notifications"}>
               {admin ? "Verifications" : "Alerts"}
             </Link>
             <Link href={admin ? "/admin/settings" : "/dashboard/profile"}>

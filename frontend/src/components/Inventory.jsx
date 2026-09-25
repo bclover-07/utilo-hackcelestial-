@@ -20,7 +20,49 @@ import {
   date,
   colors,
 } from "./ui";
+function MatchScoreGauge({ score }) {
+  const radius = 20;
+  const stroke = 3.5;
+  const normalizedRadius = radius - stroke * 0.5;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (score / 100) * circumference;
+  const strokeColor = score >= 85 ? "#10b981" : score >= 65 ? "#f59e0b" : "#6366f1";
+
+  return (
+    <div className="match-score-gauge" title={`${score}% AI Compatibility Score`}>
+      <svg height={radius * 2} width={radius * 2} className="gauge-svg">
+        <circle
+          stroke="rgba(23, 25, 21, 0.15)"
+          fill="#FFFDF4"
+          strokeWidth={stroke}
+          r={normalizedRadius}
+          cx={radius}
+          cy={radius}
+        />
+        <circle
+          stroke={strokeColor}
+          fill="transparent"
+          strokeWidth={stroke}
+          strokeDasharray={`${circumference} ${circumference}`}
+          style={{ strokeDashoffset, transition: "stroke-dashoffset 0.8s ease" }}
+          strokeLinecap="round"
+          r={normalizedRadius}
+          cx={radius}
+          cy={radius}
+          transform={`rotate(-90 ${radius} ${radius})`}
+        />
+      </svg>
+      <div className="gauge-text">
+        <strong>{score}</strong>
+        <small>%</small>
+      </div>
+    </div>
+  );
+}
+
 export function ListingCard({ listing, children, index = 0 }) {
+  const stockRatio = Math.min(100, Math.max(20, (listing.quantity || 1) * 12));
+
   return (
     <article className="panel listing-card">
       <div
@@ -40,32 +82,57 @@ export function ListingCard({ listing, children, index = 0 }) {
             {listing.category === "banquet_hall" ? "⌂" : "▦"}
           </span>
         )}
-        <Badge>{listing.category}</Badge>
+        <div className="listing-cover-badges">
+          <Badge>{listing.category?.replaceAll("_", " ")}</Badge>
+        </div>
+        {listing.score !== undefined && (
+          <div className="listing-score-badge-wrapper">
+            <MatchScoreGauge score={listing.score} />
+          </div>
+        )}
       </div>
       <div className="listing-body">
-        <h3>{listing.title}</h3>
-        <p>
-          {listing.city} · {listing.capacity} capacity · {listing.quantity}{" "}
-          units
-        </p>
-        <p className="price">
-          {money(listing.price)} <small>/ {listing.unit} / unit</small>
-        </p>
-        {listing.estimatedTotal !== undefined && (
-          <p>
-            Estimated rental: <strong>{money(listing.estimatedTotal)}</strong>
-          </p>
+        <div className="listing-header-row">
+          <h3>{listing.title}</h3>
+        </div>
+
+        <div className="spec-chip-strip">
+          <span className="spec-chip">📍 {listing.city}</span>
+          <span className="spec-chip">👥 {listing.capacity} cap</span>
+          <span className="spec-chip">📦 {listing.quantity} {listing.unit || "units"}</span>
+        </div>
+
+        <div className="listing-price-row">
+          <div className="price">
+            {money(listing.price)} <small>/ {listing.unit}</small>
+          </div>
+          {listing.estimatedTotal !== undefined && (
+            <div className="estimated-pill" title="Estimated cost for selected event timeframe">
+              <span>Total:</span> <strong>{money(listing.estimatedTotal)}</strong>
+            </div>
+          )}
+        </div>
+
+        <div className="stock-meter-container">
+          <div className="stock-meter-labels">
+            <span>Inventory Capacity</span>
+            <strong>{listing.quantity} ready</strong>
+          </div>
+          <div className="stock-meter-track">
+            <div className="stock-meter-fill" style={{ width: `${stockRatio}%` }} />
+          </div>
+        </div>
+
+        {listing.reasons?.length > 0 && (
+          <div className="reason-pills-wrap">
+            {listing.reasons.map((r) => (
+              <span key={r} className="reason-chip">
+                <span className="chip-check">✓</span> {r}
+              </span>
+            ))}
+          </div>
         )}
-        {listing.score !== undefined && (
-          <>
-            <Badge>{listing.score} / 100 match</Badge>
-            <ul className="reasons">
-              {listing.reasons.map((r) => (
-                <li key={r}>{r}</li>
-              ))}
-            </ul>
-          </>
-        )}
+
         <div className="actions">{children}</div>
       </div>
     </article>

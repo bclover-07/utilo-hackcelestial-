@@ -430,64 +430,250 @@ class BookingsScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        identity(b['listing']),
-                        style: Theme.of(context).textTheme.titleLarge,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              identity(b['listing']),
+                              style: Theme.of(context).textTheme.titleLarge,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: b['status'] == 'completed'
+                                  ? teal
+                                  : b['status'] == 'in_progress'
+                                  ? yellow
+                                  : lavender,
+                              border: Border.all(color: ink, width: 1.5),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${b['status']}'.toUpperCase(),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      Chip(label: Text('${b['status']}')),
-                      DataView(b),
-                      AsyncButton(
-                        text: 'Export to calendar',
-                        icon: Icons.calendar_month,
-                        run: () => shareDownload(
-                          session.api,
-                          '/bookings/${b['_id']}/calendar',
-                          'utlio-booking.ics',
-                          'text/calendar',
+                      const SizedBox(height: 6),
+                      Text(
+                        '${identity(b['provider'])} ↔ ${identity(b['seeker'])}',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // 4-Step Visual Stage Indicator
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                          horizontal: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: card,
+                          border: Border.all(color: ink, width: 1.5),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            for (int idx = 0; idx < 4; idx++) ...[
+                              if (idx > 0)
+                                Expanded(
+                                  child: Container(
+                                    height: 3,
+                                    color: (b['status'] == 'completed' &&
+                                                idx <= 2) ||
+                                            (b['status'] == 'in_progress' &&
+                                                idx <= 1)
+                                        ? ink
+                                        : Colors.grey.shade300,
+                                  ),
+                                ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: (idx == 0) ||
+                                          (idx == 1 &&
+                                              [
+                                                'in_progress',
+                                                'completed',
+                                              ].contains(b['status'])) ||
+                                          (idx == 2 &&
+                                              b['status'] == 'completed')
+                                      ? yellow
+                                      : Colors.white,
+                                  border: Border.all(color: ink, width: 1.5),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  ['Confirmed', 'Active', 'Done', 'Review'][idx],
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
+                      const SizedBox(height: 14),
+
+                      // Booking Facts Cards
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: paper,
+                          border: Border.all(color: ink, width: 1.5),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.calendar_month, size: 16),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    '${start.toLocal().toString().split(' ')[0]} → ${end.toLocal().toString().split(' ')[0]}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                const Icon(Icons.currency_rupee, size: 16),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    'Rental: ₹${b['price']} · ${b['quantity']} units · Deposit: ₹${b['deposit'] ?? 0}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (b['logistics'] != null) ...[
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  const Icon(Icons.local_shipping, size: 16),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      'Handover: ${b['logistics']}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                            if (b['conditions'] != null &&
+                                '${b['conditions']}'.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                'Terms: ${b['conditions']}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          AsyncButton(
+                            text: 'Export calendar (.ics)',
+                            icon: Icons.calendar_month,
+                            run: () => shareDownload(
+                              session.api,
+                              '/bookings/${b['_id']}/calendar',
+                              'utlio-booking.ics',
+                              'text/calendar',
+                            ),
+                          ),
+                          if (provider &&
+                              [
+                                'confirmed',
+                                'in_progress',
+                              ].contains(b['status']))
+                            AsyncButton(
+                              text: b['status'] == 'confirmed'
+                                  ? 'Start fulfilment'
+                                  : 'Mark completed',
+                              enabled: b['status'] == 'confirmed'
+                                  ? !start.isAfter(DateTime.now())
+                                  : !end.isAfter(DateTime.now()),
+                              run: () async {
+                                await session.api.call(
+                                  '/bookings/${b['_id']}/status',
+                                  method: 'PATCH',
+                                  body: {
+                                    'status': b['status'] == 'confirmed'
+                                        ? 'in_progress'
+                                        : 'completed',
+                                  },
+                                );
+                                await reload();
+                                return 'Booking updated.';
+                              },
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
                       ExpansionTile(
-                        title: const Text('Agreement & offer history'),
+                        title: const Text('Agreement & offer record'),
                         children: [
                           Remote(
                             api: session.api,
                             path: '/bookings/${b['_id']}/summary',
-                            builder: (v, _) => DataView(v),
+                            builder: (v, _) => Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (v is Map && v['booking'] != null)
+                                    Text(
+                                      'Reference: ${v['booking']['_id']}\nCancellation notice: ${v['booking']['cancellationHours'] ?? 24} hours',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    'Payments are arranged directly between businesses.',
+                                    style: TextStyle(
+                                      fontStyle: FontStyle.italic,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                      if (provider &&
-                          [
-                            'confirmed',
-                            'in_progress',
-                          ].contains(b['status'])) ...[
-                        Text(
-                          b['status'] == 'confirmed'
-                              ? 'Fulfilment can start from ${start.toLocal()}.'
-                              : 'Completion available from ${end.toLocal()}.',
-                        ),
-                        AsyncButton(
-                          text: b['status'] == 'confirmed'
-                              ? 'Start fulfilment'
-                              : 'Mark completed',
-                          enabled: b['status'] == 'confirmed'
-                              ? !start.isAfter(DateTime.now())
-                              : !end.isAfter(DateTime.now()),
-                          run: () async {
-                            await session.api.call(
-                              '/bookings/${b['_id']}/status',
-                              method: 'PATCH',
-                              body: {
-                                'status': b['status'] == 'confirmed'
-                                    ? 'in_progress'
-                                    : 'completed',
-                              },
-                            );
-                            await reload();
-                            return 'Booking updated.';
-                          },
-                        ),
-                      ],
                       if (b['status'] == 'confirmed' &&
                           start.isAfter(DateTime.now()))
                         ExpansionTile(
@@ -516,7 +702,7 @@ class BookingsScreen extends StatelessWidget {
                         ),
                       if (b['status'] == 'completed')
                         ExpansionTile(
-                          title: const Text('Write a review'),
+                          title: const Text('Leave a review'),
                           children: [
                             FieldsForm(
                               submit: 'Publish review',
@@ -525,11 +711,11 @@ class BookingsScreen extends StatelessWidget {
                                   'score',
                                   'Rating',
                                   options: {
-                                    '5': '5 — Excellent',
-                                    '4': '4 — Good',
-                                    '3': '3 — Okay',
-                                    '2': '2 — Poor',
-                                    '1': '1 — Very poor',
+                                    '5': '5 ★ — Excellent',
+                                    '4': '4 ★ — Good',
+                                    '3': '3 ★ — Okay',
+                                    '2': '2 ★ — Poor',
+                                    '1': '1 ★ — Very poor',
                                   },
                                   initial: '5',
                                 ),
@@ -550,28 +736,135 @@ class BookingsScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                      ExpansionTile(
-                        title: const Text('Open a dispute'),
+                      if (b['status'] != 'cancelled')
+                        ExpansionTile(
+                          title: const Text('Report an issue / Open dispute'),
+                          children: [
+                            FieldsForm(
+                              submit: 'Submit dispute claim',
+                              fields: const [
+                                FieldSpec(
+                                  'reason',
+                                  'What happened?',
+                                  type: 'multiline',
+                                ),
+                              ],
+                              onSubmit: (v) async {
+                                await session.api.call(
+                                  '/bookings/${b['_id']}/dispute',
+                                  method: 'POST',
+                                  body: v,
+                                );
+                                return 'Dispute opened. Track it under Disputes & Claims.';
+                              },
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          );
+        },
+      ),
+    ],
+  );
+}
+
+class ReviewsScreen extends StatelessWidget {
+  const ReviewsScreen({super.key, required this.session});
+  final Session session;
+
+  @override
+  Widget build(BuildContext context) => PageBody(
+    title: 'Trust, earned together.',
+    subtitle: 'Reviews come from completed bookings, in both directions.',
+    children: [
+      Remote(
+        api: session.api,
+        path: '/reviews',
+        builder: (data, reload) {
+          final list = records(data);
+          final myId = session.user?['_id'];
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  AsyncButton(
+                    text: 'Refresh',
+                    run: reload,
+                    icon: Icons.refresh,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (list.isEmpty)
+                const Empty(
+                  text:
+                      'A reputation starts with a booking. After fulfilment, both businesses can leave a review from the booking page.',
+                ),
+              ...list.map((r) {
+                final fromMe = r['from']?['_id'] == myId;
+                final score =
+                    (r['score'] is num) ? (r['score'] as num).toInt() : 5;
+                return Panel(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          FieldsForm(
-                            submit: 'Open dispute',
-                            fields: const [
-                              FieldSpec(
-                                'reason',
-                                'What happened?',
-                                type: 'multiline',
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: fromMe ? yellow : teal,
+                              border: Border.all(color: ink, width: 1.5),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              fromMe ? 'GIVEN' : 'RECEIVED',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 11,
                               ),
-                            ],
-                            onSubmit: (v) async {
-                              await session.api.call(
-                                '/bookings/${b['_id']}/dispute',
-                                method: 'POST',
-                                body: v,
-                              );
-                              return 'Dispute opened.';
-                            },
+                            ),
+                          ),
+                          Row(
+                            children: List.generate(
+                              5,
+                              (i) => Icon(
+                                i < score ? Icons.star : Icons.star_border,
+                                color: i < score
+                                    ? const Color(0xfff59e0b)
+                                    : Colors.grey,
+                                size: 20,
+                              ),
+                            ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        '${r['comment'] ?? ''}',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        '${r['from']?['name'] ?? 'User'} → ${r['to']?['name'] ?? 'Partner'} · ${r['createdAt'] != null ? DateTime.tryParse('${r['createdAt']}')?.toLocal().toString().split(' ')[0] ?? '' : ''}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.black87,
+                        ),
                       ),
                     ],
                   ),
@@ -584,3 +877,126 @@ class BookingsScreen extends StatelessWidget {
     ],
   );
 }
+
+class DisputesScreen extends StatelessWidget {
+  const DisputesScreen({super.key, required this.session});
+  final Session session;
+
+  @override
+  Widget build(BuildContext context) => PageBody(
+    title: 'Let\'s work it out.',
+    subtitle: 'Booking issues and their resolution history.',
+    children: [
+      Remote(
+        api: session.api,
+        path: '/disputes',
+        builder: (data, reload) {
+          final list = records(data);
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  AsyncButton(
+                    text: 'Refresh disputes',
+                    run: reload,
+                    icon: Icons.refresh,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (list.isEmpty)
+                const Empty(
+                  text:
+                      'No disputes to track. If an issue arises, open a dispute from the relevant booking.',
+                ),
+              ...list.map((d) {
+                final status = '${d['status'] ?? 'open'}';
+                final isResolved = status == 'resolved';
+                final statusColor =
+                    isResolved ? teal : const Color(0xffff6b6b);
+                final bookingId =
+                    '${d['booking']?['_id'] ?? d['booking'] ?? ''}';
+                return Panel(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: statusColor,
+                              border: Border.all(color: ink, width: 1.5),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              status.toUpperCase(),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                          if (bookingId.isNotEmpty)
+                            Text(
+                              'Booking ${bookingId.length > 8 ? bookingId.substring(bookingId.length - 8) : bookingId}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Reason: ${d['reason'] ?? 'Not specified'}',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (d['resolution'] != null &&
+                          '${d['resolution']}'.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: paper,
+                            border: Border.all(color: ink, width: 1.5),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Resolution',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text('${d['resolution']}'),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              }),
+            ],
+          );
+        },
+      ),
+    ],
+  );
+}
+

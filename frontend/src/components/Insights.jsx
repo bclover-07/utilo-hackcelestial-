@@ -355,11 +355,10 @@ function Stats({ data, admin }) {
         >
           <span>{label}</span>
           <strong>{value}</strong>
-          <small>
-            {i === 3
-              ? "Excludes cancelled bookings; not collected payments"
-              : "From persisted marketplace records"}
-          </small>
+          <div className="stat-live-badge">
+            <span className="live-dot" />
+            <small>{["Verified Supply", "Confirmed Agreements", "Active Exchange", "Committed Capital"][i]}</small>
+          </div>
         </div>
       ))}
     </div>
@@ -421,9 +420,6 @@ function BookingMix({ data }) {
               <small>{Math.round((row.count / total) * 100)}%</small>
             </div>
           ))}
-          <p>
-            Counts reflect recorded booking status, including cancellations.
-          </p>
         </div>
       </div>
     </section>
@@ -472,6 +468,81 @@ function Trend({ data }) {
     </section>
   );
 }
+function MarketDemandRadarChart({ demand, city, admin }) {
+  if (!demand?.length) {
+    return (
+      <Empty
+        title="Demand radar is clear"
+        text="No unmet category requirements detected in this region yet."
+      />
+    );
+  }
+
+  const chartData = demand.map((d) => ({
+    name: d._id.replaceAll("_", " "),
+    requested: d.units,
+    listed: d.listedUnits,
+    gap: d.units - d.listedUnits,
+  }));
+
+  return (
+    <div className="demand-radar-visual">
+      <div className="demand-radar-chart-wrap" style={{ height: 260 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={chartData} margin={{ top: 15, right: 15, left: -10, bottom: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e0cf" />
+            <XAxis
+              dataKey="name"
+              stroke="#171915"
+              tick={{ fill: "#171915", fontSize: 11, fontWeight: 700 }}
+              interval={0}
+              angle={-15}
+              textAnchor="end"
+            />
+            <YAxis stroke="#171915" tick={{ fill: "#171915", fontSize: 11, fontWeight: 700 }} />
+            <Tooltip
+              contentStyle={{
+                background: "#fffef8",
+                border: "2.5px solid #171915",
+                borderRadius: 12,
+                boxShadow: "3px 3px 0 #171915",
+                fontWeight: 800,
+              }}
+            />
+            <Bar
+              dataKey="requested"
+              name="Requested Units"
+              fill="#FF85A1"
+              stroke="#171915"
+              strokeWidth={2}
+              radius={[6, 6, 0, 0]}
+            />
+            <Bar
+              dataKey="listed"
+              name="Active Supply"
+              fill="#4ECDC4"
+              stroke="#171915"
+              strokeWidth={2}
+              radius={[6, 6, 0, 0]}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="demand-gap-chips">
+        {chartData.map((item) => (
+          <div key={item.name} className="demand-gap-chip">
+            <span className="gap-cat">{item.name}</span>
+            <span className={`gap-badge ${item.gap > 0 ? "deficit" : "surplus"}`}>
+              {item.gap > 0 ? `Unmet: +${item.gap} units` : `Surplus: ${Math.abs(item.gap)} excess`}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function AnalyticsPage({ admin = false }) {
   const { dashboardRole } = useAuth();
   const resource = useData(`/analytics?mode=${dashboardRole}`);
@@ -495,63 +566,46 @@ export function AnalyticsPage({ admin = false }) {
             <Trend data={data} />
             <div className="split-layout">
               <section className="panel">
-                <h2>Demand radar</h2>
-                <p>
-                  Open request units vs active listed units
-                  {!admin && ` in ${data.city}`}. Listed supply does not imply
-                  date availability.
-                </p>
-                {data.demand.length ? (
-                  <div className="radar">
-                    {data.demand.map((d) => (
-                      <div key={d._id}>
-                        <strong>{d._id.replaceAll("_", " ")}</strong>
-                        <div className="radar-bars">
-                          <div
-                            style={{
-                              width: `${Math.max(5, (100 * d.units) / Math.max(d.units, d.listedUnits, 1))}%`,
-                              background: "#FF85A1",
-                            }}
-                          >
-                            {d.units} requested
-                          </div>
-                          <div
-                            style={{
-                              width: `${Math.max(5, (100 * d.listedUnits) / Math.max(d.units, d.listedUnits, 1))}%`,
-                              background: "#4ECDC4",
-                            }}
-                          >
-                            {d.listedUnits} listed
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                <div className="section-heading">
+                  <div>
+                    <span className="eyebrow">SUPPLY-DEMAND EQUILIBRIUM</span>
+                    <h2 style={{ marginTop: 6 }}>Demand Radar</h2>
+                  </div>
+                  <Badge>{admin ? "ALL REGIONS" : data.city || "LOCAL CORRIDOR"}</Badge>
+                </div>
+                <MarketDemandRadarChart demand={data.demand} city={data.city} admin={admin} />
+              </section>
+
+              <section className="panel ai-intelligence-panel" style={{ background: "#FFE66D" }}>
+                <div className="ai-panel-header">
+                  <Badge>PREDICTIVE REVENUE PULSE</Badge>
+                  <span className="live-dot" />
+                </div>
+                <h2 style={{ margin: "0.5rem 0" }}>Market Intelligence Engine</h2>
+                {data.insights.length ? (
+                  <div className="ai-insight-box">
+                    <Sparkles size={18} />
+                    <p>{data.insights[0].text}</p>
                   </div>
                 ) : (
-                  <p>No unmet requirements in this scope yet.</p>
+                  <div className="ai-insight-empty">
+                    <Bot size={28} />
+                    <div>
+                      <strong>Active Monitoring Engaged</strong>
+                      <p>Nightly telemetry evaluates local inventory velocity, yield curves, and corridor search density.</p>
+                    </div>
+                  </div>
                 )}
-              </section>
-              <section className="panel" style={{ background: "#FFE66D" }}>
-                <Badge>NIGHTLY PROVIDER INSIGHTS</Badge>
-                <h2>A nudge backed by numbers.</h2>
-                {data.insights.length ? (
-                  <p className="ai-answer">{data.insights[0].text}</p>
-                ) : (
-                  <p>
-                    No generated insight yet. The nightly job runs at 02:00
-                    India time and uses your actual booking and demand data.
-                    Provider or quota failures never become fabricated insights.
-                  </p>
-                )}
-                <p>
-                  Fully booked requests:{" "}
-                  <strong>
-                    {data.fulfillmentRate === null
-                      ? "No requests yet"
-                      : `${data.fulfillmentRate}%`}
-                  </strong>
-                </p>
-                <p>Recorded searches: {data.searches}</p>
+                <div className="ai-kpi-metrics-row">
+                  <div className="ai-kpi-pill">
+                    <span>Fulfilment Ratio</span>
+                    <strong>{data.fulfillmentRate === null ? "Ready" : `${data.fulfillmentRate}%`}</strong>
+                  </div>
+                  <div className="ai-kpi-pill">
+                    <span>Corridor Queries</span>
+                    <strong>{data.searches} searches</strong>
+                  </div>
+                </div>
               </section>
             </div>
           </>

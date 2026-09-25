@@ -29,20 +29,28 @@ export function VerificationsPage() {
           data.length ? (
             <div className="card-grid">
               {data.map((u) => (
-                <article className="panel" key={u._id}>
-                  <Badge>{u.verification}</Badge>
-                  <h2>{u.name}</h2>
-                  <p>
-                    {u.category} · {u.city}
-                  </p>
-                  <p>
-                    {u.email} · {u.phone}
-                  </p>
-                  <p>Registration: {u.gstin || "Not supplied"}</p>
+                <article className="panel verification-card-neo" key={u._id}>
+                  <div className="section-heading">
+                    <div>
+                      <h2>{u.name}</h2>
+                      <div className="spec-chip-strip" style={{ marginTop: 4 }}>
+                        <span className="spec-chip">🏢 {u.category}</span>
+                        <span className="spec-chip">📍 {u.city}</span>
+                        <span className="spec-chip">📄 GSTIN: {u.gstin || "Not supplied"}</span>
+                      </div>
+                    </div>
+                    <Badge>{u.verification}</Badge>
+                  </div>
+                  <div className="spec-chip-strip" style={{ margin: "0.5rem 0" }}>
+                    <span className="spec-chip">✉ {u.email}</span>
+                    <span className="spec-chip">📞 {u.phone}</span>
+                  </div>
                   {u.documentId ? (
-                    <PrivateDocument id={u.documentId} />
+                    <div style={{ margin: "0.75rem 0" }}>
+                      <PrivateDocument id={u.documentId} />
+                    </div>
                   ) : (
-                    <p>No document submitted.</p>
+                    <p className="hint">No compliance document submitted yet.</p>
                   )}
                   <ActionForm
                     label="Save decision"
@@ -481,23 +489,25 @@ export function SettingsPage() {
           </State>
         </section>
         <section className="panel" style={{ background: "#89CFF0" }}>
-          <h2>Integration configuration</h2>
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">SERVICES & APIS</span>
+              <h2 style={{ marginTop: 4 }}>Integration Status</h2>
+            </div>
+          </div>
           <State resource={integrations}>
             {(data) => (
-              <dl className="spec-list">
+              <div className="integration-status-grid">
                 {Object.entries(data).map(([key, value]) => (
-                  <div key={key}>
-                    <dt>{key}</dt>
-                    <dd>{value ? "Configured" : "Not configured"}</dd>
+                  <div key={key} className={`integration-chip ${value ? "is-active" : "is-inactive"}`}>
+                    <span className="integration-dot" />
+                    <strong>{key.toUpperCase()}</strong>
+                    <small>{value ? "Active" : "Unset"}</small>
                   </div>
                 ))}
-              </dl>
+              </div>
             )}
           </State>
-          <p>
-            Configured means a server-side setting is present. It does not
-            guarantee that credentials or quotas are valid.
-          </p>
         </section>
       </div>
       <section className="panel">

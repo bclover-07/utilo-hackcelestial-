@@ -3,6 +3,16 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import AgentDecision from "./AgentDecision";
 import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Legend,
+} from "recharts";
+import {
   useData,
   State,
   Heading,
@@ -12,6 +22,49 @@ import {
   money,
   colors,
 } from "./ui";
+
+function MarketComparisonChart({ comparables, suggestedPrice }) {
+  if (!comparables?.length) return null;
+  const chartData = comparables.map((c) => ({
+    name: c._id || "Per Unit",
+    min: c.minPrice,
+    avg: Math.round(c.avgPrice),
+    max: c.maxPrice,
+    count: c.count,
+  }));
+  return (
+    <div style={{ marginTop: "1rem", marginBottom: "1.25rem", padding: "1.2rem", background: "#FAF8F5", borderRadius: "16px", border: "2px solid #20201e", boxShadow: "3px 3px 0 #20201e" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "8px" }}>
+        <div>
+          <span className="eyebrow" style={{ color: "#0F766E" }}>BENCHMARK DISTRIBUTION</span>
+          <h3 style={{ margin: "2px 0 0" }}>Competitive Price Spectrum</h3>
+        </div>
+        {suggestedPrice && (
+          <span className="badge" style={{ background: "#FFE66D", border: "2px solid #20201e" }}>
+            Suggested: {money(suggestedPrice)}
+          </span>
+        )}
+      </div>
+      <div style={{ width: "100%", height: 220 }}>
+        <ResponsiveContainer>
+          <BarChart data={chartData} barGap={4}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E0CF" />
+            <XAxis dataKey="name" stroke="#20201e" tick={{ fontSize: 11, fontWeight: 700 }} />
+            <YAxis stroke="#20201e" tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}`} />
+            <Tooltip
+              formatter={(val, name) => [money(val), name === "min" ? "Floor Price" : name === "avg" ? "Market Average" : "Ceiling Price"]}
+              contentStyle={{ background: "#fffef8", border: "2px solid #20201e", borderRadius: 10, fontWeight: 700 }}
+            />
+            <Legend wrapperStyle={{ paddingTop: "8px", fontSize: "12px", fontWeight: 700 }} />
+            <Bar dataKey="min" fill="#A8E6CF" name="Floor Price" radius={[4, 4, 0, 0]} stroke="#20201e" strokeWidth={1.5} />
+            <Bar dataKey="avg" fill="#FFE66D" name="Market Average" radius={[4, 4, 0, 0]} stroke="#20201e" strokeWidth={1.5} />
+            <Bar dataKey="max" fill="#FF85A1" name="Ceiling Price" radius={[4, 4, 0, 0]} stroke="#20201e" strokeWidth={1.5} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
 
 export function SmartPricingPage() {
   const categories = useData("/categories");
@@ -171,6 +224,10 @@ export function SmartPricingPage() {
           {result.comparables?.length > 0 && (
             <section className="panel">
               <h2>Market comparison</h2>
+              <MarketComparisonChart
+                comparables={result.comparables}
+                suggestedPrice={result.autoPilotRecommendation?.recommendedDynamicPrice}
+              />
               <div className="forecast-grid">
                 {result.comparables.map((c, i) => (
                   <div

@@ -12,26 +12,58 @@ List<Json> records(dynamic value) => value is List
     ? value.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList()
     : [];
 
-class Panel extends StatelessWidget {
-  const Panel({super.key, required this.child, this.color = card});
+class Panel extends StatefulWidget {
+  const Panel({super.key, required this.child, this.color = card, this.onTap});
   final Widget child;
   final Color color;
+  final VoidCallback? onTap;
+  @override
+  State<Panel> createState() => _PanelState();
+}
+
+class _PanelState extends State<Panel> {
+  bool _pressed = false;
+
   @override
   Widget build(BuildContext context) => TweenAnimationBuilder<double>(
     tween: Tween(begin: 0, end: 1),
-    duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 240),
-    builder: (context, value, child) => Opacity(opacity: value, child: Transform.translate(offset: Offset(0, (1 - value) * 8), child: child)),
-    child: Container(
-    margin: const EdgeInsets.only(bottom: 18, right: 5),
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      color: color,
-      borderRadius: BorderRadius.circular(18),
-      border: Border.all(color: ink, width: 2.5),
-      boxShadow: const [BoxShadow(color: ink, offset: Offset(4, 5))],
+    duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 280),
+    curve: Curves.easeOutCubic,
+    builder: (context, value, child) => Opacity(
+      opacity: value.clamp(0.0, 1.0),
+      child: Transform.translate(
+        offset: Offset(0, (1 - value) * 10),
+        child: child,
+      ),
     ),
-    child: child,
-  ));
+    child: GestureDetector(
+      onTapDown: widget.onTap != null ? (_) => setState(() => _pressed = true) : null,
+      onTapUp: widget.onTap != null ? (_) => setState(() => _pressed = false) : null,
+      onTapCancel: widget.onTap != null ? () => setState(() => _pressed = false) : null,
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _pressed ? 0.98 : 1.0,
+        duration: const Duration(milliseconds: 110),
+        curve: Curves.easeInOut,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 16, right: 3),
+          padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 400 ? 14 : 20),
+          decoration: BoxDecoration(
+            color: widget.color,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: ink, width: 2.5),
+            boxShadow: [
+              BoxShadow(
+                color: ink,
+                offset: _pressed ? const Offset(2, 2) : const Offset(4, 5),
+              ),
+            ],
+          ),
+          child: widget.child,
+        ),
+      ),
+    ),
+  );
 }
 
 class PageBody extends StatelessWidget {
@@ -47,18 +79,37 @@ class PageBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scrollbar(
     child: SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 40),
+      padding: EdgeInsets.fromLTRB(
+        MediaQuery.sizeOf(context).width < 400 ? 12 : 20,
+        18,
+        MediaQuery.sizeOf(context).width < 400 ? 12 : 20,
+        40,
+      ),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1100),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(title, style: Theme.of(context).textTheme.headlineMedium),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                ),
+              ),
               if (subtitle != null)
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Text(subtitle!),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    subtitle!,
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey.shade400
+                          : Colors.grey.shade700,
+                      fontSize: 14,
+                    ),
+                  ),
                 ),
               const SizedBox(height: 18),
               ...children,
@@ -88,40 +139,60 @@ class AsyncButton extends StatefulWidget {
 
 class _AsyncButtonState extends State<AsyncButton> {
   bool busy = false;
+  bool pressed = false;
   String? error;
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      FilledButton.icon(
-        onPressed: busy || !widget.enabled
-            ? null
-            : () async {
-                setState(() {
-                  busy = true;
-                  error = null;
-                });
-                try {
-                  final result = await widget.run();
-                  if (context.mounted && result is String) {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text(result)));
-                  }
-                } catch (e) {
-                  if (mounted) setState(() => error = e.toString());
-                } finally {
-                  if (mounted) setState(() => busy = false);
-                }
-              },
-        icon: busy
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Icon(widget.icon, size: 18),
-        label: Text(busy ? 'Working…' : widget.text),
+      AnimatedScale(
+        scale: pressed ? 0.96 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeInOut,
+        child: Listener(
+          onPointerDown: (_) => setState(() => pressed = true),
+          onPointerUp: (_) => setState(() => pressed = false),
+          onPointerCancel: (_) => setState(() => pressed = false),
+          child: FilledButton.icon(
+            onPressed: busy || !widget.enabled
+                ? null
+                : () async {
+                    setState(() {
+                      busy = true;
+                      error = null;
+                    });
+                    try {
+                      final result = await widget.run();
+                      if (context.mounted && result is String) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(result),
+                            backgroundColor: ink,
+                            behavior: SnackBarBehavior.floating,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) setState(() => error = e.toString());
+                    } finally {
+                      if (mounted) setState(() => busy = false);
+                    }
+                  },
+            icon: busy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(widget.icon, size: 18),
+            label: Text(
+              busy ? 'Working…' : widget.text,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ),
       ),
       if (error != null)
         Padding(
@@ -461,6 +532,8 @@ class _FieldsFormState extends State<FieldsForm> {
           icon: const Icon(Icons.calendar_month),
           label: Text(
             '${f.title}: ${values[f.key] == '' ? 'Choose date & time' : DateTime.tryParse('${values[f.key]}')?.toLocal().toString() ?? values[f.key]}',
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
           onPressed: () async {
             final date = await showDatePicker(
