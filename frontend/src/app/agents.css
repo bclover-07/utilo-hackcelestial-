@@ -41,10 +41,10 @@
 .studio-queue-grid strong { display: block; font-size: 30px; }
 .studio-queue-grid span { font-size: 12px; }
 .source-context { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #545a51; margin-bottom: 16px; }
-.cited-claim { border-left: 3px solid #479f8d; padding: 6px 0 6px 18px; margin: 18px 0; }
+.cited-claim { border-left: 3.5px solid var(--ink); padding: 6px 0 6px 18px; margin: 18px 0; }
 .cited-claim p { margin: 0 0 10px; }
 .cited-claim > div { display: flex; flex-wrap: wrap; gap: 8px; }
-.cited-claim a { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 5px 8px; border: 1px solid #a3b6a9; border-radius: 6px; background: #e7f3e9; }
+.cited-claim a { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 5px 8px; border: 2px solid var(--ink); border-radius: 8px; background: #e7f3e9; }
 .agent-catalog { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; margin: 20px 0 30px; }
 .agent-directory-card.panel { margin: 0; display: flex; flex-direction: column; gap: 10px; }
 .agent-directory-card h3,.agent-directory-card p { margin: 0; }

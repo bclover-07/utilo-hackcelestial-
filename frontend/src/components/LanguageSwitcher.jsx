@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useSyncExternalStore } from "react";
 import { Globe, ChevronDown, Check } from "lucide-react";
 
 export const LANGUAGES = [
@@ -19,32 +19,27 @@ export const LANGUAGES = [
   { code: "te", name: "Telugu", nativeName: "తెలుగు", flag: "🇮🇳" },
 ];
 
+function readLanguage() {
+  const match = document.cookie.match(/(?:^|; )googtrans=([^;]+)/);
+  const value = match?.[1]?.split("/").at(-1) || localStorage.getItem("utlio_lang");
+  return LANGUAGES.some(language => language.code === value) ? value : "en";
+}
+function subscribeLanguage(listener) {
+  window.addEventListener("utlio:language", listener);
+  window.addEventListener("storage", listener);
+  return () => { window.removeEventListener("utlio:language", listener); window.removeEventListener("storage", listener); };
+}
+function persistLanguage(langCode) {
+  localStorage.setItem("utlio_lang", langCode);
+  document.cookie = `googtrans=/en/${langCode}; path=/; SameSite=Lax`;
+  window.dispatchEvent(new Event("utlio:language"));
+}
 export default function LanguageSwitcher({ compact = false }) {
-  const [selectedLang, setSelectedLang] = useState("en");
+  const selectedLang = useSyncExternalStore(subscribeLanguage, readLanguage, () => "en");
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-    // Check cookie or localStorage for pre-selected language
-    const getCookie = (name) => {
-      const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
-      return match ? match[2] : null;
-    };
-
-    const googtrans = getCookie("googtrans");
-    if (googtrans) {
-      const parts = googtrans.split("/");
-      const lang = parts.at(-1);
-      if (lang && LANGUAGES.some((l) => l.code === lang)) {
-        setSelectedLang(lang);
-      }
-    } else {
-      const saved = localStorage.getItem("utlio_lang");
-      if (saved && LANGUAGES.some((l) => l.code === saved)) {
-        setSelectedLang(saved);
-      }
-    }
-
     // Close dropdown on outside click
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -56,18 +51,8 @@ export default function LanguageSwitcher({ compact = false }) {
   }, []);
 
   const changeLanguage = (langCode) => {
-    setSelectedLang(langCode);
     setIsOpen(false);
-    localStorage.setItem("utlio_lang", langCode);
-
-    // Set Google Translate cookie
-    const hostname = window.location.hostname;
-    const cookieVal = `/en/${langCode}`;
-    document.cookie = `googtrans=${cookieVal}; path=/;`;
-    if (hostname !== "localhost") {
-      document.cookie = `googtrans=${cookieVal}; path=/; domain=.${hostname};`;
-      document.cookie = `googtrans=${cookieVal}; path=/; domain=${hostname};`;
-    }
+    persistLanguage(langCode);
 
     // Attempt to trigger the native Google Translate select box if initialized
     const select = document.querySelector(".goog-te-combo");

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import LocalAi from "./LocalAi";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -168,6 +169,7 @@ function ListingForm({ initial }) {
     { user } = useAuth(),
     router = useRouter();
   const [category, setCategory] = useState(initial?.category || ""),
+    [description, setDescription] = useState(initial?.description || ""),
     [photos, setPhotos] = useState(initial?.photos || []);
   return (
     <>
@@ -241,10 +243,12 @@ function ListingForm({ initial }) {
                   as="textarea"
                   name="description"
                   rows={4}
-                  defaultValue={initial?.description}
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
                   minLength={10}
                   required
                 />
+                <LocalAi task="polish" text={description} onApply={setDescription} />
                 <div className="form-grid">
                   {[
                     ["quantity", "Units available", 1],

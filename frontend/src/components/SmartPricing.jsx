@@ -122,7 +122,7 @@ export function SmartPricingPage() {
             <AgentDecision decision={result.decision} generation={result.generation} hideSummary />
 
             {result.cannibalization?.detected && (
-              <div className="panel" style={{ marginTop: "1rem", background: "#ffebee", border: "2px solid #ef5350", borderRadius: "10px", padding: "1rem" }}>
+              <div className="panel" style={{ marginTop: "1rem", background: "#ffebee", border: "2.5px solid #171915", borderRadius: "16px", padding: "1rem", boxShadow: "3px 3px 0 #171915" }}>
                 <span className="eyebrow" style={{ color: "#c62828", fontSize: "0.75rem", letterSpacing: "0.08em" }}>INVENTORY CANNIBALIZATION ALERT</span>
                 <h4 style={{ margin: "0.25rem 0", color: "#b71c1c" }}>Cross-Listing Margin Risk</h4>
                 {result.cannibalization.warnings.map((w, idx) => (
@@ -134,7 +134,7 @@ export function SmartPricingPage() {
             )}
 
             {result.autoPilotRecommendation && (
-              <div className="panel" style={{ marginTop: "1rem", background: "#e8f5e9", border: "2px solid #4caf50", borderRadius: "10px", padding: "1rem" }}>
+              <div className="panel" style={{ marginTop: "1rem", background: "#e8f5e9", border: "2.5px solid #171915", borderRadius: "16px", padding: "1rem", boxShadow: "3px 3px 0 #171915" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
                   <div>
                     <span className="eyebrow" style={{ fontSize: "0.75rem", letterSpacing: "0.08em", color: "#2e7d32" }}>DYNAMIC PRICING AUTO-PILOT</span>

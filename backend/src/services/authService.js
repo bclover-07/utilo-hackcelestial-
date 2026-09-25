@@ -32,7 +32,8 @@ export async function register(body) {
   const { password, ...fields } = data;
   return BusinessProfile.create({
     ...fields,
-    verification: "verified",
+    role: "business",
+    verification: "pending",
     passwordHash: await bcrypt.hash(password, 12),
   });
 }

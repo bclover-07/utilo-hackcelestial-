@@ -45,8 +45,7 @@ function ActivityPipelineVisual({ data, admin, dashboardRole, user }) {
       step: "01",
       badge: admin ? "Supply Pool" : seeker ? "Saved Supply" : "Active Inventory",
       val: admin ? data.businesses : seeker ? (user.favorites?.length || 0) : data.listings,
-      label: admin ? "Verified providers" : seeker ? "Saved items to book" : "Live resources",
-      meter: 85,
+      label: admin ? "Registered businesses" : seeker ? "Saved items to book" : "Listed resources",
       color: "var(--yellow)",
     },
     {
@@ -54,23 +53,21 @@ function ActivityPipelineVisual({ data, admin, dashboardRole, user }) {
       badge: "In Negotiation",
       val: data.quotes,
       label: "Active RFQ threads",
-      meter: Math.min(100, Math.max(15, (data.quotes || 0) * 25)),
       color: "var(--teal)",
     },
     {
       step: "03",
-      badge: "Agreed Escrow",
+      badge: "Agreed booking value",
       val: money(data.totalValue),
       label: "Committed exchange value",
-      meter: data.totalValue > 0 ? 92 : 20,
       color: "var(--lavender)",
     },
     {
       step: "04",
-      badge: "Fulfilment SLA",
-      val: data.fulfillmentRate === null ? "98.4%" : `${data.fulfillmentRate}%`,
-      label: "Completed handover rate",
-      meter: data.fulfillmentRate || 98,
+      badge: "Request fulfilment",
+      val: data.fulfillmentRate === null ? "No requests yet" : `${data.fulfillmentRate}%`,
+      label: "Fully confirmed requirements",
+      meter: data.fulfillmentRate,
       color: "var(--mint)",
     },
   ];
@@ -86,12 +83,12 @@ function ActivityPipelineVisual({ data, admin, dashboardRole, user }) {
           <div>
             <div className="pipeline-val">{st.val}</div>
             <div className="pipeline-label">{st.label}</div>
-            <div className="pipeline-meter-bar">
+            {st.meter != null && <div className="pipeline-meter-bar">
               <div
                 className="pipeline-meter-fill"
                 style={{ width: `${st.meter}%`, background: st.color }}
               />
-            </div>
+            </div>}
           </div>
         </div>
       ))}

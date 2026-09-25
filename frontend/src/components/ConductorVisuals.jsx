@@ -27,7 +27,7 @@ export default function ConductorVisuals({ plan, option }) {
     )}
 
     {plan.result?.scenarioSummary && (
-      <div className="conductor-resilience-strip" style={{ marginTop: "1rem", padding: "1rem", borderRadius: "12px", border: "2px solid #20201e", background: "#f8f9fa", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+      <div className="conductor-resilience-strip" style={{ marginTop: "1rem", padding: "1rem", borderRadius: "16px", border: "2.5px solid #171915", background: "#f8f9fa", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem", boxShadow: "3px 3px 0 #171915" }}>
         <div>
           <span className="eyebrow" style={{ fontSize: "0.75rem", letterSpacing: "0.08em" }}>MONTE CARLO RESILIENCE</span>
           <h4 style={{ margin: "0.25rem 0", fontSize: "1.1rem" }}>Multi-Supplier Survivability</h4>
@@ -36,7 +36,7 @@ export default function ConductorVisuals({ plan, option }) {
           </p>
         </div>
         <div style={{ textAlign: "right", display: "flex", alignItems: "center", gap: "1rem" }}>
-          <div style={{ width: "110px", height: "12px", background: "#e0e0e0", borderRadius: "6px", overflow: "hidden" }}>
+          <div style={{ width: "110px", height: "12px", background: "#e0e0e0", borderRadius: "6px", overflow: "hidden", border: "1.5px solid #171915" }}>
             <div style={{ width: `${plan.result.scenarioSummary.resilienceScore || 100}%`, height: "100%", background: (plan.result.scenarioSummary.resilienceScore || 100) >= 80 ? "#4caf50" : "#ff9800", borderRadius: "6px" }} />
           </div>
           <strong style={{ fontSize: "1.3rem" }}>{plan.result.scenarioSummary.resilienceScore ?? 100}%</strong>
@@ -45,7 +45,7 @@ export default function ConductorVisuals({ plan, option }) {
     )}
 
     {plan.result?.gaps?.some(g => g.substituteHint) && (
-      <div className="panel conductor-substitutes" style={{ marginTop: "1rem", background: "#fff9c4", border: "2px dashed #fbc02d", padding: "1rem", borderRadius: "12px" }}>
+      <div className="panel conductor-substitutes" style={{ marginTop: "1rem", background: "#fff9c4", border: "2.5px dashed #171915", padding: "1rem", borderRadius: "16px", boxShadow: "3px 3px 0 #171915" }}>
         <h4 style={{ margin: "0 0 0.5rem 0", display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <span>💡</span> AI Substitute & Relaxation Suggestions
         </h4>

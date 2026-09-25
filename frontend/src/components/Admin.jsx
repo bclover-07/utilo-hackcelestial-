@@ -1,4 +1,5 @@
 "use client";
+import LocalAi, { conversationText } from "./LocalAi";
 import { useState } from "react";
 import { api } from "@/lib/api";
 import PrivateDocument from "./PrivateDocument";
@@ -149,6 +150,7 @@ export function AdminDisputes() {
             </p>
           ))}
           <h3>Messages</h3>
+          <LocalAi key={evidence.dispute._id} text={conversationText(evidence.messages)} />
           {evidence.messages.map((m) => (
             <p key={m._id}>
               <strong>{m.sender?.name}</strong>: {m.text}{" "}

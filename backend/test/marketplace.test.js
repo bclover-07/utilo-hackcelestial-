@@ -33,6 +33,9 @@ test("Real HTTP marketplace and agent contracts on an isolated replica set", { t
       return result;
     }
     const provider=await account("provider"), seeker=await account("seeker"), outsider=await account("outsider"), admin=await account("admin","admin");
+    assert.equal(admin.data.role, "business", "Public registration cannot create an administrator");
+    // Privileged test fixture provisioning mirrors the administrator CLI, not public signup.
+    await BusinessProfile.updateOne({_id:admin.data._id},{$set:{role:"admin"}});
     await BusinessProfile.updateMany({role:"business"},{$set:{verification:"verified"}});
     await Category.create({slug:"chairs",name:"Chairs",color:"#FFE66D",requiredFields:[]});
     const start=new Date(Date.now()+4*86400000).toISOString(), end=new Date(Date.now()+5*86400000).toISOString();

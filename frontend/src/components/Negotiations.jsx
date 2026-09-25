@@ -4,6 +4,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import AgentAction from "./AgentAction";
 import AgentDecision from "./AgentDecision";
+import LocalAi, { conversationText } from "./LocalAi";
 import {
   useData,
   State,
@@ -221,14 +222,14 @@ function QuoteDetail({ q, reload }) {
         {advice && (
           <div style={{ marginTop: "1rem" }}>
             {advice.zopa && (
-              <div style={{ background: "#fff", padding: "1rem", borderRadius: "10px", border: "2px solid #20201e", marginBottom: "1rem" }}>
+              <div style={{ background: "#fff", padding: "1.2rem", borderRadius: "16px", border: "2.5px solid #171915", marginBottom: "1rem", boxShadow: "3px 3px 0 #171915" }}>
                 <span className="eyebrow" style={{ fontSize: "0.75rem", letterSpacing: "0.08em" }}>BILATERAL BARGAINING ZONE (ZOPA)</span>
                 <div style={{ display: "flex", justifyContent: "space-between", margin: "0.5rem 0", fontSize: "0.9rem" }}>
                   <span>Seeker Target: <strong>{money(advice.zopa.min)}</strong></span>
                   <span>Agreement Alignment: <strong>{advice.zopa.convergence}%</strong></span>
                   <span>Provider Asking: <strong>{money(advice.zopa.max)}</strong></span>
                 </div>
-                <div style={{ width: "100%", height: "10px", background: "#e0e0e0", borderRadius: "5px", overflow: "hidden" }}>
+                <div style={{ width: "100%", height: "12px", background: "#e0e0e0", borderRadius: "6px", overflow: "hidden", border: "1.5px solid #171915" }}>
                   <div style={{ width: `${advice.zopa.convergence}%`, height: "100%", background: advice.zopa.convergence > 70 ? "#4caf50" : "#2196f3", borderRadius: "5px" }} />
                 </div>
                 <small style={{ color: "#666", display: "block", marginTop: "0.4rem" }}>
@@ -238,7 +239,7 @@ function QuoteDetail({ q, reload }) {
             )}
 
             {advice.protection?.flags && (
-              <div style={{ background: "#fff", padding: "1rem", borderRadius: "10px", border: "2px solid #20201e", marginBottom: "1rem" }}>
+              <div style={{ background: "#fff", padding: "1.2rem", borderRadius: "16px", border: "2.5px solid #171915", marginBottom: "1rem", boxShadow: "3px 3px 0 #171915" }}>
                 <span className="eyebrow" style={{ fontSize: "0.75rem", letterSpacing: "0.08em" }}>CONTRACT & DISPUTE PROTECTION</span>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.5rem" }}>
                   {advice.protection.flags.map((flag, idx) => (
@@ -255,12 +256,12 @@ function QuoteDetail({ q, reload }) {
             )}
 
             {advice.counterOffers?.length > 0 && (
-              <div style={{ background: "#fff", padding: "1rem", borderRadius: "10px", border: "2px solid #20201e", marginBottom: "1rem" }}>
+              <div style={{ background: "#fff", padding: "1.2rem", borderRadius: "16px", border: "2.5px solid #171915", marginBottom: "1rem", boxShadow: "3px 3px 0 #171915" }}>
                 <span className="eyebrow" style={{ fontSize: "0.75rem", letterSpacing: "0.08em" }}>AUTONOMOUS COUNTER-OFFER BLUEPRINTS</span>
                 <p style={{ fontSize: "0.85rem", color: "#666", margin: "0.25rem 0 0.75rem 0" }}>Click any strategy to pre-populate the counter-offer form above:</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
                   {advice.counterOffers.map((co, idx) => (
-                    <div key={idx} style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "0.75rem", background: "#fafafa", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
+                    <div key={idx} style={{ border: "2px solid #171915", borderRadius: "12px", padding: "0.75rem", background: "#fafafa", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem", boxShadow: "2px 2px 0 #171915" }}>
                       <div style={{ maxWidth: "70%" }}>
                         <strong style={{ fontSize: "0.95rem" }}>{co.label}</strong>
                         <p style={{ margin: "0.2rem 0 0.2rem 0", fontSize: "0.85rem", color: "#444" }}>{co.rationale}</p>
@@ -289,6 +290,7 @@ function QuoteDetail({ q, reload }) {
       </section>
       <section className="panel">
         <h3>Conversation</h3>
+        <LocalAi text={conversationText(messages.data || [])} />
         <AgentAction
           endpoint="/ai/sentiment"
           body={{ quoteId: q._id }}

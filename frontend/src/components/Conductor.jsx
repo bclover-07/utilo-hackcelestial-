@@ -136,9 +136,9 @@ export function PlannerPage() {
       </p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", margin: "0.75rem 0" }}>
         {memories.data?.map(m => (
-          <div key={m._id} style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.3rem 0.75rem", borderRadius: "20px", background: "#f0f4f8", border: "1px solid #c0d0e0", fontSize: "0.85rem" }}>
+          <div key={m._id} style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.3rem 0.75rem", borderRadius: "20px", background: "#f0f4f8", border: "2px solid #171915", fontSize: "0.85rem", boxShadow: "2px 2px 0 #171915" }}>
             <span><strong>[{m.category}]:</strong> {m.key} → {m.value}</span>
-            <button type="button" style={{ background: "none", border: "none", cursor: "pointer", padding: "0 2px", color: "#999" }} onClick={async () => { await api(`/ai/memory/${m._id}`, { method: "DELETE" }); await memories.reload(); }}>
+            <button type="button" style={{ background: "none", border: "none", cursor: "pointer", padding: "0 2px", color: "#171915", fontWeight: "bold" }} onClick={async () => { await api(`/ai/memory/${m._id}`, { method: "DELETE" }); await memories.reload(); }}>
               ✕
             </button>
           </div>
@@ -168,7 +168,7 @@ export function PlannerPage() {
       {answer && (
         <>
           {answer.subtasks?.length > 0 && (
-            <div style={{ margin: "0.75rem 0", padding: "0.75rem", background: "#f8f9fa", border: "1px solid #ddd", borderRadius: "8px" }}>
+            <div style={{ margin: "0.75rem 0", padding: "0.75rem", background: "#f8f9fa", border: "2px solid #171915", borderRadius: "14px", boxShadow: "2px 2px 0 #171915" }}>
               <span className="eyebrow" style={{ fontSize: "0.7rem", letterSpacing: "0.08em" }}>SUPERVISOR DECOMPOSITION</span>
               <ul style={{ margin: "0.3rem 0 0 1rem", fontSize: "0.8rem", color: "#555" }}>
                 {answer.subtasks.map((st, i) => <li key={i}>{st}</li>)}

@@ -45,7 +45,7 @@ export default function AuthPage({ register = false }) {
 function AuthQuery({ register }) {
   const query = useSearchParams();
   const requested = query.get("role");
-  const initialPersona = Object.hasOwn(personas, requested)
+  const initialPersona = Object.hasOwn(personas, requested) && !(register && requested === "admin")
     ? requested
     : "seeker";
   return (
@@ -164,7 +164,7 @@ function AuthForm({ register, initialPersona }) {
             <legend>Account type</legend>
             <div className="persona-toggle account-type-toggle" aria-label="Account type">
               <button type="button" aria-pressed={role === "business"} className={role === "business" ? "selected" : ""} onClick={() => selectPersona("seeker")}><Package size={19} /> Business</button>
-              <button type="button" aria-pressed={role === "admin"} className={role === "admin" ? "selected" : ""} onClick={() => selectPersona("admin")}><ShieldCheck size={19} /> Admin</button>
+              {!register && <button type="button" aria-pressed={role === "admin"} className={role === "admin" ? "selected" : ""} onClick={() => selectPersona("admin")}><ShieldCheck size={19} /> Admin</button>}
             </div>
             {role === "business" && <><p className="business-mode-label">{register ? "Choose your starting mode" : "Open your business workspace in"}</p><div className="persona-toggle business-mode-toggle" aria-label="Business mode">
               {Object.entries(personas).filter(([key]) => key !== "admin").map(([key, item]) => {

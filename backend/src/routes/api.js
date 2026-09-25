@@ -14,6 +14,7 @@ import { aiRoutes } from "./aiRoutes.js";
 import { uploadRoutes } from "./uploadRoutes.js";
 import { notificationRoutes } from "./notificationRoutes.js";
 import { adminRoutes } from "./adminRoutes.js";
+import { localAiConfig } from "../services/localAiConfig.js";
 
 export const api = Router();
 
@@ -32,6 +33,7 @@ api.use("/auth", authRoutes);
 
 
 api.use(auth);
+api.get("/ai/local-config", (_req, res) => res.json(localAiConfig));
 
 api.get("/auth/me", authController.me);
 api.post("/auth/logout", authController.logout);
