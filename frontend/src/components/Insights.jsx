@@ -25,7 +25,6 @@ import {
   MessageSquare,
   ShieldCheck,
   ArrowUpRight,
-  CheckCircle2,
 } from "lucide-react";
 import {
   useData,
@@ -33,7 +32,6 @@ import {
   Empty,
   Heading,
   Badge,
-  Flow,
   money,
   colors,
 } from "./ui";
@@ -468,7 +466,7 @@ function Trend({ data }) {
     </section>
   );
 }
-function MarketDemandRadarChart({ demand, city, admin }) {
+function MarketDemandRadarChart({ demand }) {
   if (!demand?.length) {
     return (
       <Empty

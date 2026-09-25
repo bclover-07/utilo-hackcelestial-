@@ -175,12 +175,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   nameKey: '_id',
                   valueKey: 'count',
                 ),
-                Bars(
-                  title: 'Open demand by category (units)',
-                  rows: records(data['demand']),
-                  nameKey: '_id',
-                  valueKey: 'units',
-                ),
+                const SizedBox(height: 12),
+                _MarketDemandRadarWidget(demand: records(data['demand'])),
               ],
               if (section == 'analytics') ...[
                 Bars(
@@ -1471,3 +1467,122 @@ class _PlanResultState extends State<PlanResult> {
     ),
   );
 }
+
+class _MarketDemandRadarWidget extends StatelessWidget {
+  const _MarketDemandRadarWidget({required this.demand});
+  final List<dynamic> demand;
+
+  @override
+  Widget build(BuildContext context) {
+    if (demand.isEmpty) return const SizedBox.shrink();
+
+    return Panel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Demand vs Listed Supply',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: teal,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: ink, width: 1.5),
+                ),
+                child: const Text('EQUILIBRIUM', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          for (final d in demand) ...[
+            Builder(
+              builder: (context) {
+                final catName = '${d['_id'] ?? d['category'] ?? ''}'.replaceAll('_', ' ');
+                final reqUnits = d['units'] is num ? (d['units'] as num).toInt() : (d['totalUnits'] is num ? (d['totalUnits'] as num).toInt() : 0);
+                final listedUnits = d['listedUnits'] is num ? (d['listedUnits'] as num).toInt() : 0;
+                final maxUnits = (reqUnits > listedUnits ? reqUnits : listedUnits).clamp(1, 99999);
+                final reqRatio = (reqUnits / maxUnits).clamp(0.05, 1.0);
+                final listedRatio = (listedUnits / maxUnits).clamp(0.05, 1.0);
+                final isDeficit = reqUnits > listedUnits;
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(catName, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: isDeficit ? const Color(0xfffee2e2) : const Color(0xffd1fae5),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              isDeficit ? 'Unmet +${reqUnits - listedUnits}' : 'Surplus +${listedUnits - reqUnits}',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: isDeficit ? const Color(0xff991b1b) : const Color(0xff065f46),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          const SizedBox(width: 55, child: Text('Demand', style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.w700))),
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: reqRatio,
+                                minHeight: 8,
+                                backgroundColor: const Color(0xfff3f4f6),
+                                valueColor: const AlwaysStoppedAnimation(Color(0xffff85a1)),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text('$reqUnits req', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700)),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const SizedBox(width: 55, child: Text('Supply', style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.w700))),
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: listedRatio,
+                                minHeight: 8,
+                                backgroundColor: const Color(0xfff3f4f6),
+                                valueColor: const AlwaysStoppedAnimation(Color(0xff4ecdc4)),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text('$listedUnits pool', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700)),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+

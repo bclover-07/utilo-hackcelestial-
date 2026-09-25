@@ -28,6 +28,19 @@ const rangeFields = [
   FieldSpec('end', 'Ends', type: 'date'),
 ];
 
+Widget _specChip(String text) => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xfff4f1ea),
+        border: Border.all(color: ink, width: 1.2),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+      ),
+    );
+
 class ListingCard extends StatelessWidget {
   const ListingCard({
     super.key,
@@ -36,62 +49,209 @@ class ListingCard extends StatelessWidget {
   });
   final Json listing;
   final List<Widget> actions;
+
   @override
-  Widget build(BuildContext context) => Panel(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if ((listing['photos'] as List? ?? []).isNotEmpty)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              listing['photos'][0],
-              height: 170,
-              fit: BoxFit.cover,
-              errorBuilder: (_, e, s) => const SizedBox(
-                height: 100,
-                child: Icon(Icons.broken_image_outlined, size: 40),
+  Widget build(BuildContext context) {
+    final score = listing['score'] is num ? (listing['score'] as num).toInt() : null;
+    final qty = listing['quantity'] is num ? (listing['quantity'] as num).toInt() : 1;
+    final stockRatio = ((qty * 12).clamp(20, 100)) / 100;
+    final reasons = listing['reasons'] is List ? (listing['reasons'] as List) : [];
+
+    return Panel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Stack(
+            children: [
+              if ((listing['photos'] as List? ?? []).isNotEmpty)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    listing['photos'][0],
+                    height: 170,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, e, s) => Container(
+                      height: 120,
+                      color: const Color(0xffe5e0cf),
+                      child: const Icon(Icons.broken_image_outlined, size: 40),
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  height: 120,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: teal,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.inventory_2_outlined, size: 44),
+                ),
+              Positioned(
+                bottom: 8,
+                left: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: ink, width: 1.5),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: const [BoxShadow(color: ink, offset: Offset(1.5, 1.5))],
+                  ),
+                  child: Text(
+                    '${listing['category']}'.replaceAll('_', ' ').toUpperCase(),
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
+                  ),
+                ),
               ),
-            ),
-          )
-        else
-          Container(
-            height: 90,
-            decoration: BoxDecoration(
-              color: teal,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.inventory_2_outlined, size: 44),
+              if (score != null)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: ink, width: 1.5),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: const [BoxShadow(color: ink, offset: Offset(2, 2))],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: score >= 85
+                                ? const Color(0xff10b981)
+                                : score >= 65
+                                    ? const Color(0xfff59e0b)
+                                    : const Color(0xff6366f1),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$score% match',
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
           ),
-        const SizedBox(height: 12),
-        Text(
-          '${listing['title']}',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        Wrap(
-          spacing: 8,
-          children: [
-            Chip(label: Text('${listing['category']}')),
-            if (listing['status'] != null)
-              Chip(label: Text('${listing['status']}')),
+          const SizedBox(height: 12),
+          Text(
+            '${listing['title']}',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 8),
+
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              _specChip('📍 ${listing['city']}'),
+              _specChip('👥 ${listing['capacity']} cap'),
+              _specChip('📦 $qty ${listing['unit'] ?? 'units'}'),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '₹${listing['price']} / ${listing['unit']}',
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+              ),
+              if (listing['estimatedTotal'] != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: lavender,
+                    border: Border.all(color: ink, width: 1.5),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: const [BoxShadow(color: ink, offset: Offset(1.5, 1.5))],
+                  ),
+                  child: Text(
+                    'Est: ₹${listing['estimatedTotal']}',
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xfffaf8f2),
+              border: Border.all(color: ink, width: 1.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Capacity Availability', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.black54)),
+                    Text('$qty ready', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: stockRatio,
+                    minHeight: 6,
+                    backgroundColor: const Color(0xffe5e0cf),
+                    valueColor: const AlwaysStoppedAnimation(Color(0xff10b981)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          if (reasons.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                for (final r in reasons)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xffecfdf5),
+                      border: Border.all(color: const Color(0xff10b981), width: 1.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.check, size: 12, color: Color(0xff059669)),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$r',
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xff065f46)),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
           ],
-        ),
-        Text(
-          '${listing['city']} • ${listing['capacity']} capacity • ${listing['quantity']} units',
-        ),
-        Text(
-          '₹${listing['price']} / ${listing['unit']} / unit',
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
-        ),
-        if (listing['estimatedTotal'] != null)
-          Text('Estimated rental: ₹${listing['estimatedTotal']}'),
-        if (listing['score'] != null) Text('${listing['score']} / 100 match'),
-        if (listing['reasons'] != null) DataView(listing['reasons']),
-        const SizedBox(height: 12),
-        Wrap(spacing: 10, runSpacing: 10, children: actions),
-      ],
-    ),
-  );
+          const SizedBox(height: 12),
+          Wrap(spacing: 10, runSpacing: 10, children: actions),
+        ],
+      ),
+    );
+  }
 }
 
 class ListingsScreen extends StatelessWidget {
@@ -1241,51 +1401,171 @@ class RequestsScreen extends StatelessWidget {
             const SizedBox(height: 20),
             if (records(data).isEmpty) const Empty(),
             ...records(data).map(
-              (r) => Panel(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      '${r['title']}',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    DataView(r),
-                    AsyncButton(
-                      text: 'Repeat requirement',
-                      run: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => RequestEditor(
-                              session: session,
-                              initial: {...r, 'start': '', 'end': ''},
+              (r) {
+                final items = r['items'] is List ? (r['items'] as List) : [];
+                final totalItems = items.isNotEmpty ? items.length : 1;
+                final bookedCount = items.where((item) => item is Map && item['booking'] != null).length;
+                final progressRatio = bookedCount / totalItems;
+                final startDate = r['start'] != null ? DateTime.tryParse('${r['start']}')?.toLocal().toString().split(' ')[0] : null;
+                final endDate = r['end'] != null ? DateTime.tryParse('${r['end']}')?.toLocal().toString().split(' ')[0] : null;
+
+                return Panel(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${r['title']}',
+                              style: Theme.of(context).textTheme.titleLarge,
                             ),
                           ),
-                        );
-                        await reload();
-                      },
-                    ),
-                    if (r['status'] == 'open')
-                      AsyncButton(
-                        text: 'Cancel request',
-                        run: () async {
-                          await session.api.call(
-                            '/requests/${r['_id']}/cancel',
-                            method: 'POST',
-                          );
-                          await reload();
-                          return 'Request cancelled.';
-                        },
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: r['status'] == 'completed' ? teal : yellow,
+                              border: Border.all(color: ink, width: 1.5),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '${r['status'] ?? 'OPEN'}'.toUpperCase(),
+                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
+                            ),
+                          ),
+                        ],
                       ),
-                    AiResultButton(
-                      api: session.api,
-                      path: '/ai/urgency',
-                      body: {'requestId': r['_id']},
-                      title: 'Analyze urgency',
-                    ),
-                  ],
-                ),
-              ),
+                      const SizedBox(height: 8),
+
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          if (startDate != null && endDate != null)
+                            _specChip('📅 $startDate → $endDate'),
+                          if (r['city'] != null)
+                            _specChip('📍 ${r['city']}'),
+                          if (r['budget'] != null)
+                            _specChip('💰 Budget: ₹${r['budget']}'),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Fulfilment Progress', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.black54)),
+                          Text('$bookedCount of $totalItems Secured (${(progressRatio * 100).round()}%)', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: progressRatio,
+                          minHeight: 8,
+                          backgroundColor: const Color(0xffe5e0cf),
+                          valueColor: const AlwaysStoppedAnimation(Color(0xff4ecdc4)),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      if (items.isNotEmpty) ...[
+                        const Text('Resource Bundle Items', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 8),
+                        for (final item in items)
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 6),
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: item['booking'] != null ? const Color(0xfff0fdf4) : const Color(0xfffffbeb),
+                              border: Border.all(
+                                color: item['booking'] != null ? const Color(0xff10b981) : const Color(0xfff59e0b),
+                                width: 1.2,
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  item['booking'] != null ? Icons.check_circle : Icons.radio_button_unchecked,
+                                  size: 18,
+                                  color: item['booking'] != null ? const Color(0xff059669) : const Color(0xffd97706),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    '${item['quantity'] ?? 1} × ${'${item['category']}'.replaceAll('_', ' ')}',
+                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: item['booking'] != null ? const Color(0xffd1fae5) : const Color(0xfffef3c7),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    item['booking'] != null ? 'Confirmed' : 'Quoting',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      color: item['booking'] != null ? const Color(0xff065f46) : const Color(0xff92400e),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                      const SizedBox(height: 10),
+
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          AsyncButton(
+                            text: 'Repeat requirement',
+                            icon: Icons.repeat,
+                            run: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => RequestEditor(
+                                    session: session,
+                                    initial: {...r, 'start': '', 'end': ''},
+                                  ),
+                                ),
+                              );
+                              await reload();
+                            },
+                          ),
+                          if (r['status'] == 'open')
+                            AsyncButton(
+                              text: 'Cancel request',
+                              icon: Icons.close,
+                              run: () async {
+                                await session.api.call(
+                                  '/requests/${r['_id']}/cancel',
+                                  method: 'POST',
+                                );
+                                await reload();
+                                return 'Request cancelled.';
+                              },
+                            ),
+                          AiResultButton(
+                            api: session.api,
+                            path: '/ai/urgency',
+                            body: {'requestId': r['_id']},
+                            title: 'Analyze urgency',
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ],
         ),

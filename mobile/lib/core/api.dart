@@ -14,12 +14,15 @@ class ApiFailure implements Exception {
 
 class Api {
   Api({String? baseUrl, bool persistSession = true}) {
-    final url =
-        baseUrl ??
-        const String.fromEnvironment(
-          'API_BASE_URL',
-          defaultValue: 'http://10.0.2.2:4000/api',
-        );
+    final defaultHost = (kIsWeb ||
+            defaultTargetPlatform == TargetPlatform.windows ||
+            defaultTargetPlatform == TargetPlatform.macOS ||
+            defaultTargetPlatform == TargetPlatform.linux ||
+            defaultTargetPlatform == TargetPlatform.iOS)
+        ? 'http://localhost:4000/api'
+        : 'http://10.0.2.2:4000/api';
+    const envUrl = String.fromEnvironment('API_BASE_URL');
+    final url = baseUrl ?? (envUrl.isNotEmpty ? envUrl : defaultHost);
     final uri = Uri.parse(url);
     if (!uri.hasAuthority || !['http', 'https'].contains(uri.scheme)) {
       throw ArgumentError(
