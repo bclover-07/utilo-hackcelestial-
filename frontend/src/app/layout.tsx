@@ -6,6 +6,7 @@ import "./conductor.css";
 import "./agents.css";
 import { AuthProvider } from "@/context/AuthContext";
 import MotionExperience from "@/components/MotionExperience";
+import GoogleTranslateScript from "@/components/GoogleTranslateScript";
 const dmSans = DM_Sans({
   subsets: ["latin"],
   variable: "--font-dm",
@@ -38,7 +39,12 @@ export default function RootLayout({
       className={`${dmSans.variable} ${spaceGrotesk.variable}`}
     >
       <body>
-        <AuthProvider><MotionExperience>{children}</MotionExperience></AuthProvider>
+        <AuthProvider>
+          <MotionExperience>
+            {children}
+            <GoogleTranslateScript />
+          </MotionExperience>
+        </AuthProvider>
       </body>
     </html>
   );

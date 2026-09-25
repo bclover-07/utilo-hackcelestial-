@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Action } from "./ui";
 import { motion, useReducedMotion } from "framer-motion";
 import { Bot } from "lucide-react";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 const providerSections = [
   {
@@ -280,6 +281,9 @@ export default function DashboardShell({ children, admin = false }) {
         </nav>
 
         <div className="sidebar-bottom">
+          <div style={{ marginBottom: "12px" }}>
+            <LanguageSwitcher />
+          </div>
           <div className="sidebar-user-info">
             <strong>{auth.user.name}</strong>
             <small>{auth.user.email}</small>
@@ -348,6 +352,8 @@ export default function DashboardShell({ children, admin = false }) {
               ))}
             </div>
           )}
+
+          <LanguageSwitcher compact />
 
           <Link
             className="avatar"

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Field } from "./ui";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 const personas = {
   seeker: {
@@ -94,9 +95,12 @@ function AuthForm({ register, initialPersona }) {
         <Link className="brand" href="/">
           <span>u</span>utlio<span className="brand-dot">✳</span>
         </Link>
-        <Link className="back-link" href="/">
-          <ArrowLeft size={16} /> Back to the exchange
-        </Link>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <LanguageSwitcher compact />
+          <Link className="back-link" href="/">
+            <ArrowLeft size={16} /> Back to the exchange
+          </Link>
+        </div>
       </header>
       <div className="auth-layout">
         <section className="auth-editorial">
