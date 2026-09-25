@@ -62,9 +62,9 @@ export async function api<T = unknown>(
       );
     throw new Error("Cannot reach Utlio. Check your connection and retry.");
   }
-  const data = await response
-    .json()
-    .catch(() => ({ error: "The server is unavailable. Please retry." }));
+  let data;
+  try { data = await response.json(); }
+  catch { throw new Error("The server returned an unreadable response. Please retry; check your records before repeating a change."); }
   if (!response.ok) {
     if (
       response.status === 401 &&

@@ -240,32 +240,40 @@ export function ActionForm({
 
 export function Action({ run, children, className = "", disabled = false }) {
   const [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+    [error, setError] = useState(""), [success, setSuccess] = useState("");
+  const running = useRef(false);
 
   return (
     <span className="action-wrap">
       <button
+        type="button"
         className={className}
         disabled={busy || disabled}
         onClick={async () => {
+          if (running.current || disabled) return;
+          running.current = true;
           setBusy(true);
           setError("");
+          setSuccess("");
           try {
-            await run();
+            const result = await run();
+            setSuccess(typeof result === "string" ? result : "Completed.");
           } catch (e) {
             setError(e.message);
           } finally {
+            running.current = false;
             setBusy(false);
           }
         }}
       >
-        {busy ? "Working…" : children}
+        {busy ? <><LoaderCircle className="busy-spinner" size={16} aria-hidden="true" /> Working…</> : children}
       </button>
       {error && (
         <small role="alert" className="error">
           {error}
         </small>
       )}
+      {success && <small className="action-success" role="status"><CheckCircle2 size={13} aria-hidden="true" /> {success}</small>}
     </span>
   );
 }

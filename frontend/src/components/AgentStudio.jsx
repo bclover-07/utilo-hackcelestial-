@@ -5,6 +5,7 @@ import { Activity, ArrowUpRight, BookOpen, Bot, CheckCheck, Clock3, Database, Se
 import { api } from "@/lib/api";
 import { ActionForm, Badge, Empty, Field, Heading, State, date, useData } from "./ui";
 import AgentDecision from "./AgentDecision";
+import MatchWorkbench from "./MatchWorkbench";
 
 const runName = value => ({ "/ai/workflow": "Brief & matching", "/ai/knowledge": "Resource research", "/ai/forecast": "Demand analyst", "/ai/smart-price": "Pricing advisor", "/ai/sentiment": "Communication coach", "/ai/urgency": "Urgency advisor", "/quotes/:id/assistant": "Negotiation advisor", "/listings/:id/index": "Resource indexing", conductor: "Event Conductor", "conductor-recovery": "Recovery planner", operations: "Operations copilot", "provider-digest": "Provider digest" })[value] || value;
 
@@ -30,6 +31,7 @@ export default function AgentStudio({ admin = false }) {
         </>}
       </div>}
     </section>
+    {!admin && <MatchWorkbench />}
     <State resource={resource}>{data => <>
       <div className="section-heading"><div><span className="eyebrow">SPECIALIST DIRECTORY</span><h2>The right tool for the task.</h2></div><div className="segmented" aria-label="Filter agents">{["all", "seeker", "provider", ...(admin ? ["admin"] : [])].map(value => <button key={value} onClick={() => setFilter(value)} aria-pressed={filter === value} className={filter === value ? "selected" : ""}>{value}</button>)}</div></div>
       <div className="agent-catalog">{data.agents.filter(agent => filter === "all" || agent.role === filter || (agent.role === "both" && filter !== "admin")).map((agent, index) => <article className="panel agent-directory-card" key={agent.id}><div className="section-heading"><span className="agent-card-icon"><Bot size={23} /></span><small>{String(index + 1).padStart(2, "0")} / {agent.role}</small></div><h3>{agent.title}</h3><p>{agent.description}</p><small className="agent-engine">{agent.engine}</small><div className="agent-check"><ShieldCheck size={16} /><span>{agent.check}</span></div>{(!admin || agent.role === "admin") && <Link href={agent.href}>Open workspace <ArrowUpRight size={16} /></Link>}</article>)}</div>

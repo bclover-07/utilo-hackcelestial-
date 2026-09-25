@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { api } from "@/lib/api";
+import PrivateDocument from "./PrivateDocument";
 import {
   useData,
   State,
@@ -38,17 +39,7 @@ export function VerificationsPage() {
                   </p>
                   <p>Registration: {u.gstin || "Not supplied"}</p>
                   {u.documentId ? (
-                    <Action
-                      className="quiet"
-                      run={async () => {
-                        const { url } = await api(
-                          `/uploads/${u.documentId}/document`,
-                        );
-                        window.open(url, "_blank", "noopener,noreferrer");
-                      }}
-                    >
-                      View evidence
-                    </Action>
+                    <PrivateDocument id={u.documentId} />
                   ) : (
                     <p>No document submitted.</p>
                   )}

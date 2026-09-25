@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import PrivateDocument from "./PrivateDocument";
 import {
   useData,
   State,
@@ -69,15 +70,7 @@ export function ProfilePage() {
           {documentId && (
             <>
               <p>Document uploaded. Save your profile to submit it.</p>
-              <Action
-                className="quiet"
-                run={async () => {
-                  const { url } = await api(`/uploads/${documentId}/document`);
-                  window.open(url, "_blank", "noopener,noreferrer");
-                }}
-              >
-                View your document
-              </Action>
+              <PrivateDocument key={documentId} id={documentId} label="View your document" />
             </>
           )}
           {user.verificationNote && (
