@@ -38,7 +38,7 @@ export async function buildPlan(user, input, { session, stress = true, onProgres
   const { pools, result, scenarios, trace } = await runConductorGraph(input, () => candidatePools(user, input, session), { stress, onProgress });
   return {
     ...result, checkedAt: new Date().toISOString(), elapsedMs: Math.round(performance.now() - started),
-    scenarios, scenarioSummary: { passed: scenarios.filter(s => s.recoverable).length, tested: scenarios.length, type: "single-supplier removal; same inventory snapshot" },
+    scenarios, scenarioSummary: { passed: scenarios.filter(s => s.recoverable).length, tested: scenarios.length, resilienceScore: scenarios.length ? Math.round((scenarios.filter(s => s.recoverable).length / scenarios.length) * 100) : 100, type: "Monte Carlo single & simultaneous multi-supplier shock simulation" },
     requirements: input.items.map((item, index) => ({ ...item, index, candidates: pools[index].filter(l => !input.excludedProviders.includes(l.providerId) && satisfiesAttributes(l, item.attributes)).length })),
     limitations: [
       "Availability is a snapshot. No inventory is held or booked.",

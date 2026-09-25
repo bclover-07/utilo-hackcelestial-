@@ -96,6 +96,33 @@ export async function recommendPrice(user, raw) {
     }, adviceSchema, "Review comparable pricing",
   ));
 
+  // Cannibalization & Cross-Listing Awareness
+  const siblingListings = await Listing.find({
+    owner: user._id,
+    category,
+    status: "active",
+    ...(listing ? { _id: { $ne: listing._id } } : {}),
+  }).select("title price unit capacity").lean();
+
+  const cannibalizationWarnings = [];
+  if (listing && siblingListings.length) {
+    for (const sib of siblingListings) {
+      if (sib.unit === listing.unit && listing.price < sib.price * 0.85 && listing.capacity >= sib.capacity) {
+        cannibalizationWarnings.push({
+          siblingId: sib._id,
+          siblingTitle: sib.title,
+          warning: `At ${listing.price}, this listing may undercut your own "${sib.title}" (${sib.price}) with comparable capacity.`,
+        });
+      }
+    }
+  }
+
+  // Auto-Pilot Dynamic Price Calculation
+  const demandPressure = heatmap.length ? (heatmap[0].openRequests || 0) : 0;
+  const surgeMultiplier = demandPressure >= 5 ? 1.18 : demandPressure >= 2 ? 1.08 : 1.0;
+  const baseRate = listing?.price || (comparables[0]?.avgPrice ? Math.round(comparables[0].avgPrice) : 100);
+  const recommendedDynamicPrice = Math.round(baseRate * surgeMultiplier);
+
   return {
     ...output,
     advice: output.decision?.summary || output.generation.message,
@@ -103,10 +130,22 @@ export async function recommendPrice(user, raw) {
     comparables,
     recentBookings: recentBookings[0] || null,
     demandSignals: heatmap.slice(0, 5),
+    cannibalization: {
+      detected: cannibalizationWarnings.length > 0,
+      warnings: cannibalizationWarnings,
+    },
+    autoPilotRecommendation: {
+      basePrice: baseRate,
+      recommendedDynamicPrice,
+      surgeMultiplier,
+      floorPrice: Math.round(baseRate * 0.8),
+      ceilingPrice: Math.round(baseRate * 1.3),
+    },
     trace: [
       "Smart pricing: gathered comparable listings",
       "Smart pricing: analyzed recent booking prices",
-      "Smart pricing: factored demand signals",
+      "Smart pricing: evaluated cross-listing cannibalization risk",
+      "Smart pricing: computed auto-pilot demand multiplier",
       output.decision ? "Gemini: generated structured pricing advice" : "AI advice unavailable; observed rates retained",
     ],
   };

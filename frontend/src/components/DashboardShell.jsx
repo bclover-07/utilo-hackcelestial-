@@ -161,7 +161,7 @@ export default function DashboardShell({ children, admin = false }) {
       <a className="skip-link" href="#workspace-content">
         Skip to workspace
       </a>
-      {}
+      { }
       <div
         className={`sidebar-backdrop ${menu ? "is-open" : ""}`}
         onClick={() => setMenu(false)}
@@ -371,7 +371,15 @@ export default function DashboardShell({ children, admin = false }) {
               {switchError}
             </p>
           )}
-          {!admin && auth.user.verification !== "verified" && <div className="notice business-verification-banner"><strong>{auth.user.verification === "rejected" ? "Business verification needs an update." : "Your business approval is pending."}</strong><p>One approval covers seeker and provider modes. Explore and plan now; approval is required to publish resources, request quotes or confirm bookings.</p><Link href="/dashboard/profile">Complete your business profile →</Link></div>}
+          {!admin && auth.user?.verification === "rejected" && (
+            <div className="notice business-verification-banner">
+              <strong>Business verification restricted.</strong>
+              <p>
+                Please review your business profile and verification documents or contact operations support.
+              </p>
+              <Link href="/dashboard/profile">Complete your business profile →</Link>
+            </div>
+          )}
           {children}
         </motion.main>
 

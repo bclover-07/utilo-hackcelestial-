@@ -29,7 +29,7 @@ export async function offer(user, id, raw) {
   return mongoose.connection.transaction(async (session) => {
     const q = await getQuote(user, id, session);
     const r = await Request.findById(q.request).session(session);
-    assert(await BusinessProfile.countDocuments({ _id: { $in: [q.provider, q.seeker] }, verification: "verified" }).session(session) === 2, 403, "Both businesses must be approved before negotiating.");
+    assert(await BusinessProfile.countDocuments({ _id: { $in: [q.provider, q.seeker] }, verification: "rejected" }).session(session) === 0, 403, "An account in this negotiation is restricted.");
     assert(
       ["open", "partial"].includes(r.status) &&
         !r.items[q.itemIndex].booking &&
@@ -74,7 +74,7 @@ export async function accept(user, id, raw) {
   const { version } = z.object({ version: z.number().int().min(1) }).parse(raw);
   return mongoose.connection.transaction(async (session) => {
     const q = await getQuote(user, id, session);
-    assert(await BusinessProfile.countDocuments({ _id: { $in: [q.provider, q.seeker] }, verification: "verified" }).session(session) === 2, 403, "Both businesses must be approved before confirming a booking.");
+    assert(await BusinessProfile.countDocuments({ _id: { $in: [q.provider, q.seeker] }, verification: "rejected" }).session(session) === 0, 403, "An account in this booking is restricted.");
     assert(
       q.status === "offered" && q.version === version,
       409,

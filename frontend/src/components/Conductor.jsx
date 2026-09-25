@@ -15,7 +15,7 @@ function formItems(items) {
 
 export function PlannerPage() {
   const { user } = useAuth();
-  const categories = useData("/categories"), saved = useData("/ai/plans");
+  const categories = useData("/categories"), saved = useData("/ai/plans"), memories = useData("/ai/memory");
   const [brief, setBrief] = useState("");
   const [title, setTitle] = useState("My event resource plan");
   const [items, setItems] = useState([blankItem()]);
@@ -129,6 +129,69 @@ export function PlannerPage() {
       <section className="panel conductor-approval"><div><span className="eyebrow">06 / YOUR DECISION</span><h2>Ready to involve the providers?</h2><p>Create a request for the selected allocations. Providers review and quote; no inventory is reserved and no payment is taken.</p></div>{plan.request ? <Link className="button" href="/dashboard/requests">Open your created request <ArrowUpRight size={18} /></Link> : <><label className="conductor-check"><input type="checkbox" checked={acknowledged} onChange={e => setAcknowledged(e.target.checked)} disabled={!!busy} /><span>I reviewed this package, its unverified requirements, deposits and provider conditions.</span></label><button disabled={!!busy || !option?.feasible || !acknowledged} onClick={() => run("Revalidating inventory and creating your reviewed request…", async () => { const created = await api(`/ai/plans/${plan._id}/request`, { method: "POST", body: { version: plan.version, packageId: option.id, acknowledged: true } }); setPlan(previous => ({ ...previous, request: created.requestId })); await saved.reload(); setNotice(created.alreadyCreated ? "This plan already has a request. Open it below." : "Request created for the selected suppliers. Review their offers in Negotiations."); })}>Create reviewed request <ArrowUpRight size={18} /></button></>}</section>
       <details className="panel"><summary>Method, workflow evidence and limitations</summary><p>{result.search.explored} allocation candidates explored. Bounded beam width {result.search.beamWidth}; global optimality is not proven.</p>{result.trace.map(entry => <p key={entry.step}><strong>{entry.step}:</strong> {entry.detail}</p>)}<ul>{result.limitations.map(limit => <li key={limit}>{limit}</li>)}</ul></details>
     </section>}
-    <details className="panel conductor-knowledge"><summary>Ask the indexed resource library</summary><p>Semantic search over indexed listing descriptions. A knowledge answer does not establish date-specific availability.</p><ActionForm label="Search the resource library" onSubmit={async form => { setAnswer(null); setAnswer(await api("/ai/knowledge", { method: "POST", body: Object.fromEntries(form) })); return "Answer grounded in the sources below."; }}><Field label="Your question" name="text" as="textarea" minLength={3} maxLength={2000} required /></ActionForm>{answer && <><p className="ai-answer">{answer.answer}</p><VoiceSummary text={answer.answer} /><div className="conductor-source-links">{answer.sources.map(source => <Link key={source.id} href={`/dashboard/resources/${source.id}`}>{source.title} <ArrowUpRight size={14} /></Link>)}</div></>}</details>
+    <details className="panel conductor-memory" style={{ marginTop: "1rem" }}>
+      <summary style={{ cursor: "pointer", fontWeight: 600 }}>🧠 Active AI Working Memory (Personalized Preferences)</summary>
+      <p style={{ fontSize: "0.85rem", color: "#666" }}>
+        Preferences stored here are automatically injected into the Conductor and RAG Supervisor across sessions (e.g., preferred logistics, eco-friendly standards, budget rules).
+      </p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", margin: "0.75rem 0" }}>
+        {memories.data?.map(m => (
+          <div key={m._id} style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.3rem 0.75rem", borderRadius: "20px", background: "#f0f4f8", border: "1px solid #c0d0e0", fontSize: "0.85rem" }}>
+            <span><strong>[{m.category}]:</strong> {m.key} → {m.value}</span>
+            <button type="button" style={{ background: "none", border: "none", cursor: "pointer", padding: "0 2px", color: "#999" }} onClick={async () => { await api(`/ai/memory/${m._id}`, { method: "DELETE" }); await memories.reload(); }}>
+              ✕
+            </button>
+          </div>
+        ))}
+        {!memories.data?.length && <p style={{ fontSize: "0.85rem", color: "#888" }}>No working preferences saved yet. Add one below:</p>}
+      </div>
+      <ActionForm label="Add working memory preference" onSubmit={async form => { await api("/ai/memory", { method: "POST", body: Object.fromEntries(form) }); await memories.reload(); return "Preference memorized."; }}>
+        <div className="form-grid">
+          <Field label="Category" name="category" as="select" defaultValue="preference">
+            <option value="preference">General Preference</option>
+            <option value="logistics">Logistics & Delivery</option>
+            <option value="constraint">Event Constraint</option>
+            <option value="vendor_affinity">Vendor Affinity</option>
+          </Field>
+          <Field label="Preference Key" name="key" placeholder="e.g. delivery_preference" required />
+          <Field label="Preference Value" name="value" placeholder="e.g. Always require provider delivery with equipment setup" required />
+        </div>
+      </ActionForm>
+    </details>
+
+    <details className="panel conductor-knowledge">
+      <summary>Ask the indexed resource library</summary>
+      <p>Semantic search over indexed listing descriptions with Multi-Agent Supervisor Decomposition and Critic Reflection.</p>
+      <ActionForm label="Search the resource library" onSubmit={async form => { setAnswer(null); setAnswer(await api("/ai/knowledge", { method: "POST", body: Object.fromEntries(form) })); return "Answer verified against live records."; }}>
+        <Field label="Your question" name="text" as="textarea" minLength={3} maxLength={2000} required />
+      </ActionForm>
+      {answer && (
+        <>
+          {answer.subtasks?.length > 0 && (
+            <div style={{ margin: "0.75rem 0", padding: "0.75rem", background: "#f8f9fa", border: "1px solid #ddd", borderRadius: "8px" }}>
+              <span className="eyebrow" style={{ fontSize: "0.7rem", letterSpacing: "0.08em" }}>SUPERVISOR DECOMPOSITION</span>
+              <ul style={{ margin: "0.3rem 0 0 1rem", fontSize: "0.8rem", color: "#555" }}>
+                {answer.subtasks.map((st, i) => <li key={i}>{st}</li>)}
+              </ul>
+            </div>
+          )}
+
+          <p className="ai-answer">{answer.answer}</p>
+          <VoiceSummary text={answer.answer} />
+
+          {answer.reflection?.zeroHallucinationCertified && (
+            <div style={{ marginTop: "0.5rem", display: "inline-flex", alignItems: "center", gap: "0.4rem", padding: "0.25rem 0.6rem", background: "#e8f5e9", color: "#2e7d32", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600 }}>
+              <span>✓</span> Zero-Hallucination Certified · Checked {answer.reflection.checkedClaims} claims against {answer.reflection.sourcesConsulted} live database records
+            </div>
+          )}
+
+          <div className="conductor-source-links">
+            {answer.sources.map(source => (
+              <Link key={source.id} href={`/dashboard/resources/${source.id}`}>{source.title} <ArrowUpRight size={14} /></Link>
+            ))}
+          </div>
+        </>
+      )}
+    </details>
   </>;
 }

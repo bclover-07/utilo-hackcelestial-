@@ -80,7 +80,9 @@ export function NegotiationsPage() {
 function QuoteDetail({ q, reload }) {
   const { user } = useAuth();
   const messages = useData(`/quotes/${q._id}/messages`),
-    [advice, setAdvice] = useState(null);
+    [advice, setAdvice] = useState(null),
+    [selectedOfferPrice, setSelectedOfferPrice] = useState(null),
+    [selectedOfferConditions, setSelectedOfferConditions] = useState(null);
   const last = q.offers.at(-1),
     mine = last?.by?._id === user._id;
   const open = ["invited", "offered"].includes(q.status),
@@ -165,22 +167,28 @@ function QuoteDetail({ q, reload }) {
                 method: "POST",
                 body: { ...Object.fromEntries(form), version: q.version },
               });
+              setSelectedOfferPrice(null);
+              setSelectedOfferConditions(null);
               await reload();
             }}
           >
             <div className="form-grid">
               <Field
+                key={`price-${selectedOfferPrice || "empty"}`}
                 label="Total agreed rental (INR)"
                 name="price"
                 type="number"
                 min="1"
                 step="0.01"
+                defaultValue={selectedOfferPrice ?? ""}
                 required
               />
               <Field
+                key={`cond-${selectedOfferConditions || "empty"}`}
                 label="Conditions & logistics"
                 name="conditions"
                 as="textarea"
+                defaultValue={selectedOfferConditions ?? ""}
                 rows={2}
               />
             </div>
@@ -210,7 +218,74 @@ function QuoteDetail({ q, reload }) {
             required
           />
         </ActionForm>
-        {advice && <AgentDecision decision={advice.decision} />}
+        {advice && (
+          <div style={{ marginTop: "1rem" }}>
+            {advice.zopa && (
+              <div style={{ background: "#fff", padding: "1rem", borderRadius: "10px", border: "2px solid #20201e", marginBottom: "1rem" }}>
+                <span className="eyebrow" style={{ fontSize: "0.75rem", letterSpacing: "0.08em" }}>BILATERAL BARGAINING ZONE (ZOPA)</span>
+                <div style={{ display: "flex", justifyContent: "space-between", margin: "0.5rem 0", fontSize: "0.9rem" }}>
+                  <span>Seeker Target: <strong>{money(advice.zopa.min)}</strong></span>
+                  <span>Agreement Alignment: <strong>{advice.zopa.convergence}%</strong></span>
+                  <span>Provider Asking: <strong>{money(advice.zopa.max)}</strong></span>
+                </div>
+                <div style={{ width: "100%", height: "10px", background: "#e0e0e0", borderRadius: "5px", overflow: "hidden" }}>
+                  <div style={{ width: `${advice.zopa.convergence}%`, height: "100%", background: advice.zopa.convergence > 70 ? "#4caf50" : "#2196f3", borderRadius: "5px" }} />
+                </div>
+                <small style={{ color: "#666", display: "block", marginTop: "0.4rem" }}>
+                  {advice.zopa.status} · Current offer is {money(advice.zopa.current)}
+                </small>
+              </div>
+            )}
+
+            {advice.protection?.flags && (
+              <div style={{ background: "#fff", padding: "1rem", borderRadius: "10px", border: "2px solid #20201e", marginBottom: "1rem" }}>
+                <span className="eyebrow" style={{ fontSize: "0.75rem", letterSpacing: "0.08em" }}>CONTRACT & DISPUTE PROTECTION</span>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.5rem" }}>
+                  {advice.protection.flags.map((flag, idx) => (
+                    <div key={idx} style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem", fontSize: "0.85rem" }}>
+                      <span>{flag.status === "pass" ? "🛡️" : "⚠️"}</span>
+                      <div>
+                        <strong>{flag.label}: </strong>
+                        <span style={{ color: "#444" }}>{flag.detail}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {advice.counterOffers?.length > 0 && (
+              <div style={{ background: "#fff", padding: "1rem", borderRadius: "10px", border: "2px solid #20201e", marginBottom: "1rem" }}>
+                <span className="eyebrow" style={{ fontSize: "0.75rem", letterSpacing: "0.08em" }}>AUTONOMOUS COUNTER-OFFER BLUEPRINTS</span>
+                <p style={{ fontSize: "0.85rem", color: "#666", margin: "0.25rem 0 0.75rem 0" }}>Click any strategy to pre-populate the counter-offer form above:</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+                  {advice.counterOffers.map((co, idx) => (
+                    <div key={idx} style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "0.75rem", background: "#fafafa", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
+                      <div style={{ maxWidth: "70%" }}>
+                        <strong style={{ fontSize: "0.95rem" }}>{co.label}</strong>
+                        <p style={{ margin: "0.2rem 0 0.2rem 0", fontSize: "0.85rem", color: "#444" }}>{co.rationale}</p>
+                        <small style={{ color: "#777" }}>Proposed: <strong>{money(co.price)}</strong> {co.deliveryFee ? `+ ${money(co.deliveryFee)} delivery` : "(Zero delivery fee)"}</small>
+                      </div>
+                      <button
+                        type="button"
+                        className="button"
+                        style={{ padding: "0.4rem 0.8rem", fontSize: "0.85rem", cursor: "pointer" }}
+                        onClick={() => {
+                          setSelectedOfferPrice(co.price);
+                          setSelectedOfferConditions(co.rationale);
+                        }}
+                      >
+                        Apply proposal →
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <AgentDecision decision={advice.decision} />
+          </div>
+        )}
       </section>
       <section className="panel">
         <h3>Conversation</h3>

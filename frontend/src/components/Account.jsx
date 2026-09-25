@@ -34,7 +34,7 @@ export function ProfilePage() {
                 ...Object.fromEntries(form),
                 ...(documentId ? { documentId } : {}),
               });
-              return "Profile saved. Changes to identity details return verification to pending.";
+              return "Profile saved successfully.";
             }}
           >
             {[

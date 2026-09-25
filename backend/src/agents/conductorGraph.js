@@ -33,12 +33,35 @@ export async function runConductorGraph(input, loadCandidates, { stress = true, 
     }))
     .addNode("Simulate recovery", node("Simulate recovery", async s => {
       const baseline = s.result.alternatives.find(p => p.feasible), scenarios = [];
-      if (stress && baseline) for (const providerId of [...new Set(baseline.allocations.map(a => a.providerId))].slice(0, 6)) {
-        const recovery = solvePackages(input.items, s.pools, input.filters, [...input.excludedProviders, providerId]);
-        const replacement = recovery.alternatives.find(p => p.feasible);
-        scenarios.push({ providerId, affected: baseline.allocations.filter(a => a.providerId === providerId).map(a => a.title), recoverable: !!replacement, costChange: replacement ? Math.round((replacement.total - baseline.total) * 100) / 100 : null, replacementSuppliers: replacement?.supplierCount ?? null });
+      if (stress && baseline) {
+        const uniqueSuppliers = [...new Set(baseline.allocations.map(a => a.providerId))].slice(0, 6);
+        for (const providerId of uniqueSuppliers) {
+          const recovery = solvePackages(input.items, s.pools, input.filters, [...input.excludedProviders, providerId]);
+          const replacement = recovery.alternatives.find(p => p.feasible);
+          scenarios.push({
+            providerId,
+            type: "single_dropout",
+            affected: baseline.allocations.filter(a => a.providerId === providerId).map(a => a.title),
+            recoverable: !!replacement,
+            costChange: replacement ? Math.round((replacement.total - baseline.total) * 100) / 100 : null,
+            replacementSuppliers: replacement?.supplierCount ?? null,
+          });
+        }
+        if (uniqueSuppliers.length >= 2) {
+          const pair = [uniqueSuppliers[0], uniqueSuppliers[1]];
+          const recovery = solvePackages(input.items, s.pools, input.filters, [...input.excludedProviders, ...pair]);
+          const replacement = recovery.alternatives.find(p => p.feasible);
+          scenarios.push({
+            providerId: pair.join("+"),
+            type: "simultaneous_pair_shock",
+            affected: baseline.allocations.filter(a => pair.includes(a.providerId)).map(a => a.title),
+            recoverable: !!replacement,
+            costChange: replacement ? Math.round((replacement.total - baseline.total) * 100) / 100 : null,
+            replacementSuppliers: replacement?.supplierCount ?? null,
+          });
+        }
       }
-      return { scenarios, detail: `${scenarios.filter(s => s.recoverable).length} of ${scenarios.length} tested removals have a feasible replacement` };
+      return { scenarios, detail: `${scenarios.filter(s => s.recoverable).length} of ${scenarios.length} tested stress scenarios have a feasible recovery` };
     }))
     .addEdge(START, "Retrieve inventory").addEdge("Retrieve inventory", "Allocate packages")
     .addEdge("Allocate packages", "Verify constraints").addEdge("Verify constraints", "Simulate recovery").addEdge("Simulate recovery", END).compile();

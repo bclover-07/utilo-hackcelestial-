@@ -120,6 +120,37 @@ export function SmartPricingPage() {
             <h2>AI pricing recommendation</h2>
             <p className="ai-answer">{result.advice}</p>
             <AgentDecision decision={result.decision} generation={result.generation} hideSummary />
+
+            {result.cannibalization?.detected && (
+              <div className="panel" style={{ marginTop: "1rem", background: "#ffebee", border: "2px solid #ef5350", borderRadius: "10px", padding: "1rem" }}>
+                <span className="eyebrow" style={{ color: "#c62828", fontSize: "0.75rem", letterSpacing: "0.08em" }}>INVENTORY CANNIBALIZATION ALERT</span>
+                <h4 style={{ margin: "0.25rem 0", color: "#b71c1c" }}>Cross-Listing Margin Risk</h4>
+                {result.cannibalization.warnings.map((w, idx) => (
+                  <p key={idx} style={{ margin: "0.25rem 0", fontSize: "0.85rem", color: "#442222" }}>
+                    ⚠️ {w.warning}
+                  </p>
+                ))}
+              </div>
+            )}
+
+            {result.autoPilotRecommendation && (
+              <div className="panel" style={{ marginTop: "1rem", background: "#e8f5e9", border: "2px solid #4caf50", borderRadius: "10px", padding: "1rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
+                  <div>
+                    <span className="eyebrow" style={{ fontSize: "0.75rem", letterSpacing: "0.08em", color: "#2e7d32" }}>DYNAMIC PRICING AUTO-PILOT</span>
+                    <h3 style={{ margin: "0.2rem 0" }}>Suggested Dynamic Rate: {money(result.autoPilotRecommendation.recommendedDynamicPrice)}</h3>
+                    <p style={{ margin: 0, fontSize: "0.85rem", color: "#333" }}>
+                      Current multiplier: <strong>{result.autoPilotRecommendation.surgeMultiplier}x</strong> based on real-time market demand pressure.
+                    </p>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <small style={{ display: "block", color: "#555" }}>Floor: {money(result.autoPilotRecommendation.floorPrice)} · Ceiling: {money(result.autoPilotRecommendation.ceilingPrice)}</small>
+                    <span className="badge" style={{ marginTop: "0.3rem", display: "inline-block", background: "#4caf50", color: "#fff" }}>Auto-Pilot Ready</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="pricing-evidence">{result.evidence?.map(row => <div className="notice" key={row.unit}><strong>{row.samples} comparable {row.unit} rates · {row.support}</strong><p>{row.suggestedRangeAvailable ? "Observed asking-price range supports a reviewable recommendation." : "Too few comparable rates to support a suggested range."}</p></div>)}</div>
             {result.trace && (
               <div className="workflow-trace">

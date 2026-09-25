@@ -16,3 +16,4 @@ export { Insight } from "./Insight.js";
 export { SavedSearch } from "./SavedSearch.js";
 export { SearchEvent } from "./SearchEvent.js";
 export { Audit } from "./Audit.js";
+export { Memory } from "./Memory.js";

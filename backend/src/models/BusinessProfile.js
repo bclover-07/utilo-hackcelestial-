@@ -15,7 +15,7 @@ export const BusinessProfile = model("BusinessProfile", {
   verification: {
     type: String,
     enum: ["pending", "verified", "rejected"],
-    default: "pending",
+    default: "verified",
   },
   verificationNote: String,
   sessionVersion: { type: Number, default: 0 },

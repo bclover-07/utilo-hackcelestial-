@@ -16,6 +16,47 @@ export default function ConductorVisuals({ plan, option }) {
       {requirements.map((item, index) => <g key={index}><rect x={24} y={y(index, requirements.length) - 27} width={242} height={54} rx={16} fill="#FFFDF4" stroke="#20201e" strokeWidth={3} /><text x={40} y={y(index, requirements.length) - 3} className="graph-label">{item.label.length > 26 ? `${item.label.slice(0, 25)}…` : item.label}</text><text x={40} y={y(index, requirements.length) + 16} className="graph-detail">{item.quantity} units · capacity {item.capacity}</text></g>)}
       {suppliers.map((supplier, index) => { const rows = option.allocations.filter(a => a.providerId === supplier); return <g key={supplier}><rect x={634} y={y(index, suppliers.length) - 27} width={242} height={54} rx={16} fill={colors[index % colors.length]} stroke="#20201e" strokeWidth={3} /><text x={650} y={y(index, suppliers.length) - 3} className="graph-label">Supplier {index + 1} · {rows.length} allocation{rows.length === 1 ? "" : "s"}</text><text x={650} y={y(index, suppliers.length) + 16} className="graph-detail">{rows.reduce((sum, a) => sum + a.quantity, 0)} units · {money(rows.reduce((sum, a) => sum + a.rentalTotal, 0))} rental</text></g>; })}
     </svg></div>
+    {option.corridorOptimized && (
+      <div className="notice conductor-corridor-badge" style={{ marginTop: "1rem", display: "flex", alignItems: "center", gap: "0.75rem", background: "#e8f5e9", borderColor: "#81c784" }}>
+        <span style={{ fontSize: "1.25rem" }}>🚚</span>
+        <div>
+          <strong>Logistics Corridor Aligned</strong>
+          <p style={{ margin: 0, fontSize: "0.85rem" }}>{option.corridorNote || "Suppliers clustered along the same transit corridor to reduce combined delivery friction."}</p>
+        </div>
+      </div>
+    )}
+
+    {plan.result?.scenarioSummary && (
+      <div className="conductor-resilience-strip" style={{ marginTop: "1rem", padding: "1rem", borderRadius: "12px", border: "2px solid #20201e", background: "#f8f9fa", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+        <div>
+          <span className="eyebrow" style={{ fontSize: "0.75rem", letterSpacing: "0.08em" }}>MONTE CARLO RESILIENCE</span>
+          <h4 style={{ margin: "0.25rem 0", fontSize: "1.1rem" }}>Multi-Supplier Survivability</h4>
+          <p style={{ margin: 0, fontSize: "0.85rem", color: "#555" }}>
+            Tested single dropouts & dual-vendor failure shocks: <strong>{plan.result.scenarioSummary.passed} / {plan.result.scenarioSummary.tested} scenarios passed</strong>
+          </p>
+        </div>
+        <div style={{ textAlign: "right", display: "flex", alignItems: "center", gap: "1rem" }}>
+          <div style={{ width: "110px", height: "12px", background: "#e0e0e0", borderRadius: "6px", overflow: "hidden" }}>
+            <div style={{ width: `${plan.result.scenarioSummary.resilienceScore || 100}%`, height: "100%", background: (plan.result.scenarioSummary.resilienceScore || 100) >= 80 ? "#4caf50" : "#ff9800", borderRadius: "6px" }} />
+          </div>
+          <strong style={{ fontSize: "1.3rem" }}>{plan.result.scenarioSummary.resilienceScore ?? 100}%</strong>
+        </div>
+      </div>
+    )}
+
+    {plan.result?.gaps?.some(g => g.substituteHint) && (
+      <div className="panel conductor-substitutes" style={{ marginTop: "1rem", background: "#fff9c4", border: "2px dashed #fbc02d", padding: "1rem", borderRadius: "12px" }}>
+        <h4 style={{ margin: "0 0 0.5rem 0", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <span>💡</span> AI Substitute & Relaxation Suggestions
+        </h4>
+        {plan.result.gaps.filter(g => g.substituteHint).map(g => (
+          <div key={g.itemIndex} style={{ fontSize: "0.9rem", marginTop: "0.25rem" }}>
+            <strong>{g.label}:</strong> {g.substituteHint}
+          </div>
+        ))}
+      </div>
+    )}
+
     <div className="conductor-budget-visual"><div><strong>Package cost against budget</strong><span>{money(option.total)} / {money(plan.input.filters.budget)}</span></div><div className="conductor-budget-track" role="meter" aria-label="Package cost as percentage of budget, capped at 100" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, Math.round(option.total / plan.input.filters.budget * 100))}><span className={option.feasible ? "" : "is-over-budget"} style={{ width: `${Math.min(100, option.total / plan.input.filters.budget * 100)}%` }} /></div><small>{option.feasible ? `${money(option.budgetRemaining)} remains within your rental and delivery budget.` : `${money(-option.budgetRemaining)} above your budget.`} Deposits are separate.</small></div>
   </section>;
 }

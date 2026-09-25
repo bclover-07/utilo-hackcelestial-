@@ -31,8 +31,11 @@ export function business(req, res, next) {
   next();
 }
 export function verifiedBusiness(req, res, next) {
-  assert(req.user.role === "business" && req.user.verification === "verified", 403,
-    "Business approval is required for this action. Complete your profile and verification documents; one approval covers both seeker and provider modes.");
+  assert(
+    req.user.role === "business" && req.user.verification !== "rejected",
+    403,
+    "Your business account has been restricted. Please contact support or update your verification documents."
+  );
   next();
 }
 

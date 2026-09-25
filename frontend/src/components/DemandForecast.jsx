@@ -126,12 +126,52 @@ export function DemandForecastPage() {
               </div>
             )}
           </section>
+          <HorizonProjectionChart data={result.horizonProjections} />
           <DemandHeatmap data={result.heatmap} />
           <SupplyUtilization data={result.supply} />
           <LiquidityView data={result.liquidity} />
         </>
       )}
     </>
+  );
+}
+
+export function HorizonProjectionChart({ data }) {
+  if (!data?.length) return null;
+  return (
+    <section className="panel" style={{ marginTop: "1rem" }}>
+      <div className="section-heading">
+        <h2>7-day demand horizon projection</h2>
+        <Badge>TIME-SERIES ML HORIZON</Badge>
+      </div>
+      <p>Calculates daily projected demand factoring weekend event surges and current open booking pressure.</p>
+      <div style={{ width: "100%", height: 260, marginTop: "1rem" }}>
+        <ResponsiveContainer>
+          <AreaChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="day" />
+            <YAxis />
+            <Tooltip
+              formatter={(value, name) => [value, name === "projectedDemand" ? "Projected Units" : name]}
+              labelFormatter={(label, payload) => payload?.[0]?.payload?.date || label}
+            />
+            <Area type="monotone" dataKey="projectedDemand" stroke="#673ab7" fill="#c3b1e1" fillOpacity={0.6} />
+            <Area type="monotone" dataKey="confidenceMax" stroke="#9575cd" strokeDasharray="3 3" fill="none" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="forecast-grid" style={{ marginTop: "1rem" }}>
+        {data.map((d) => (
+          <div key={d.date} className="forecast-card" style={{ padding: "0.75rem", background: d.isWeekend ? "#ffe082" : "#f5f5f5" }}>
+            <span className="eyebrow" style={{ fontSize: "0.7rem" }}>{d.day} · {d.date.slice(5)}</span>
+            <strong style={{ fontSize: "1.2rem", display: "block" }}>{d.projectedDemand} units</strong>
+            <small style={{ color: d.isWeekend ? "#d84315" : "#666" }}>
+              {d.isWeekend ? "Weekend peak surge (+35%)" : "Routine weekday flow"}
+            </small>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 

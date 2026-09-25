@@ -88,7 +88,7 @@ export async function setStatus(user, id, body) {
     .object({ status: z.enum(["active", "paused", "archived"]) })
     .parse(body);
   const l = await ownListing(user, id);
-  assert(status !== "active" || user.verification === "verified", 403, "Business approval is required to publish resources. Complete your profile for review.");
+  assert(status !== "active" || user.verification !== "rejected", 403, "Your account is restricted from publishing resources. Please contact support.");
   assert(
     status !== "active" || !l.moderationHold,
     409,

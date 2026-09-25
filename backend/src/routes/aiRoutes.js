@@ -28,3 +28,6 @@ aiRoutes.post("/ai/plans", aiLimit, conductor.create);
 aiRoutes.post("/ai/plans/stream", aiLimit, conductor.stream);
 aiRoutes.post("/ai/plans/:id/replan", aiLimit, conductor.replan);
 aiRoutes.post("/ai/plans/:id/request", verifiedBusiness, conductor.request);
+aiRoutes.get("/ai/memory", c.listMemories);
+aiRoutes.post("/ai/memory", c.saveMemory);
+aiRoutes.delete("/ai/memory/:id", c.deleteMemory);

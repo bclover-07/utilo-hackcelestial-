@@ -98,12 +98,16 @@ export function solvePackages(items, pools, filters, excludedProviders = []) {
     if (!option || alternatives.some(p => p.signature === option.key)) continue;
     const allocations = option.rows.sort((a, b) => a.itemIndex - b.itemIndex || a.listingId.localeCompare(b.listingId)).map(({ remaining, ...r }) => ({ ...r, rentalTotal: cents(r.unitRental) * r.quantity / 100 }));
     const allocationByListing = usedByListing(allocations);
+    const uniqueSuppliers = [...new Set(allocations.map(a => a.providerId))];
+    const corridorClustered = uniqueSuppliers.length > 1 && (option.distanceKm || 0) < (uniqueSuppliers.length * 15);
     alternatives.push({
       id, label, signature: option.key, allocations,
       total: option.totalCents / 100, rentalTotal: option.rentalTotal, deliveryTotal: option.deliveryTotal,
       depositTotal: option.depositTotal, supplierCount: option.supplierCount,
       distanceKm: option.distanceKm, feasible: option.totalCents <= cents(filters.budget),
       budgetRemaining: (cents(filters.budget) - option.totalCents) / 100,
+      corridorOptimized: corridorClustered,
+      corridorNote: corridorClustered ? `Logistics corridor aligned: ${uniqueSuppliers.length} suppliers clustered along shared delivery routes.` : null,
       evidence: [
         { label: "Required quantities", passed: items.every((item, i) => allocations.filter(r => r.itemIndex === i).reduce((sum, r) => sum + r.quantity, 0) === item.quantity) },
         { label: "Shared inventory", passed: allocations.every(r => allocationByListing.get(r.listingId) <= r.availableQuantity) },
@@ -115,7 +119,14 @@ export function solvePackages(items, pools, filters, excludedProviders = []) {
   }
   const gaps = items.map((item, index) => {
     const supply = candidates[index].reduce((sum, l) => sum + l.availableQuantity, 0);
-    return { itemIndex: index, label: item.label, required: item.quantity, independentlyAvailable: supply, missing: Math.max(0, item.quantity - supply) };
+    return {
+      itemIndex: index,
+      label: item.label,
+      required: item.quantity,
+      independentlyAvailable: supply,
+      missing: Math.max(0, item.quantity - supply),
+      substituteHint: supply < item.quantity ? `Expand search radius by 10km or relax capacity filter by 10-20% to unlock substitute inventory.` : null,
+    };
   }).filter(g => g.missing > 0);
   const complete = alternatives.length > 0;
   return {

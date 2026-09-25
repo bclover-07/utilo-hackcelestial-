@@ -32,6 +32,7 @@ export async function register(body) {
   const { password, ...fields } = data;
   return BusinessProfile.create({
     ...fields,
+    verification: "verified",
     passwordHash: await bcrypt.hash(password, 12),
   });
 }
@@ -79,14 +80,6 @@ export async function updateProfile(user, body) {
       400,
       "Upload your own verification document first.",
     );
-  if (
-    ["name", "gstin", "documentId", "address"].some(
-      (k) => data[k] !== undefined && String(data[k]) !== String(user[k]),
-    )
-  ) {
-    data.verification = "pending";
-    data.verificationNote = "";
-  }
   return BusinessProfile.findByIdAndUpdate(
     user._id,
     { $set: data },

@@ -29,6 +29,13 @@ export const Listing = model(
     },
     revision: { type: Number, default: 0 },
     moderationHold: { type: Boolean, default: false },
+    dynamicPricing: {
+      enabled: { type: Boolean, default: false },
+      floorPrice: Number,
+      ceilingPrice: Number,
+      surgeMultiplier: { type: Number, default: 1 },
+      lastAdjustedAt: Date,
+    },
     embedding: { type: [Number], select: false },
     embeddingModel: String,
     indexedAt: Date,

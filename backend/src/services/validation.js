@@ -67,6 +67,14 @@ export const listingSchema = z.object({
       z.union([z.string().max(500), z.number().finite(), z.boolean()]),
     )
     .default({}),
+  dynamicPricing: z
+    .object({
+      enabled: z.boolean().default(false),
+      floorPrice: nonnegative.optional(),
+      ceilingPrice: nonnegative.optional(),
+      surgeMultiplier: z.number().min(0.5).max(3).default(1),
+    })
+    .optional(),
 });
 export const requestSchema = z
   .object({
