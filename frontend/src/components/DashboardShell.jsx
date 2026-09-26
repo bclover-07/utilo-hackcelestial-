@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Action } from "./ui";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   Bot,
   Search,
@@ -28,6 +28,10 @@ import {
   Sliders,
   ArrowLeftRight,
   Boxes,
+  CheckCircle2,
+  AlertTriangle,
+  X,
+  ArrowRight,
 } from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useTranslation } from "@/lib/i18n";
@@ -51,7 +55,6 @@ const providerSections = [
       ["listings", "My listings", <Package size={17} key="listings" />],
       ["calendar", "Availability & Calendar", <Calendar size={17} key="calendar" />],
       ["smart-pricing", "Smart pricing & demand", <DollarSign size={17} key="pricing" />],
-      ["performance", "Provider performance", <Award size={17} key="performance" />],
     ],
   },
   {
@@ -176,6 +179,23 @@ export default function DashboardShell({ children, admin = false }) {
   const [incomingCall, setIncomingCall] = useState(null);
   const [activeCall, setActiveCall] = useState(null);
   const [hasNewAlert, setHasNewAlert] = useState(false);
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = (notification) => {
+    if (!notification) return;
+    const id = notification._id || `toast_${Date.now()}_${Math.random()}`;
+    const newToast = {
+      id,
+      title: notification.title || "Notification",
+      body: notification.body || "",
+      href: notification.href || "/dashboard/notifications",
+      kind: notification.kind || "general",
+    };
+    setToasts((prev) => [...prev.slice(-2), newToast]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 6000);
+  };
 
   useEffect(() => {
     if (!auth.user) return;
@@ -202,8 +222,18 @@ export default function DashboardShell({ children, admin = false }) {
       setIncomingCall(null);
     }
 
-    function handleNotification() {
+    function handleNotification(data) {
       setHasNewAlert(true);
+      if (data) {
+        addToast(data);
+      }
+    }
+
+    function handleCustomNotify(e) {
+      if (e.detail) {
+        setHasNewAlert(true);
+        addToast(e.detail);
+      }
     }
 
     function handleWindowStartCall(e) {
@@ -216,6 +246,8 @@ export default function DashboardShell({ children, admin = false }) {
     socket.on("video_call_accepted", handleAccepted);
     socket.on("video_call_declined", handleDeclined);
     socket.on("notification", handleNotification);
+    socket.on("notification_new", handleNotification);
+    window.addEventListener("utlio:notify", handleCustomNotify);
     window.addEventListener("utlio:open-video-call", handleWindowStartCall);
 
     return () => {
@@ -223,6 +255,8 @@ export default function DashboardShell({ children, admin = false }) {
       socket.off("video_call_accepted", handleAccepted);
       socket.off("video_call_declined", handleDeclined);
       socket.off("notification", handleNotification);
+      socket.off("notification_new", handleNotification);
+      window.removeEventListener("utlio:notify", handleCustomNotify);
       window.removeEventListener("utlio:open-video-call", handleWindowStartCall);
     };
   }, [auth.user]);
@@ -581,6 +615,158 @@ export default function DashboardShell({ children, admin = false }) {
           messageId={activeCall.messageId}
         />
       )}
+
+      {/* Real-Time Floating Notification Alerts */}
+      <div
+        aria-live="polite"
+        style={{
+          position: "fixed",
+          top: "80px",
+          right: "24px",
+          zIndex: 99999,
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px",
+          maxWidth: "380px",
+          width: "calc(100vw - 32px)",
+          pointerEvents: "none",
+        }}
+      >
+        <AnimatePresence>
+          {toasts.map((toast) => {
+            const isBooking = toast.kind === "booking" || toast.title.toLowerCase().includes("booking");
+            const isCancelled = toast.title.toLowerCase().includes("cancel");
+            const isMsg = toast.kind === "message" || toast.title.toLowerCase().includes("message");
+            const isOffer = toast.kind === "negotiation" || toast.title.toLowerCase().includes("offer");
+
+            const accentColor = isCancelled
+              ? "#ef4444"
+              : isBooking
+              ? "#10b981"
+              : isMsg
+              ? "#3b82f6"
+              : isOffer
+              ? "#f59e0b"
+              : "#6366f1";
+
+            return (
+              <motion.div
+                key={toast.id}
+                initial={{ opacity: 0, x: 50, scale: 0.95 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 50, scale: 0.9 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                style={{
+                  pointerEvents: "auto",
+                  background: "#fffdf8",
+                  border: "2px solid #171915",
+                  borderRadius: "10px",
+                  boxShadow: "4px 4px 0 #171915",
+                  padding: "12px 14px",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "12px",
+                }}
+              >
+                <div
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "8px",
+                    background: accentColor,
+                    border: "1.5px solid #171915",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    color: "#fff",
+                    boxShadow: "1px 1px 0 #171915",
+                  }}
+                >
+                  {isCancelled ? (
+                    <AlertTriangle size={18} color="#fff" />
+                  ) : isBooking ? (
+                    <CheckCircle2 size={18} color="#fff" />
+                  ) : isMsg ? (
+                    <MessageSquare size={18} color="#fff" />
+                  ) : (
+                    <Bell size={18} color="#fff" />
+                  )}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <h4
+                      style={{
+                        margin: 0,
+                        fontSize: "0.88rem",
+                        fontWeight: 800,
+                        color: "#171915",
+                        letterSpacing: "-0.01em",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {toast.title}
+                    </h4>
+                    <button
+                      onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        padding: "2px",
+                        color: "#595852",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                      aria-label="Dismiss notification"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                  <p
+                    style={{
+                      margin: "3px 0 8px",
+                      fontSize: "0.8rem",
+                      color: "#475569",
+                      lineHeight: 1.35,
+                      wordBreak: "break-word",
+                    }}
+                  >
+                    {toast.body}
+                  </p>
+                  {toast.href && (
+                    <Link
+                      href={toast.href}
+                      onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        fontSize: "0.78rem",
+                        fontWeight: 700,
+                        color: "#171915",
+                        textDecoration: "underline",
+                      }}
+                    >
+                      <span>View details</span>
+                      <ArrowRight size={12} />
+                    </Link>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

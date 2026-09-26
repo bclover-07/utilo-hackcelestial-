@@ -94,13 +94,30 @@ export async function transition(user, id, raw) {
     }
     b.status = status;
     await b.save({ session });
+    const statusTitles = {
+      cancelled: "Booking cancelled",
+      in_progress: "Booking started",
+      completed: "Booking completed",
+      confirmed: "Booking confirmed",
+    };
+    const statusTitle = statusTitles[status] || `Booking ${status.replace("_", " ")}`;
+    const statusBody =
+      status === "cancelled"
+        ? `Booking was cancelled by ${user.name || "partner"}.${b.cancellationReason ? ` Reason: ${b.cancellationReason}` : ""}`
+        : status === "completed"
+          ? "Booking marked as completed. Please leave a review!"
+          : status === "in_progress"
+            ? "Your booking is now in progress."
+            : `Booking changed status to ${status.replace("_", " ")}.`;
+
     for (const uid of [b.provider, b.seeker].filter(Boolean))
       await notify(
         uid,
-        `Booking ${status.replace("_", " ")}`,
-        `Booking ${b._id} changed status.`,
+        statusTitle,
+        statusBody,
         "/dashboard/bookings",
         session,
+        { kind: "booking", relatedBooking: b._id }
       );
     emitToUser(b.provider, "inventory_changed", {
       type: "booking_transition",
@@ -143,7 +160,18 @@ export async function dispute(user, id, raw) {
     409,
     "You already have an open dispute for this booking.",
   );
-  return Dispute.create({ booking: id, openedBy: user._id, reason });
+  const d = await Dispute.create({ booking: id, openedBy: user._id, reason });
+  const otherUser = String(b.provider) === String(user._id) ? b.seeker : b.provider;
+  if (otherUser) {
+    await notify(
+      otherUser,
+      "Dispute opened",
+      `${user.name || "A partner"} opened a dispute on booking #${String(b._id).slice(-6)}.`,
+      "/dashboard/disputes",
+      { kind: "dispute", relatedBooking: b._id }
+    );
+  }
+  return d;
 }
 const icsEscape = (v) =>
   String(v)

@@ -1,4 +1,6 @@
-import { ProviderPerformancePage } from "@/components/DemandForecast";
+import { redirect } from "next/navigation";
+
 export default function Page() {
-  return <ProviderPerformancePage />;
+  redirect("/dashboard");
 }
+
