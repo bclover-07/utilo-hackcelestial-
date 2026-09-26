@@ -127,6 +127,7 @@ class _AuthScreenState extends State<AuthScreen> {
       body: DottedScaffoldBackground(
         child: Scrollbar(
           child: SingleChildScrollView(
+            primary: true,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
             child: Form(
               key: _formKey,

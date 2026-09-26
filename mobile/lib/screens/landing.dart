@@ -286,6 +286,7 @@ class _LandingScreenState extends State<LandingScreen> {
       body: DottedScaffoldBackground(
         child: Scrollbar(
           child: SingleChildScrollView(
+            primary: true,
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
