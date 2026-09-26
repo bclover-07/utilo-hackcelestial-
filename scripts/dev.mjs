@@ -53,7 +53,7 @@ function startProcess(name, cmd, args, cwd, color) {
 }
 
 // 1. Start Backend on port 4000
-const backendArgs = isProduction ? ["src/server.js"] : ["--watch", "src/server.js"];
+const backendArgs = isProduction ? ["src/server.js"] : ["--watch", "--watch-path=src", "src/server.js"];
 startProcess(
   "backend",
   "node",
