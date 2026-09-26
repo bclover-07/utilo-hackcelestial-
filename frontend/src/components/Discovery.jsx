@@ -300,11 +300,15 @@ export function SearchPage() {
 
   const categoryIcons = {
     banquet_hall: "🏛️",
+    banquet_space: "🏛️",
+    parking_capacity: "🅿️",
+    vehicles: "🚐",
+    kitchen: "👨‍🍳",
+    furniture: "🛋️",
+    av_equipment: "🔊",
     chairs: "🪑",
     tables: "🍽️",
-    av_equipment: "🔊",
     linens: "✨",
-    kitchen: "👨‍🍳",
   };
 
   return (

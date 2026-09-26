@@ -1,11 +1,11 @@
-import { model, ref } from "./helpers.js";
+import { Schema, model, ref } from "./helpers.js";
 
 export const Booking = model("Booking", {
-  quote: { ...ref("Quote"), unique: true },
-  request: ref("Request"),
+  quote: { type: Schema.Types.ObjectId, ref: "Quote", unique: true, sparse: true, required: false },
+  request: { type: Schema.Types.ObjectId, ref: "Request", required: false },
   listing: ref("Listing"),
   provider: ref("BusinessProfile"),
-  seeker: ref("BusinessProfile"),
+  seeker: { type: Schema.Types.ObjectId, ref: "BusinessProfile", required: false },
   itemIndex: Number,
   start: Date,
   end: Date,
@@ -22,5 +22,15 @@ export const Booking = model("Booking", {
     enum: ["confirmed", "in_progress", "completed", "cancelled"],
     default: "confirmed",
   },
+  isOfflineDeal: { type: Boolean, default: false },
+  offlineClient: {
+    name: String,
+    phone: String,
+    email: String,
+    notes: String,
+  },
+  returnedAt: Date,
   reminderSent: Boolean,
+  returnReminderSent: Boolean,
+  expiryNotifiedAt: Date,
 });

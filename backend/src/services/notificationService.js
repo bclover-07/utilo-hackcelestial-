@@ -1,19 +1,43 @@
 import nodemailer from "nodemailer";
 import { Notification, BusinessProfile } from "../models/index.js";
-import { getIO } from "../socket.js";
+import { emitToUser, getIO } from "../socket.js";
 
-export async function notify(user, title, body, href, session) {
-  const docs = await Notification.create(
-    [{ user, title, body, href }],
-    session ? { session } : {},
-  );
+export async function notify(user, title, body, href, sessionOrMeta, maybeMeta) {
+  let session = null;
+  let meta = {};
+  if (sessionOrMeta && sessionOrMeta.startTransaction) {
+    session = sessionOrMeta;
+    meta = maybeMeta || {};
+  } else if (sessionOrMeta && typeof sessionOrMeta === "object") {
+    meta = sessionOrMeta;
+  }
+
+  const payload = {
+    user,
+    title,
+    body,
+    href,
+    kind: meta.kind || "general",
+    relatedBooking: meta.relatedBooking,
+    relatedListing: meta.relatedListing,
+  };
+
+  const docs = await Notification.create([payload], session ? { session } : {});
+  const created = docs[0];
+
   try {
-    const io = getIO();
-    if (io) {
-      io.to(`user_${user}`).emit("notification", docs[0]);
-    }
-  } catch {}
-  return docs[0];
+    emitToUser(user, "notification", created);
+    emitToUser(user, "notification_new", created);
+    emitToUser(user, "inventory_changed", {
+      kind: meta.kind,
+      bookingId: meta.relatedBooking,
+      listingId: meta.relatedListing,
+    });
+  } catch {
+    // Non-blocking socket emission
+  }
+
+  return created;
 }
 export async function deliverEmails() {
   if (!process.env.SMTP_HOST || !process.env.EMAIL_FROM) return;

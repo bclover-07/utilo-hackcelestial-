@@ -32,17 +32,114 @@ async function seed() {
 
   // ─── 1. Categories ────────────────────────────────────────────────
   const categories = [
-    { slug: "banquet_hall", name: "Banquet halls & Venues", color: "#FFE66D" },
-    { slug: "chairs", name: "Chairs & Seating", color: "#4ECDC4" },
-    { slug: "tables", name: "Tables & Dining Setups", color: "#FFB347" },
-    { slug: "av_equipment", name: "Audio, Visual & LED Screens", color: "#C3B1E1" },
-    { slug: "linens", name: "Linens, Tents & Decor", color: "#FF85A1" },
-    { slug: "kitchen", name: "Commercial Kitchens", color: "#85E8B8" },
+    {
+      slug: "banquet_hall",
+      name: "Banquet Spaces & Venues",
+      color: "#FFE66D",
+      requiredFields: [
+        { key: "carpet_area_sqft", label: "Carpet Area (sq ft)", type: "number" },
+        { key: "air_conditioning", label: "Air Conditioning (AC)", type: "boolean" },
+        { key: "parking_capacity", label: "Parking Capacity (vehicles)", type: "number" },
+        { key: "stage_available", label: "Stage & Performance Area", type: "boolean" },
+        { key: "catering_allowed", label: "Outside Catering Allowed", type: "boolean" },
+        { key: "sound_system", label: "Built-in Sound / PA System", type: "boolean" },
+        { key: "power_backup", label: "Generator / Power Backup", type: "boolean" },
+      ],
+    },
+    {
+      slug: "parking_capacity",
+      name: "Parking Capacity & Spaces",
+      color: "#38BDF8",
+      requiredFields: [
+        { key: "total_vehicle_spots", label: "Total Vehicle Capacity (spots)", type: "number" },
+        { key: "covered_parking", label: "Covered / Basement Parking", type: "boolean" },
+        { key: "valet_available", label: "Valet Service Available", type: "boolean" },
+        { key: "bus_truck_access", label: "Bus / Heavy Vehicle Access", type: "boolean" },
+        { key: "security_cctv", label: "24/7 Security & CCTV", type: "boolean" },
+        { key: "ev_charging", label: "EV Charging Points", type: "boolean" },
+      ],
+    },
+    {
+      slug: "vehicles",
+      name: "Vehicles & Transport",
+      color: "#F97316",
+      requiredFields: [
+        { key: "vehicle_type", label: "Vehicle Type (Shuttle Van, Bus, Food Truck, VIP Car)", type: "text" },
+        { key: "seating_capacity", label: "Seating / Passenger Capacity", type: "number" },
+        { key: "driver_included", label: "Driver / Chauffeur Included", type: "boolean" },
+        { key: "fuel_included", label: "Fuel Included", type: "boolean" },
+        { key: "ac_available", label: "Air Conditioned", type: "boolean" },
+        { key: "permit_type", label: "Permit Type (Local, State, All-India)", type: "text" },
+      ],
+    },
+    {
+      slug: "kitchen",
+      name: "Commercial Kitchens & Capacity",
+      color: "#85E8B8",
+      requiredFields: [
+        { key: "appliances", label: "Included Appliances (Oven, Freezer, Fryer, Burners)", type: "text" },
+        { key: "gas_piped", label: "Piped Commercial Gas Line", type: "boolean" },
+        { key: "fssai_certified", label: "Food Grade / FSSAI Certified", type: "boolean" },
+        { key: "prep_stations", label: "Dedicated Prep Stations", type: "number" },
+        { key: "cold_storage_cu_ft", label: "Cold Storage Space (cu ft)", type: "number" },
+      ],
+    },
+    {
+      slug: "furniture",
+      name: "Furniture & Seating",
+      color: "#FFB347",
+      requiredFields: [
+        { key: "furniture_type", label: "Furniture Type (Banquet Chairs, Tables, Sofas, Bars)", type: "text" },
+        { key: "material", label: "Material (Wood, Steel, Plastic, Upholstered)", type: "text" },
+        { key: "stackable_foldable", label: "Stackable / Foldable", type: "boolean" },
+        { key: "cushion_included", label: "Padded Cushion / Covers Included", type: "boolean" },
+        { key: "indoor_outdoor", label: "Indoor / Outdoor Rated", type: "text" },
+      ],
+    },
+    {
+      slug: "av_equipment",
+      name: "Audio-Visual Equipment",
+      color: "#C3B1E1",
+      requiredFields: [
+        { key: "equipment_type", label: "Equipment Type (Speaker, Mic, Projector, LED Wall)", type: "text" },
+        { key: "power_output_watts", label: "Power Output / Brightness (Watts/Lumens)", type: "number" },
+        { key: "wireless", label: "Wireless / Bluetooth", type: "boolean" },
+        { key: "setup_assistance", label: "On-site Technician Included", type: "boolean" },
+      ],
+    },
+    {
+      slug: "chairs",
+      name: "Chairs & Seating",
+      color: "#4ECDC4",
+      requiredFields: [
+        { key: "chair_type", label: "Chair Style", type: "text" },
+        { key: "material", label: "Material", type: "text" },
+        { key: "stackable", label: "Stackable", type: "boolean" },
+      ],
+    },
+    {
+      slug: "tables",
+      name: "Tables & Dining Setups",
+      color: "#FFB347",
+      requiredFields: [
+        { key: "shape", label: "Table Shape", type: "text" },
+        { key: "seating_per_table", label: "Seats per Table", type: "number" },
+      ],
+    },
+    {
+      slug: "linens",
+      name: "Linens, Tents & Decor",
+      color: "#FF85A1",
+      requiredFields: [
+        { key: "fabric_material", label: "Fabric Material", type: "text" },
+        { key: "waterproof", label: "Waterproof / Outdoor Rated", type: "boolean" },
+      ],
+    },
   ];
   for (const cat of categories) {
     await Category.updateOne(
       { slug: cat.slug },
-      { $set: { name: cat.name, color: cat.color, requiredFields: [] } },
+      { $set: { name: cat.name, color: cat.color, requiredFields: cat.requiredFields || [] } },
       { upsert: true }
     );
   }
@@ -450,9 +547,93 @@ async function seed() {
       attributes: { mobileTruck: true, LPGIncluded: true, refrigerator: true },
       photos: ["https://images.unsplash.com/photo-1565123409695-7b5ef63a2efb?auto=format&fit=crop&w=1200&q=80"],
     },
+
+    // ── Parking Capacity ──
+    {
+      category: "parking_capacity",
+      title: "Hotel Multi-Level Underground Covered Parking Hub (120 Bays)",
+      description: "Secure, weather-protected basement parking facility with 24/7 CCTV surveillance, automated barrier entry, dedicated valet staging lane, and 6 high-speed EV charging stations.",
+      quantity: 120, capacity: 1, price: 450, unit: "day", minHours: 4,
+      deposit: 2000, delivery: false, deliveryFee: 0,
+      conditions: "Valet drivers available upon advance booking. 24-hour security personnel on site.",
+      cancellationHours: 12,
+      city: "Mumbai", address: "BKC Commercial Hub, Bandra East, Mumbai",
+      location: { type: "Point", coordinates: [72.868, 19.066] },
+      attributes: { covered: true, valetAvailable: true, cctv: true, evChargers: 6 },
+      photos: ["https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=1200&q=80"],
+    },
+    {
+      category: "parking_capacity",
+      title: "BKC Paved Coach & Event Bus Parking Lot (30 Bays)",
+      description: "Heavy-vehicle accessible paved parking lot with 40-foot turn radius, floodlighting, boom barrier, and driver restrooms. Perfect for large guest transport coaches and equipment trucks.",
+      quantity: 30, capacity: 1, price: 1500, unit: "day", minHours: 4,
+      deposit: 3000, delivery: false, deliveryFee: 0,
+      conditions: "Accommodates 45-seater Volvo coaches and heavy logistics trucks. Overnight parking allowed.",
+      cancellationHours: 24,
+      city: "Mumbai", address: "BKC Logistics Depot, Mumbai",
+      location: { type: "Point", coordinates: [72.870, 19.065] },
+      attributes: { busAccess: true, floodlights: true, security: true },
+      photos: ["https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&w=1200&q=80"],
+    },
+
+    // ── Vehicles & Transport ──
+    {
+      category: "vehicles",
+      title: "Mercedes-Benz Sprinter 18-Seater VIP Shuttle Van",
+      description: "Ultra-luxury guest transfer van with executive leather reclining seats, ambient LED cabin lighting, chilled beverage console, high-capacity AC, and uniformed chauffeur.",
+      quantity: 2, capacity: 18, price: 9500, unit: "day", minHours: 4,
+      deposit: 5000, delivery: true, deliveryFee: 0,
+      conditions: "Includes professional uniformed driver and 100km daily fuel allowance. Extra km at ₹22/km.",
+      cancellationHours: 24,
+      city: "Mumbai", address: "BKC Logistics Depot, Mumbai",
+      location: { type: "Point", coordinates: [72.870, 19.065] },
+      attributes: { vehicleType: "Van", leatherSeats: true, driverIncluded: true, ac: true },
+      photos: ["https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=1200&q=80"],
+    },
+    {
+      category: "vehicles",
+      title: "Tata Winger AC Luxury Guest Shuttles (Fleet of 4)",
+      description: "Air-conditioned 12-seater passenger shuttles for wedding guest transfers, venue hops, and airport pickups. Clean, GPS-tracked, and well-maintained.",
+      quantity: 4, capacity: 12, price: 5500, unit: "day", minHours: 4,
+      deposit: 3000, delivery: true, deliveryFee: 0,
+      conditions: "Commercial tourist permit. Driver provided. 80km running included.",
+      cancellationHours: 24,
+      city: "Mumbai", address: "Andheri Warehouse, Mumbai",
+      location: { type: "Point", coordinates: [72.835, 19.130] },
+      attributes: { vehicleType: "Mini Bus", gpsTracked: true, driverIncluded: true },
+      photos: ["https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=1200&q=80"],
+    },
+
+    // ── Furniture & Seating ──
+    {
+      category: "furniture",
+      title: "Gold Chiavari Banquet Chairs & Plush Cushions (Lot of 250)",
+      description: "Classic high-strength resin chiavari ballroom chairs in metallic gold with high-density ivory foam seat cushions. Lightweight, stackable, and pristine.",
+      quantity: 250, capacity: 1, price: 95, unit: "day", minHours: 1,
+      deposit: 4000, delivery: true, deliveryFee: 1500,
+      conditions: "Indoor or covered outdoor use only. Returned stacked in padded transport carts.",
+      cancellationHours: 24,
+      city: "Mumbai", address: "Andheri Warehouse, Mumbai",
+      location: { type: "Point", coordinates: [72.835, 19.130] },
+      attributes: { material: "Resin", color: "Gold", stackable: true, cushionIncluded: true },
+      photos: ["https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=1200&q=80"],
+    },
+    {
+      category: "furniture",
+      title: "VIP Chesterfield Velvet Lounge Sofas & Brass Center Tables",
+      description: "Emerald green deep-buttoned Chesterfield 3-seater sofas paired with brushed brass and tempered glass coffee tables. Ideal for VIP lounges, green rooms, and cocktail stages.",
+      quantity: 8, capacity: 4, price: 3200, unit: "day", minHours: 1,
+      deposit: 5000, delivery: true, deliveryFee: 1200,
+      conditions: "White-glove delivery and positioning included. No open flame or smoking near upholstery.",
+      cancellationHours: 24,
+      city: "Mumbai", address: "BKC Logistics Depot, Mumbai",
+      location: { type: "Point", coordinates: [72.870, 19.065] },
+      attributes: { material: "Velvet", style: "Chesterfield", seatingCapacity: 4 },
+      photos: ["https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1200&q=80"],
+    },
   ];
 
-  const priyaIndices = [6, 7, 8, 9, 10, 11, 12]; // cocktailTables, jblSound, ledWall, projector, lightingRig, pagodaTent, linens
+  const priyaIndices = [6, 7, 8, 9, 10, 11, 12, 16, 18, 20];
   const listings = [];
   for (let idx = 0; idx < listingsData.length; idx++) {
     const ownerId = priyaIndices.includes(idx) ? seeker._id : provider._id;
@@ -736,6 +917,45 @@ async function seed() {
 
   console.log(`✔ 3 completed past bookings with 6 bilateral reviews.`);
 
+  // ─── 8b. INVENTORY OFFLINE DEALS & REAL-TIME DEMO RENTALS ─────────
+  const offlineBk1 = await Booking.create({
+    listing: roundTables._id,
+    provider: provider._id,
+    start: new Date(Date.now() - 6 * 3600000),
+    end: new Date(Date.now() + 18 * 3600000),
+    quantity: 12,
+    price: 9600,
+    deposit: 3000,
+    status: "in_progress",
+    isOfflineDeal: true,
+    offlineClient: {
+      name: "Rajesh Singhania (Elite Caterers)",
+      phone: "+91 98111 22334",
+      email: "rajesh@elitecaterers.in",
+      notes: "Cash advance paid at Bandra warehouse. Handover confirmed.",
+    },
+  });
+
+  const overdueBk = await Booking.create({
+    listing: foldChairs._id,
+    provider: provider._id,
+    start: new Date(Date.now() - 30 * 3600000),
+    end: new Date(Date.now() - 3 * 3600000),
+    quantity: 50,
+    price: 3500,
+    deposit: 1500,
+    status: "in_progress",
+    isOfflineDeal: true,
+    offlineClient: {
+      name: "Sunita Kapoor (Studio 9 Decor)",
+      phone: "+91 98222 33445",
+      email: "sunita@studio9decor.in",
+      notes: "Corporate anniversary setup. Awaiting van return to warehouse.",
+    },
+  });
+
+  console.log(`✔ 2 inventory demo rentals (1 expiring soon offline deal, 1 overdue return).`);
+
   // ─── 9. DISPUTES ──────────────────────────────────────────────────
   await Dispute.create({
     booking: pastBkA._id, openedBy: seeker._id,
@@ -813,8 +1033,35 @@ async function seed() {
     { user: admin._id, title: "New Business Registered", body: "Priya Sharma Productions joined as a Seeker.", href: "/admin/verifications", readAt: new Date() },
     { user: admin._id, title: "Dispute Filed", body: "Priya filed a dispute about AC delay during load-in.", href: "/admin/disputes", readAt: new Date() },
     { user: admin._id, title: "Dispute Resolved", body: "AC chiller dispute resolved amicably.", href: "/admin/disputes", readAt: new Date() },
+    {
+      user: provider._id,
+      title: "⚠️ Rental Expired: White Resin Folding Chairs",
+      body: "Rental duration ended for Sunita Kapoor (Studio 9 Decor). Verify return to free inventory or repost to marketplace.",
+      href: "/dashboard/inventory",
+      kind: "rental_expiry",
+      relatedBooking: overdueBk._id,
+      relatedListing: foldChairs._id,
+    },
+    {
+      user: provider._id,
+      title: "Rental Ending Soon: Round Banquet Tables",
+      body: "Rental concludes within 18 hours for Rajesh Singhania (Elite Caterers).",
+      href: "/dashboard/inventory",
+      kind: "rental_expiry",
+      relatedBooking: offlineBk1._id,
+      relatedListing: roundTables._id,
+    },
+    {
+      user: provider._id,
+      title: "Offline Deal Logged: Round Banquet Tables",
+      body: "Rented 12 units to Rajesh Singhania (Elite Caterers).",
+      href: "/dashboard/inventory",
+      kind: "offline_deal",
+      relatedBooking: offlineBk1._id,
+      relatedListing: roundTables._id,
+    },
   ]);
-  console.log(`✔ 14 notifications.`);
+  console.log(`✔ 17 notifications.`);
 
   // ─── 14. EVENT PLANS (AI Conductor) ───────────────────────────────
   await EventPlan.create([

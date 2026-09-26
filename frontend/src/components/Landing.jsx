@@ -17,6 +17,7 @@ import {
   AudioLines,
   Truck,
   Building2,
+  Car,
   Check,
   Menu,
   X,
@@ -61,39 +62,39 @@ class SceneBoundary extends Component {
 const categories = [
   [
     Building2,
-    "Spaces & venues",
-    "A little room for your big ideas.",
+    "Banquet space & venues",
+    "Turn unused banquet halls, ballrooms, and lawns into revenue.",
     "var(--lavender)",
+  ],
+  [
+    Car,
+    "Parking capacity",
+    "Monetize idle parking bays, covered basements, and valet spots.",
+    "var(--sky)",
+  ],
+  [
+    Truck,
+    "Vehicles & transport",
+    "Deploy guest shuttles, luxury passenger vans, and equipment trucks.",
+    "var(--peach)",
+  ],
+  [
+    CookingPot,
+    "Kitchen capacity",
+    "Share certified commercial prep stations, tandoors, and cold storage.",
+    "var(--teal)",
   ],
   [
     Armchair,
     "Furniture & seating",
-    "Make everyone feel invited.",
+    "Rent banquet chairs, dining setups, and cocktail lounge sofas.",
     "var(--yellow)",
   ],
   [
     AudioLines,
-    "Sound & vision",
-    "Set the tone. Steal the show.",
+    "Audio-visual equipment",
+    "Utilize idle concert sound, LED video walls, and stage rigs.",
     "var(--pink)",
-  ],
-  [
-    CookingPot,
-    "Kitchens & catering",
-    "Great events start in the kitchen.",
-    "var(--teal)",
-  ],
-  [
-    Truck,
-    "Transport & logistics",
-    "Get the good stuff where it belongs.",
-    "var(--sky)",
-  ],
-  [
-    Package,
-    "The finishing touches",
-    "Linens, decor and everything more.",
-    "var(--peach)",
   ],
 ];
 const agents = [
@@ -176,11 +177,12 @@ function MarketTickerSection({ reveal }) {
 }
 
 const categoriesCalc = [
-  { name: "Venues & Banquets", rate: 22000, unitLabel: "halls", icon: Building2 },
-  { name: "Sound & Lighting", rate: 5500, unitLabel: "rigs", icon: AudioLines },
-  { name: "Banquet Chairs", rate: 65, unitLabel: "chairs", icon: Armchair },
-  { name: "Cloud Kitchens", rate: 14000, unitLabel: "prep stations", icon: CookingPot },
-  { name: "Fleet & Logistics", rate: 7500, unitLabel: "trips", icon: Truck },
+  { name: "Banquet Spaces", rate: 22000, unitLabel: "halls", icon: Building2 },
+  { name: "Parking Capacity", rate: 450, unitLabel: "bays", icon: Car },
+  { name: "Vehicles & Transport", rate: 7500, unitLabel: "trips", icon: Truck },
+  { name: "Kitchen Capacity", rate: 14000, unitLabel: "prep stations", icon: CookingPot },
+  { name: "Furniture & Seating", rate: 65, unitLabel: "units", icon: Armchair },
+  { name: "Audio-Visual Gear", rate: 18000, unitLabel: "rigs", icon: AudioLines },
 ];
 
 function CapacityRoiCalculatorSection({ destination, reveal }) {

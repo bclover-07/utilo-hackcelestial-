@@ -15,6 +15,7 @@ import { uploadRoutes } from "./uploadRoutes.js";
 import { notificationRoutes } from "./notificationRoutes.js";
 import { adminRoutes } from "./adminRoutes.js";
 import { workProcessRoutes } from "./workProcessRoutes.js";
+import { inventoryRoutes } from "./inventoryRoutes.js";
 import { localAiConfig } from "../services/localAiConfig.js";
 
 export const api = Router();
@@ -58,4 +59,5 @@ b.use(requestRoutes);
 b.use(quoteRoutes);
 b.use(bookingRoutes);
 b.use(aiRoutes);
+b.use(inventoryRoutes);
 api.use(b);
