@@ -14,6 +14,7 @@ import { offerSchema } from "./validation.js";
 import { assert } from "../middlewares/errors.js";
 import { peakReserved } from "./matchingService.js";
 import { notify } from "./notificationService.js";
+import { broadcastMessage } from "../socket.js";
 export const participantQuery = (user) => ({
   $or: [{ provider: user._id }, { seeker: user._id }],
 });
@@ -235,11 +236,17 @@ export async function message(user, id, raw) {
   const q = await getQuote(user, id);
   const text = z.string().trim().min(1).max(4000).parse(raw.text);
   const m = await Message.create({ quote: id, sender: user._id, text });
+  const populated = await Message.findById(m._id)
+    .populate("sender", "name")
+    .lean();
+  try {
+    broadcastMessage(id, populated);
+  } catch {}
   await notify(
     String(q.provider) === String(user._id) ? q.seeker : q.provider,
     "New message",
     "Your booking partner sent a message.",
     "/dashboard/negotiations",
   );
-  return m;
+  return populated;
 }

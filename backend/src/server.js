@@ -1,8 +1,10 @@
+import { createServer } from "node:http";
 import mongoose from "mongoose";
 import { config, validateConfig } from "./config.js";
 import { app } from "./app.js";
 import { Category, Setting } from "./models/index.js";
 import { startJobs } from "./jobs/scheduler.js";
+import { initSocketServer } from "./socket.js";
 validateConfig();
 try {
   await mongoose.connect(config.mongo, { serverSelectionTimeoutMS: 15000 });
@@ -34,8 +36,10 @@ await Setting.updateOne(
   { upsert: true },
 );
 startJobs();
-const server = app.listen(config.port, () =>
-  console.log(`Utlio API ready on port ${config.port}`),
+const httpServer = createServer(app);
+export const io = initSocketServer(httpServer);
+const server = httpServer.listen(config.port, () =>
+  console.log(`Utlio API ready on port ${config.port} with Socket.io real-time chat`),
 );
 async function stop() {
   server.close();
@@ -44,3 +48,4 @@ async function stop() {
 }
 process.on("SIGINT", stop);
 process.on("SIGTERM", stop);
+

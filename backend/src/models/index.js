@@ -17,3 +17,6 @@ export { SavedSearch } from "./SavedSearch.js";
 export { SearchEvent } from "./SearchEvent.js";
 export { Audit } from "./Audit.js";
 export { Memory } from "./Memory.js";
+export { EventPlan } from "./EventPlan.js";
+export { AgentRun } from "./AgentRun.js";
+

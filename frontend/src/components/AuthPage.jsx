@@ -189,6 +189,63 @@ function AuthForm({ register, initialPersona }) {
             </p>
             {role === "business" && <p className="business-approval-note">One business account gives you full access to both modes. Switch between seeking and providing anytime in your workspace. Start monetizing idle capacity or discover verified venue and equipment setups immediately.</p>}
           </fieldset>
+          {!register && (
+            <div style={{ margin: "0.75rem 0 1rem", padding: "0.75rem", background: "#F5F2EB", borderRadius: "12px", border: "1.5px solid #20201e" }}>
+              <span className="eyebrow" style={{ fontSize: "0.7rem", letterSpacing: "0.08em", display: "block", marginBottom: "6px" }}>
+                DEMO ACCOUNTS (ONE-CLICK AUTOFILL)
+              </span>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                <button
+                  type="button"
+                  className="button"
+                  style={{ fontSize: "0.8rem", padding: "4px 8px", background: "#FFE66D", border: "1.5px solid #20201e", cursor: "pointer" }}
+                  onClick={() => {
+                    setEmail("shreshta@utlio.com");
+                    setPassword("Password123!");
+                    selectPersona("provider");
+                  }}
+                >
+                  🏢 Shreshta (Provider)
+                </button>
+                <button
+                  type="button"
+                  className="button"
+                  style={{ fontSize: "0.8rem", padding: "4px 8px", background: "#FFE66D", border: "1.5px solid #20201e", cursor: "pointer" }}
+                  onClick={() => {
+                    setEmail("shreyas@utlio.com");
+                    setPassword("Password123!");
+                    selectPersona("provider");
+                  }}
+                >
+                  🔊 Shreyas (Provider)
+                </button>
+                <button
+                  type="button"
+                  className="button"
+                  style={{ fontSize: "0.8rem", padding: "4px 8px", background: "#4ECDC4", border: "1.5px solid #20201e", cursor: "pointer" }}
+                  onClick={() => {
+                    setEmail("shivam@utlio.com");
+                    setPassword("Password123!");
+                    selectPersona("seeker");
+                  }}
+                >
+                  💼 Shivam (Seeker)
+                </button>
+                <button
+                  type="button"
+                  className="button"
+                  style={{ fontSize: "0.8rem", padding: "4px 8px", background: "#4ECDC4", border: "1.5px solid #20201e", cursor: "pointer" }}
+                  onClick={() => {
+                    setEmail("vaishnavi@utlio.com");
+                    setPassword("Password123!");
+                    selectPersona("seeker");
+                  }}
+                >
+                  🎉 Vaishnavi (Seeker)
+                </button>
+              </div>
+            </div>
+          )}
           <form
             className="form-stack"
             aria-busy={busy}

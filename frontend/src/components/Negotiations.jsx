@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { getSocket } from "@/lib/socket";
 import { useAuth } from "@/context/AuthContext";
 import AgentAction from "./AgentAction";
 import AgentDecision from "./AgentDecision";
@@ -137,14 +138,67 @@ function QuoteDetail({ q, reload }) {
   const messages = useData(`/quotes/${q._id}/messages`),
     [advice, setAdvice] = useState(null),
     [selectedOfferPrice, setSelectedOfferPrice] = useState(null),
-    [selectedOfferConditions, setSelectedOfferConditions] = useState(null);
+    [selectedOfferConditions, setSelectedOfferConditions] = useState(null),
+    [realtimeMessages, setRealtimeMessages] = useState([]),
+    [socketActive, setSocketActive] = useState(false);
   const last = q.offers.at(-1),
     mine = last?.by?._id === user._id;
   const open = ["invited", "offered"].includes(q.status),
     canOffer = open && (last ? !mine : q.provider._id === user._id);
   const reloadMessages = messages.reload;
+
+  // Sync initial loaded messages
   useEffect(() => {
-    const interval = setInterval(reloadMessages, 15000);
+    if (messages.data) {
+      setRealtimeMessages(messages.data);
+    }
+  }, [messages.data]);
+
+  // Socket.io real-time room joining and messaging
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    function handleConnect() {
+      setSocketActive(true);
+      socket.emit("join_quote", q._id);
+    }
+
+    function handleDisconnect() {
+      setSocketActive(false);
+    }
+
+    if (socket.connected) {
+      setSocketActive(true);
+      socket.emit("join_quote", q._id);
+    } else {
+      socket.connect();
+    }
+
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+
+    function handleNewMessage(msg) {
+      if (String(msg.quote) === String(q._id)) {
+        setRealtimeMessages((prev) => {
+          if (prev.some((m) => String(m._id) === String(msg._id))) return prev;
+          return [...prev, msg];
+        });
+      }
+    }
+
+    socket.on("new_message", handleNewMessage);
+
+    return () => {
+      socket.emit("leave_quote", q._id);
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+      socket.off("new_message", handleNewMessage);
+    };
+  }, [q._id]);
+
+  useEffect(() => {
+    const interval = setInterval(reloadMessages, 30000);
     return () => clearInterval(interval);
   }, [reloadMessages]);
   return (
@@ -349,42 +403,86 @@ function QuoteDetail({ q, reload }) {
         )}
       </section>
       <section className="panel">
-        <h3>Conversation</h3>
-        <LocalAi text={conversationText(messages.data || [])} />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+          <h3 style={{ margin: 0 }}>Conversation</h3>
+          {socketActive ? (
+            <span
+              className="badge"
+              style={{
+                background: "#A8E6CF",
+                border: "1.5px solid #20201e",
+                fontSize: "0.75rem",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+                fontWeight: 700,
+                padding: "3px 8px",
+              }}
+            >
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: "50%",
+                  background: "#059669",
+                  display: "inline-block",
+                  boxShadow: "0 0 4px #059669",
+                }}
+              />
+              Socket.io Live
+            </span>
+          ) : (
+            <span
+              className="badge"
+              style={{
+                background: "#FFE66D40",
+                border: "1.5px solid #20201e",
+                fontSize: "0.75rem",
+                padding: "3px 8px",
+              }}
+            >
+              Connecting...
+            </span>
+          )}
+        </div>
+        <LocalAi text={conversationText(realtimeMessages)} />
         <AgentAction
           endpoint="/ai/sentiment"
           body={{ quoteId: q._id }}
           label="Analyze conversation tone ✳"
         />
-        <State resource={messages}>
-          {(data) =>
-            data.length ? (
-              <div className="messages" aria-live="polite">
-                {data.map((m) => (
-                  <div
-                    key={m._id}
-                    className={`message ${m.sender?._id === user._id ? "mine" : ""}`}
-                  >
-                    <small>
-                      {m.sender?.name} · {date(m.createdAt)}
-                    </small>
-                    <p>{m.text}</p>
-                  </div>
-                ))}
+        {realtimeMessages.length ? (
+          <div className="messages" aria-live="polite">
+            {realtimeMessages.map((m) => (
+              <div
+                key={m._id}
+                className={`message ${m.sender?._id === user._id ? "mine" : ""}`}
+              >
+                <small>
+                  {m.sender?.name} · {date(m.createdAt)}
+                </small>
+                <p>{m.text}</p>
               </div>
-            ) : (
-              <p>Start the conversation with your booking partner.</p>
-            )
-          }
-        </State>
+            ))}
+          </div>
+        ) : messages.loading ? (
+          <p>Loading messages...</p>
+        ) : (
+          <p>Start the conversation with your booking partner.</p>
+        )}
         <ActionForm
           label="Send message"
           onSubmit={async (form) => {
-            await api(`/quotes/${q._id}/messages`, {
+            const result = await api(`/quotes/${q._id}/messages`, {
               method: "POST",
               body: Object.fromEntries(form),
             });
-            await messages.reload();
+            if (result && result._id) {
+              setRealtimeMessages((prev) => {
+                if (prev.some((m) => String(m._id) === String(result._id))) return prev;
+                return [...prev, result];
+              });
+            }
             return "Message sent.";
           }}
         >
