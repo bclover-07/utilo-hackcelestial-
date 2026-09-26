@@ -35,6 +35,13 @@ import { useTranslation } from "@/lib/i18n";
 
 const providerSections = [
   {
+    title: "MAIN",
+    categoryKey: "main",
+    links: [
+      ["", "Overview", <LayoutDashboard size={17} key="overview" />],
+    ],
+  },
+  {
     title: "INVENTORY & YIELD",
     categoryKey: "inventory",
     links: [
@@ -65,17 +72,22 @@ const providerSections = [
     ],
   },
   {
-    title: "ACCOUNT & SETTINGS",
-    categoryKey: "account",
+    title: "SETTINGS",
+    categoryKey: "settings",
     links: [
-      ["", "Overview summary", <LayoutDashboard size={17} key="overview" />],
-      ["notifications", "Alerts & updates", <Bell size={17} key="notifications" />],
-      ["profile", "Business profile & KYC", <User size={17} key="profile" />],
+      ["profile", "Settings", <Sliders size={17} key="settings" />],
     ],
   },
 ];
 
 const seekerSections = [
+  {
+    title: "MAIN",
+    categoryKey: "main",
+    links: [
+      ["", "Overview", <LayoutDashboard size={17} key="overview" />],
+    ],
+  },
   {
     title: "DISCOVER & PLAN",
     categoryKey: "discovery",
@@ -106,12 +118,10 @@ const seekerSections = [
     ],
   },
   {
-    title: "ACCOUNT & SETTINGS",
-    categoryKey: "account",
+    title: "SETTINGS",
+    categoryKey: "settings",
     links: [
-      ["", "Overview summary", <LayoutDashboard size={17} key="overview" />],
-      ["notifications", "Alerts & updates", <Bell size={17} key="notifications" />],
-      ["profile", "Business profile & KYC", <User size={17} key="profile" />],
+      ["profile", "Settings", <Sliders size={17} key="settings" />],
     ],
   },
 ];
@@ -184,13 +194,14 @@ export default function DashboardShell({ children, admin = false }) {
   // Current active page title for the breadcrumb
   const currentTitle = useMemo(() => {
     const currentSlug = path.replace(/^\/dashboard\/?/, "").replace(/^\/admin\/?/, "");
+    if (currentSlug === "notifications") return "Alerts & updates";
     for (const section of sections) {
       for (const [slug, label] of section.links) {
         if (slug === currentSlug) return label;
         if (slug && currentSlug.startsWith(slug)) return label;
       }
     }
-    return "Overview summary";
+    return "Overview";
   }, [path, sections]);
 
   if (auth.loading) return <div className="state">Checking your session…</div>;
@@ -235,52 +246,7 @@ export default function DashboardShell({ children, admin = false }) {
           </button>
         </div>
 
-        {/* Sidebar Role Switcher / Status Banner */}
-        {!admin ? (
-          <div className="sidebar-role-panel">
-            <div className="sidebar-role-badge-row">
-              <span className="sidebar-role-indicator">
-                <span
-                  className="role-status-dot"
-                  style={{
-                    background:
-                      auth.dashboardRole === "provider" ? "var(--yellow)" : "var(--teal)",
-                  }}
-                />
-                {auth.dashboardRole === "provider" ? "PROVIDER MODE" : "SEEKER MODE"}
-              </span>
-              <span
-                className="role-tag-pill"
-                style={{
-                  background:
-                    auth.dashboardRole === "provider" ? "var(--yellow)" : "var(--teal)",
-                }}
-              >
-                {auth.dashboardRole === "provider" ? "↗ Host" : "⌕ Guest"}
-              </span>
-            </div>
-            <p className="sidebar-role-desc">
-              {auth.dashboardRole === "provider"
-                ? "Listing inventory, setting prices, managing calendar & responding to incoming RFQs."
-                : "Searching venues, equipment, planning with AI Conductor & submitting RFQs."}
-            </p>
-            <button
-              type="button"
-              className="sidebar-role-swap-btn"
-              disabled={switching}
-              onClick={() =>
-                switchMode(auth.dashboardRole === "provider" ? "seeker" : "provider")
-              }
-            >
-              <ArrowLeftRight size={14} className={switching ? "spin" : ""} />
-              <span>
-                {switching
-                  ? "Switching mode..."
-                  : `Switch to ${auth.dashboardRole === "provider" ? "Seeker (Buy / Rent)" : "Provider (Sell / Monetize)"}`}
-              </span>
-            </button>
-          </div>
-        ) : (
+        {admin && (
           <div className="workspace-label">
             {t("OPERATIONS STUDIO")}
           </div>
@@ -313,12 +279,8 @@ export default function DashboardShell({ children, admin = false }) {
           ))}
         </nav>
 
-        {/* Sidebar Footer with Language Switcher and User Info */}
+        {/* Sidebar Footer with User Info */}
         <div className="sidebar-bottom">
-          <div className="sidebar-lang-box">
-            <span className="sidebar-lang-label">Language:</span>
-            <LanguageSwitcher />
-          </div>
           <div className="sidebar-user-info">
             <strong>{auth.user.name}</strong>
             <small>{auth.user.email}</small>
@@ -339,7 +301,7 @@ export default function DashboardShell({ children, admin = false }) {
       <div className="workspace-main">
         {/* Top Navbar */}
         <header className="workspace-top">
-          {/* Left: Mobile Toggle & Brand / Breadcrumb */}
+          {/* Left: Mobile Toggle & Clean Brand / Page Breadcrumb */}
           <div className="workspace-top-left">
             <button
               className="mobile-menu quiet"
@@ -358,21 +320,13 @@ export default function DashboardShell({ children, admin = false }) {
                 <span className="workspace-doodle-star">✳</span>
               </Link>
               <span className="workspace-nav-divider">/</span>
-              <span className="workspace-active-tag">
-                {admin
-                  ? "Admin"
-                  : auth.dashboardRole === "provider"
-                  ? "Provider"
-                  : "Seeker"}
-              </span>
-              <span className="workspace-nav-divider desktop-only">/</span>
-              <span className="workspace-current-page desktop-only">
+              <span className="workspace-current-page">
                 {t(currentTitle)}
               </span>
             </div>
           </div>
 
-          {/* Center: Redesigned Segmented Role Toggle */}
+          {/* Center: Segmented Role Toggle */}
           {!admin && (
             <div className="top-role-toggle-container">
               <div
@@ -433,7 +387,7 @@ export default function DashboardShell({ children, admin = false }) {
             {/* Quick Link to Notifications */}
             <Link
               href={admin ? "/admin/disputes" : "/dashboard/notifications"}
-              className="top-icon-btn"
+              className={`top-icon-btn ${path.includes("notifications") ? "active" : ""}`}
               title="Alerts & Notifications"
               aria-label="Alerts & Notifications"
             >
@@ -451,31 +405,6 @@ export default function DashboardShell({ children, admin = false }) {
             </Link>
           </div>
         </header>
-
-        {/* Features Sub-Navbar (Horizontal Quick-Nav for Desktop & Tablets) */}
-        {!admin && (
-          <nav className="features-sub-navbar" aria-label="Quick feature navigation">
-            <div className="features-nav-scroll">
-              {sections.flatMap((section) => section.links).map(([slug, label, icon]) => {
-                const target = `${base}${slug ? "/" + slug : ""}`;
-                const isActive =
-                  path === target ||
-                  (slug && path.startsWith(`${base}/${slug}/`));
-                return (
-                  <Link
-                    key={slug}
-                    href={target}
-                    className={`features-nav-chip ${isActive ? "active" : ""}`}
-                    aria-current={isActive ? "page" : undefined}
-                  >
-                    <span className="chip-icon">{icon}</span>
-                    <span className="chip-text">{t(label)}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </nav>
-        )}
 
         {/* Main Viewport Content */}
         <motion.main
