@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import { api } from "@/lib/api";
@@ -1323,14 +1324,29 @@ function OfflineDealModal({ listing, listings, onClose, onSuccess }) {
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="modal-backdrop" style={modalBackdropStyle}>
-      <div className="modal-card" style={modalCardStyle}>
-        <div style={modalHeaderStyle}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <h2 style={{ margin: 0, fontWeight: 900, textTransform: "uppercase", fontSize: "1.2rem" }}>
-              ⚡ Record Offline Deal
-            </h2>
+    <ModalPortal>
+      <div
+        className="modal-backdrop"
+        style={modalBackdropStyle}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
+        <div className="modal-card" style={modalCardStyle}>
+          <div style={modalHeaderStyle}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <h2 style={{ margin: 0, fontWeight: 900, textTransform: "uppercase", fontSize: "1.2rem" }}>
+                ⚡ Record Offline Deal
+              </h2>
             <Link
               href="/dashboard/inventory/offline-deal"
               onClick={onClose}
@@ -1475,6 +1491,7 @@ function OfflineDealModal({ listing, listings, onClose, onSuccess }) {
         </form>
       </div>
     </div>
+    </ModalPortal>
   );
 }
 
@@ -1518,15 +1535,42 @@ function NewAssetModal({ onClose, onSuccess }) {
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="modal-backdrop" style={modalBackdropStyle}>
-      <div className="modal-card" style={modalCardStyle}>
-        <div style={modalHeaderStyle}>
-          <h2 style={{ margin: 0, fontWeight: 900, textTransform: "uppercase", fontSize: "1.2rem" }}>
-            📦 Store New Fleet Asset / Space
-          </h2>
-          <button onClick={onClose} style={closeBtnStyle}><X size={18} /></button>
-        </div>
+    <ModalPortal>
+      <div
+        className="modal-backdrop"
+        style={modalBackdropStyle}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
+        <div className="modal-card" style={modalCardStyle}>
+          <div style={modalHeaderStyle}>
+            <div>
+              <h2 style={{ margin: 0, fontWeight: 900, textTransform: "uppercase", fontSize: "1.2rem" }}>
+                📦 Store New Fleet Asset / Space
+              </h2>
+              <div style={{ fontSize: "0.75rem", color: "#666", marginTop: "2px" }}>
+                Quick store in fleet, or{" "}
+                <Link
+                  href="/dashboard/listings/create"
+                  onClick={onClose}
+                  style={{ color: "#000", fontWeight: 700, textDecoration: "underline" }}
+                >
+                  open full listing creator →
+                </Link>
+              </div>
+            </div>
+            <button onClick={onClose} style={closeBtnStyle}><X size={18} /></button>
+          </div>
 
         {error && <div style={errorBannerStyle}>{error}</div>}
 
@@ -1658,6 +1702,7 @@ function NewAssetModal({ onClose, onSuccess }) {
         </form>
       </div>
     </div>
+    </ModalPortal>
   );
 }
 
@@ -1686,15 +1731,30 @@ function ReturnAndRepostModal({ booking, onClose, onSuccess }) {
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="modal-backdrop" style={modalBackdropStyle}>
-      <div className="modal-card" style={modalCardStyle}>
-        <div style={modalHeaderStyle}>
-          <h2 style={{ margin: 0, fontWeight: 900, textTransform: "uppercase", fontSize: "1.2rem" }}>
-            ✓ Check In & Free Fleet Units
-          </h2>
-          <button onClick={onClose} style={closeBtnStyle}><X size={18} /></button>
-        </div>
+    <ModalPortal>
+      <div
+        className="modal-backdrop"
+        style={modalBackdropStyle}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
+        <div className="modal-card" style={modalCardStyle}>
+          <div style={modalHeaderStyle}>
+            <h2 style={{ margin: 0, fontWeight: 900, textTransform: "uppercase", fontSize: "1.2rem" }}>
+              ✓ Check In & Free Fleet Units
+            </h2>
+            <button onClick={onClose} style={closeBtnStyle}><X size={18} /></button>
+          </div>
 
         {error && <div style={errorBannerStyle}>{error}</div>}
 
@@ -1739,19 +1799,35 @@ function ReturnAndRepostModal({ booking, onClose, onSuccess }) {
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }
 
 function ListingHistoryModal({ historyData, loading, onClose, onCheckIn }) {
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="modal-backdrop" style={modalBackdropStyle}>
-      <div className="modal-card" style={{ ...modalCardStyle, maxWidth: "720px" }}>
-        <div style={modalHeaderStyle}>
-          <h2 style={{ margin: 0, fontWeight: 900, textTransform: "uppercase", fontSize: "1.2rem" }}>
-            📜 Asset Lease History & Analytics
-          </h2>
-          <button onClick={onClose} style={closeBtnStyle}><X size={18} /></button>
-        </div>
+    <ModalPortal>
+      <div
+        className="modal-backdrop"
+        style={modalBackdropStyle}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
+        <div className="modal-card" style={{ ...modalCardStyle, maxWidth: "720px" }}>
+          <div style={modalHeaderStyle}>
+            <h2 style={{ margin: 0, fontWeight: 900, textTransform: "uppercase", fontSize: "1.2rem" }}>
+              📜 Asset Lease History & Analytics
+            </h2>
+            <button onClick={onClose} style={closeBtnStyle}><X size={18} /></button>
+          </div>
 
         {loading ? (
           <div style={{ padding: "2rem", textAlign: "center", fontWeight: 700 }}>Loading history records…</div>
@@ -1863,37 +1939,57 @@ function ListingHistoryModal({ historyData, loading, onClose, onCheckIn }) {
         )}
       </div>
     </div>
+    </ModalPortal>
   );
 }
 
 // -------------------------------------------------------------
-// STYLES
+// MODAL PORTAL & STYLES
 // -------------------------------------------------------------
+
+function ModalPortal({ children }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  if (!mounted || typeof document === "undefined") return null;
+  return createPortal(children, document.body);
+}
 
 const modalBackdropStyle = {
   position: "fixed",
   top: 0,
   left: 0,
-  width: "100%",
-  height: "100%",
-  backgroundColor: "rgba(0, 0, 0, 0.6)",
-  backdropFilter: "blur(2px)",
+  right: 0,
+  bottom: 0,
+  width: "100vw",
+  height: "100vh",
+  backgroundColor: "rgba(0, 0, 0, 0.7)",
+  backdropFilter: "blur(4px)",
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
-  zIndex: 9999,
-  padding: "1rem",
+  zIndex: 999999,
+  padding: "1.25rem",
+  boxSizing: "border-box",
+  overflowY: "auto",
 };
 
 const modalCardStyle = {
   backgroundColor: "#FFFFFF",
   border: "3px solid #000",
-  boxShadow: "6px 6px 0px #000",
+  boxShadow: "8px 8px 0px #000",
   width: "100%",
   maxWidth: "580px",
   padding: "1.5rem",
   maxHeight: "90vh",
   overflowY: "auto",
+  boxSizing: "border-box",
+  position: "relative",
+  zIndex: 1000000,
+  margin: "auto",
 };
 
 const modalHeaderStyle = {
