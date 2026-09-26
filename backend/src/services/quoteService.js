@@ -509,10 +509,15 @@ export async function respondVideoCall(user, id, raw) {
       roomId,
       messageId,
       acceptedBy: { _id: String(user._id), name: user.name },
+      userId: String(user._id),
+      senderId: String(user._id),
     };
     if (io) {
       io.to(`quote_${id}`).emit("video_call_accepted", payload);
       io.to(`user_${callerId}`).emit("video_call_accepted", payload);
+      if (roomId) {
+        io.to(`call_${roomId}`).emit("video_call_accepted", payload);
+      }
     }
     return { success: true, status: "accepted", roomId };
   } else {

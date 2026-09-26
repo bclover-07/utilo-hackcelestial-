@@ -269,11 +269,16 @@ export function initSocketServer(httpServer) {
             _id: String(socket.user._id),
             name: socket.user.name,
           },
+          userId: String(socket.user._id),
+          senderId: String(socket.user._id),
         };
 
         io.to(`quote_${quoteId}`).emit("video_call_accepted", payload);
         const callerId = String(q.provider) === String(socket.user._id) ? String(q.seeker) : String(q.provider);
         io.to(`user_${callerId}`).emit("video_call_accepted", payload);
+        if (roomId) {
+          io.to(`call_${roomId}`).emit("video_call_accepted", payload);
+        }
 
         if (typeof callback === "function") {
           callback({ success: true, payload });
@@ -312,12 +317,17 @@ export function initSocketServer(httpServer) {
             _id: String(socket.user._id),
             name: socket.user.name,
           },
+          userId: String(socket.user._id),
+          senderId: String(socket.user._id),
           reason: reason || "User is currently unavailable.",
         };
 
         io.to(`quote_${quoteId}`).emit("video_call_declined", payload);
         const callerId = String(q.provider) === String(socket.user._id) ? String(q.seeker) : String(q.provider);
         io.to(`user_${callerId}`).emit("video_call_declined", payload);
+        if (roomId) {
+          io.to(`call_${roomId}`).emit("video_call_declined", payload);
+        }
 
         if (typeof callback === "function") {
           callback({ success: true });
@@ -337,6 +347,7 @@ export function initSocketServer(httpServer) {
           quoteId,
           roomId,
           userId: String(socket.user._id),
+          senderId: String(socket.user._id),
           name: socket.user.name,
         });
       }
@@ -349,6 +360,7 @@ export function initSocketServer(httpServer) {
           quoteId,
           roomId,
           userId: String(socket.user._id),
+          senderId: String(socket.user._id),
         });
       }
     });
@@ -362,10 +374,13 @@ export function initSocketServer(httpServer) {
         senderId: String(socket.user._id),
         signal,
       };
-      if (targetUserId) {
-        io.to(`user_${targetUserId}`).emit("webrtc_signal", payload);
-      } else if (roomId) {
+      // Direct room broadcast to all other call participants
+      if (roomId) {
         socket.to(`call_${roomId}`).emit("webrtc_signal", payload);
+      }
+      // Also emit to targeted user personal room as a fallback
+      if (targetUserId && targetUserId !== "undefined" && targetUserId !== "null") {
+        io.to(`user_${targetUserId}`).emit("webrtc_signal", payload);
       }
     });
 
@@ -375,11 +390,13 @@ export function initSocketServer(httpServer) {
         quoteId,
         roomId,
         senderId: String(socket.user._id),
+        userId: String(socket.user._id),
       };
-      if (targetUserId) {
-        io.to(`user_${targetUserId}`).emit("webrtc_ready", payload);
-      } else if (roomId) {
+      if (roomId) {
         socket.to(`call_${roomId}`).emit("webrtc_ready", payload);
+      }
+      if (targetUserId && targetUserId !== "undefined" && targetUserId !== "null") {
+        io.to(`user_${targetUserId}`).emit("webrtc_ready", payload);
       }
     });
 

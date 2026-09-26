@@ -155,7 +155,7 @@ function QuoteDetail({ q, reload }) {
   const counterparty = isProvider ? q.seeker : q.provider;
   const partnerName = counterparty?.name || (isProvider ? "Seeker" : "Provider");
   const partnerRole = isProvider ? "Seeker" : "Provider";
-  const partnerId = counterparty?._id;
+  const partnerId = counterparty?._id ? String(counterparty._id) : "";
 
   // Video call interaction state
   const [requestingCall, setRequestingCall] = useState(false);
@@ -180,7 +180,7 @@ function QuoteDetail({ q, reload }) {
           detail: {
             quoteId: String(q._id),
             roomId: res.roomId,
-            partnerId: String(partnerId),
+            partnerId: partnerId,
             partnerName,
             partnerRole,
             listingTitle: q.listing?.title || "Asset Negotiation",
@@ -216,7 +216,7 @@ function QuoteDetail({ q, reload }) {
           detail: {
             quoteId: String(q._id),
             roomId,
-            partnerId: String(partnerId),
+            partnerId: partnerId,
             partnerName,
             partnerRole,
             listingTitle: q.listing?.title || "Asset Negotiation",
@@ -735,13 +735,14 @@ function QuoteDetail({ q, reload }) {
             const text = form.get("text");
             if (!text || !String(text).trim() || sendingMessage) return;
             const textarea = e.currentTarget.querySelector('textarea[name="text"]');
+            const cleanText = String(text).trim();
+            if (textarea) textarea.value = "";
             setSendingMessage(true);
             try {
               const result = await api(`/quotes/${q._id}/messages`, {
                 method: "POST",
-                body: { text: String(text).trim() },
+                body: { text: cleanText },
               });
-              if (textarea) textarea.value = "";
               if (result && result._id) {
                 setSocketMessages((prev) => {
                   if (prev.some((m) => String(m._id) === String(result._id))) return prev;
@@ -750,6 +751,7 @@ function QuoteDetail({ q, reload }) {
               }
             } catch (err) {
               console.error("Message send error:", err);
+              if (textarea && !textarea.value) textarea.value = cleanText;
             } finally {
               setSendingMessage(false);
             }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { getSocket } from "@/lib/socket";
 import { playConnectTone, playEndTone } from "@/lib/callSound";
 import {
@@ -26,7 +27,9 @@ const RTC_CONFIG = {
     { urls: "stun:stun2.l.google.com:19302" },
     { urls: "stun:stun3.l.google.com:19302" },
     { urls: "stun:stun4.l.google.com:19302" },
+    { urls: "stun:global.stun.twilio.com:3478" },
   ],
+  iceCandidatePoolSize: 10,
 };
 
 function formatDuration(seconds) {
@@ -47,6 +50,7 @@ export function VideoCallModal({
   isInitiator = false,
   messageId = "",
 }) {
+  const { user } = useAuth();
   const [callState, setCallState] = useState(isInitiator ? "calling" : "initializing");
   const [errorMessage, setErrorMessage] = useState("");
   const [audioMuted, setAudioMuted] = useState(false);
@@ -70,6 +74,9 @@ export function VideoCallModal({
   const pendingCandidatesRef = useRef([]);
   const earlySignalsBufferRef = useRef([]);
   const hasOfferedRef = useRef(false);
+  const peerReadyReceivedRef = useRef(false);
+  const seenCandidatesRef = useRef(new Set());
+  const hasReceivedOfferRef = useRef(false);
 
   // Sync ref with duration and partnerId
   useEffect(() => {
@@ -227,12 +234,13 @@ export function VideoCallModal({
     }
 
     function drainCandidates(pcInstance) {
+      if (!pcInstance || !pcInstance.remoteDescription) return;
       while (pendingCandidatesRef.current.length > 0) {
         const c = pendingCandidatesRef.current.shift();
         if (c) {
           try {
             const candidateInit = typeof c === "string" ? { candidate: c } : c;
-            pcInstance.addIceCandidate(new RTCIceCandidate(candidateInit)).catch(() => {});
+            pcInstance.addIceCandidate(candidateInit).catch(() => {});
           } catch {}
         }
       }
@@ -242,6 +250,7 @@ export function VideoCallModal({
       if (!pcInstance || !signal) return;
 
       if (signal.type === "offer") {
+        hasReceivedOfferRef.current = true;
         if (pcInstance.signalingState !== "stable") {
           console.warn("[WebRTC] Ignoring offer in non-stable state:", pcInstance.signalingState);
           return;
@@ -301,6 +310,7 @@ export function VideoCallModal({
           .setRemoteDescription(new RTCSessionDescription(sdpObj))
           .then(() => {
             drainCandidates(pcInstance);
+            setCallState("connecting");
           })
           .catch((err) => {
             console.error("[WebRTC] Error setting remote description from answer:", err);
@@ -308,11 +318,15 @@ export function VideoCallModal({
       } else if (signal.type === "candidate") {
         const cand = signal.candidate;
         if (cand && (cand.candidate || typeof cand === "string")) {
+          const candKey = typeof cand === "string" ? cand : (cand.candidate || JSON.stringify(cand));
+          if (candKey && seenCandidatesRef.current.has(candKey)) return;
+          if (candKey) seenCandidatesRef.current.add(candKey);
+
           if (pcInstance.remoteDescription && pcInstance.remoteDescription.type) {
             try {
               const candidateInit = typeof cand === "string" ? { candidate: cand } : cand;
               pcInstance
-                .addIceCandidate(new RTCIceCandidate(candidateInit))
+                .addIceCandidate(candidateInit)
                 .catch((err) => console.warn("[WebRTC] Error adding ICE candidate:", err));
             } catch (e) {
               console.warn("[WebRTC] Exception adding candidate:", e);
@@ -325,7 +339,7 @@ export function VideoCallModal({
     }
 
     async function sendOffer(pcInstance, socketInstance) {
-      if (!pcInstance || !socketInstance) return;
+      if (!pcInstance || !socketInstance || hasOfferedRef.current) return;
       try {
         hasOfferedRef.current = true;
         setCallState("connecting");
@@ -357,6 +371,8 @@ export function VideoCallModal({
     // Register signaling listener IMMEDIATELY so early signals are never lost
     function handleSignal({ senderId, signal }) {
       if (!isMounted || !signal) return;
+      // Filter out our own signals
+      if (senderId && user?._id && String(senderId) === String(user._id)) return;
       if (senderId) {
         remotePeerIdRef.current = senderId;
       }
@@ -372,33 +388,16 @@ export function VideoCallModal({
     // When counterparty announces ready or joins
     function handlePeerReady(data) {
       if (!isMounted) return;
-      if (data?.senderId || data?.userId) {
-        remotePeerIdRef.current = data.senderId || data.userId;
+      const sender = data?.senderId || data?.userId || data?.acceptedBy?._id;
+      if (sender && user?._id && String(sender) === String(user._id)) return;
+      if (sender) {
+        remotePeerIdRef.current = sender;
       }
+      peerReadyReceivedRef.current = true;
       if (isInitiator) {
         const pc = pcRef.current;
-        if (pc) {
-          if (pc.signalingState === "have-local-offer" && pc.localDescription) {
-            // Re-transmit offer to the newly joined/ready peer
-            const s = getSocket();
-            if (s && s.connected) {
-              s.emit("webrtc_signal", {
-                quoteId,
-                roomId,
-                targetUserId: remotePeerIdRef.current || partnerId,
-                signal: {
-                  type: "offer",
-                  sdp: pc.localDescription.sdp,
-                  sessionDescription: {
-                    type: pc.localDescription.type,
-                    sdp: pc.localDescription.sdp,
-                  },
-                },
-              });
-            }
-          } else if (!hasOfferedRef.current) {
-            sendOffer(pc, socket);
-          }
+        if (pc && !hasOfferedRef.current) {
+          sendOffer(pc, socket);
         }
       }
     }
@@ -598,6 +597,9 @@ export function VideoCallModal({
 
         // 3. Initiator vs Recipient startup
         if (isInitiator) {
+          if (peerReadyReceivedRef.current && !hasOfferedRef.current) {
+            sendOffer(pc, socket);
+          }
           callTimeoutRef.current = setTimeout(() => {
             if (isMounted && (callState === "calling" || callState === "initializing")) {
               playEndTone();
@@ -608,7 +610,7 @@ export function VideoCallModal({
             }
           }, 45000);
         } else {
-          // Recipient: announce ready immediately and on interval
+          // Recipient: announce ready immediately and on interval until offer is received
           socket.emit("webrtc_ready", {
             quoteId,
             roomId,
@@ -617,12 +619,12 @@ export function VideoCallModal({
 
           let attempts = 0;
           readyInterval = setInterval(() => {
-            if (!isMounted || hasOfferedRef.current || callState === "connected") {
+            if (!isMounted || hasReceivedOfferRef.current || callState === "connected") {
               clearInterval(readyInterval);
               return;
             }
             attempts++;
-            if (attempts > 12) {
+            if (attempts > 8) {
               clearInterval(readyInterval);
               return;
             }
