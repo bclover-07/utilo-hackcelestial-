@@ -260,9 +260,25 @@ export function Listings() {
         title="Make idle, useful."
         description="Your resources, ready for their next booking."
       >
-        <Link className="button" href="/dashboard/listings/create">
-          + List a resource
-        </Link>
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+          <Link
+            className="button"
+            style={{ background: "#FFE66D", color: "#000", fontWeight: 800, border: "2px solid #000" }}
+            href="/dashboard/inventory/offline-deal"
+          >
+            ⚡ Record offline deal
+          </Link>
+          <Link
+            className="button quiet"
+            style={{ border: "2px solid #000", fontWeight: 700 }}
+            href="/dashboard/inventory"
+          >
+            📦 Fleet Hub
+          </Link>
+          <Link className="button" href="/dashboard/listings/create">
+            + List a resource
+          </Link>
+        </div>
       </Heading>
       <State resource={resource}>
         {(data) =>
@@ -279,6 +295,20 @@ export function Listings() {
                       resource.
                     </p>
                   )}
+                  <Link
+                    className="button"
+                    style={{
+                      background: "#FFE66D",
+                      color: "#000",
+                      fontWeight: 800,
+                      border: "1.5px solid #000",
+                      fontSize: "0.8rem",
+                      padding: "0.3rem 0.6rem",
+                    }}
+                    href={`/dashboard/inventory/offline-deal?listingId=${l._id}`}
+                  >
+                    ⚡ Offline deal
+                  </Link>
                   <Link
                     className="button quiet"
                     href={`/dashboard/listings/${l._id}/edit`}

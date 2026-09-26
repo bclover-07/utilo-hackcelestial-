@@ -66,12 +66,12 @@ export function InventoryHub() {
 
   // Real-time socket listener
   const { isConnected, lastEvent } = useInventorySocket(
-    useCallback(() => {
+    useCallback((payload) => {
       dashboard.reload();
-      if (lastEvent?.notif?.title) {
-        showToast(lastEvent.notif.title, "info");
+      if (payload?.notif?.title) {
+        showToast(payload.notif.title, "info");
       }
-    }, [dashboard, lastEvent])
+    }, [dashboard])
   );
 
   return (
@@ -178,8 +178,8 @@ export function InventoryHub() {
             Sync
           </button>
 
-          <button
-            onClick={() => setOfflineDealModal({ open: true, listing: null })}
+          <Link
+            href="/dashboard/inventory/offline-deal"
             style={{
               display: "flex",
               alignItems: "center",
@@ -190,14 +190,14 @@ export function InventoryHub() {
               border: "2px solid #000",
               boxShadow: "3px 3px 0px #000",
               fontWeight: 800,
-              cursor: "pointer",
+              textDecoration: "none",
               textTransform: "uppercase",
               fontSize: "0.85rem",
             }}
           >
             <Zap size={16} />
             + Record Offline Deal
-          </button>
+          </Link>
 
           <button
             onClick={() => setNewAssetModal(true)}
@@ -1085,32 +1085,56 @@ function OfflineDealsView({ offlineDeals, onRecordNew, onCheckIn }) {
             Leases conducted directly with walk-in clients, phone orders, or direct corporate contracts.
           </p>
         </div>
-        <button
-          onClick={onRecordNew}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.4rem",
-            padding: "0.5rem 0.9rem",
-            backgroundColor: "#FFE66D",
-            color: "#000",
-            border: "2px solid #000",
-            boxShadow: "3px 3px 0px #000",
-            fontWeight: 800,
-            cursor: "pointer",
-            fontSize: "0.8rem",
-            textTransform: "uppercase",
-          }}
-        >
-          <Zap size={15} />
-          + Log New Offline Deal
-        </button>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button
+            onClick={onRecordNew}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              padding: "0.5rem 0.9rem",
+              backgroundColor: "#FFF",
+              color: "#000",
+              border: "2px solid #000",
+              boxShadow: "3px 3px 0px #000",
+              fontWeight: 800,
+              cursor: "pointer",
+              fontSize: "0.8rem",
+              textTransform: "uppercase",
+            }}
+          >
+            <Zap size={15} />
+            Quick Modal
+          </button>
+          <Link
+            href="/dashboard/inventory/offline-deal"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              padding: "0.5rem 0.9rem",
+              backgroundColor: "#FFE66D",
+              color: "#000",
+              border: "2px solid #000",
+              boxShadow: "3px 3px 0px #000",
+              fontWeight: 800,
+              textDecoration: "none",
+              fontSize: "0.8rem",
+              textTransform: "uppercase",
+            }}
+          >
+            <Zap size={15} />
+            + Record Offline Deal Page
+          </Link>
+        </div>
       </div>
 
       {(!offlineDeals || offlineDeals.length === 0) ? (
         <Empty
           title="No offline deals recorded yet"
           text="Have a direct client renting equipment or spaces offline? Log them here to keep your fleet availability in sync."
+          href="/dashboard/inventory/offline-deal"
+          label="+ Record an Offline Deal"
         />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -1303,9 +1327,26 @@ function OfflineDealModal({ listing, listings, onClose, onSuccess }) {
     <div className="modal-backdrop" style={modalBackdropStyle}>
       <div className="modal-card" style={modalCardStyle}>
         <div style={modalHeaderStyle}>
-          <h2 style={{ margin: 0, fontWeight: 900, textTransform: "uppercase", fontSize: "1.2rem" }}>
-            ⚡ Record Offline Deal
-          </h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <h2 style={{ margin: 0, fontWeight: 900, textTransform: "uppercase", fontSize: "1.2rem" }}>
+              ⚡ Record Offline Deal
+            </h2>
+            <Link
+              href="/dashboard/inventory/offline-deal"
+              onClick={onClose}
+              style={{
+                fontSize: "0.75rem",
+                color: "#000",
+                textDecoration: "underline",
+                fontWeight: 700,
+                background: "#FFE66D",
+                padding: "0.15rem 0.4rem",
+                border: "1px solid #000",
+              }}
+            >
+              Full Page ↗
+            </Link>
+          </div>
           <button onClick={onClose} style={closeBtnStyle}><X size={18} /></button>
         </div>
 

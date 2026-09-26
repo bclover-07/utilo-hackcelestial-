@@ -3,10 +3,17 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { getSocket } from "./socket";
 
 export function useInventorySocket(onInventoryChanged) {
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const socket = getSocket();
+    return Boolean(socket?.connected);
+  });
   const [lastEvent, setLastEvent] = useState(null);
   const callbackRef = useRef(onInventoryChanged);
-  callbackRef.current = onInventoryChanged;
+
+  useEffect(() => {
+    callbackRef.current = onInventoryChanged;
+  }, [onInventoryChanged]);
 
   const debounceTimerRef = useRef(null);
 
@@ -17,7 +24,7 @@ export function useInventorySocket(onInventoryChanged) {
     }
     debounceTimerRef.current = setTimeout(() => {
       if (typeof callbackRef.current === "function") {
-        callbackRef.current();
+        callbackRef.current(payload);
       }
     }, 300);
   }, []);
@@ -25,10 +32,6 @@ export function useInventorySocket(onInventoryChanged) {
   useEffect(() => {
     const socket = getSocket();
     if (!socket) return;
-
-    if (socket.connected) {
-      setIsConnected(true);
-    }
 
     const handleConnect = () => setIsConnected(true);
     const handleDisconnect = () => setIsConnected(false);
