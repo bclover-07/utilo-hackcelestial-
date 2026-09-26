@@ -20,7 +20,7 @@ import { ListingCard } from "./Inventory";
 export function RapidoNegotiateModal({ listing, onClose }) {
   const router = useRouter();
   const [quantity, setQuantity] = useState(1);
-  const [days, setDays] = useState(1);
+  const [days] = useState(1);
   const unitPrice = listing.price || 1000;
   const baseRate = unitPrice * quantity * days;
   const [offerPrice, setOfferPrice] = useState(baseRate);

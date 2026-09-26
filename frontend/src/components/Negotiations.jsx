@@ -77,14 +77,9 @@ export function NegotiationsPage() {
   const searchParams = useSearchParams();
   const paramSelected = searchParams ? searchParams.get("selected") : null;
   const resource = useData("/quotes"),
-    [selected, setSelected] = useState(paramSelected || "");
+    [selectedId, setSelectedId] = useState("");
   const { user, dashboardRole } = useAuth();
-
-  useEffect(() => {
-    if (paramSelected) {
-      setSelected(paramSelected);
-    }
-  }, [paramSelected]);
+  const selected = selectedId || paramSelected || "";
 
   return (
     <>
@@ -110,7 +105,7 @@ export function NegotiationsPage() {
                   <button
                     key={q._id}
                     className={`thread-tab ${q._id === current?._id ? "selected" : ""}`}
-                    onClick={() => setSelected(q._id)}
+                    onClick={() => setSelectedId(q._id)}
                   >
                     <Badge>{q.status}</Badge>
                     <strong>{q.listing?.title}</strong>
@@ -151,7 +146,7 @@ function QuoteDetail({ q, reload }) {
     [advice, setAdvice] = useState(null),
     [selectedOfferPrice, setSelectedOfferPrice] = useState(null),
     [selectedOfferConditions, setSelectedOfferConditions] = useState(null),
-    [realtimeMessages, setRealtimeMessages] = useState([]),
+    [socketMessages, setSocketMessages] = useState([]),
     [socketActive, setSocketActive] = useState(false);
   const last = q.offers.at(-1),
     mine = last?.by?._id === user._id;
@@ -159,12 +154,13 @@ function QuoteDetail({ q, reload }) {
     canOffer = open && (last ? !mine : q.provider._id === user._id);
   const reloadMessages = messages.reload;
 
-  // Sync initial loaded messages
-  useEffect(() => {
-    if (messages.data) {
-      setRealtimeMessages(messages.data);
-    }
-  }, [messages.data]);
+  // Combine initial loaded messages with incoming real-time socket messages
+  const realtimeMessages = [
+    ...(messages.data || []),
+    ...socketMessages.filter(
+      (sm) => !(messages.data || []).some((m) => String(m._id) === String(sm._id))
+    ),
+  ];
 
   // Socket.io real-time room joining and messaging
   useEffect(() => {
@@ -180,19 +176,21 @@ function QuoteDetail({ q, reload }) {
       setSocketActive(false);
     }
 
-    if (socket.connected) {
-      setSocketActive(true);
-      socket.emit("join_quote", q._id);
-    } else {
-      socket.connect();
-    }
-
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
 
+    const timer = setTimeout(() => {
+      if (socket.connected) {
+        setSocketActive(true);
+        socket.emit("join_quote", q._id);
+      } else {
+        socket.connect();
+      }
+    }, 0);
+
     function handleNewMessage(msg) {
       if (String(msg.quote) === String(q._id)) {
-        setRealtimeMessages((prev) => {
+        setSocketMessages((prev) => {
           if (prev.some((m) => String(m._id) === String(msg._id))) return prev;
           return [...prev, msg];
         });
@@ -202,6 +200,7 @@ function QuoteDetail({ q, reload }) {
     socket.on("new_message", handleNewMessage);
 
     return () => {
+      clearTimeout(timer);
       socket.emit("leave_quote", q._id);
       socket.off("connect", handleConnect);
       socket.off("disconnect", handleDisconnect);
