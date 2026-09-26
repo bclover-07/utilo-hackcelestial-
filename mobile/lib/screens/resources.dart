@@ -120,22 +120,15 @@ class ListingCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: score >= 85
-                                ? const Color(0xff10b981)
-                                : score >= 65
-                                    ? const Color(0xfff59e0b)
-                                    : const Color(0xff6366f1),
-                            shape: BoxShape.circle,
-                          ),
+                        NeoCircularGauge(
+                          score: score.toDouble(),
+                          size: 24,
+                          strokeWidth: 3,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 6),
                         Text(
                           '$score% match',
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
                         ),
                       ],
                     ),
@@ -254,6 +247,686 @@ class ListingCard extends StatelessWidget {
   }
 }
 
+
+
+class RapidoNegotiateModal extends StatefulWidget {
+  const RapidoNegotiateModal({
+    super.key,
+    required this.session,
+    required this.listing,
+    this.onSuccess,
+  });
+  final Session session;
+  final Json listing;
+  final VoidCallback? onSuccess;
+
+  @override
+  State<RapidoNegotiateModal> createState() => _RapidoNegotiateModalState();
+}
+
+class _RapidoNegotiateModalState extends State<RapidoNegotiateModal> {
+  int quantity = 1;
+  late int unitPrice;
+  late double baseRate;
+  late double offerPrice;
+  final TextEditingController _conditionsCtrl = TextEditingController();
+  final TextEditingController _offerCtrl = TextEditingController();
+  bool loading = false;
+  String? error;
+  bool success = false;
+
+  @override
+  void initState() {
+    super.initState();
+    unitPrice = (widget.listing['price'] is num) ? (widget.listing['price'] as num).toInt() : 1000;
+    baseRate = (unitPrice * quantity).toDouble();
+    offerPrice = baseRate;
+    _offerCtrl.text = offerPrice.toInt().toString();
+  }
+
+  @override
+  void dispose() {
+    _conditionsCtrl.dispose();
+    _offerCtrl.dispose();
+    super.dispose();
+  }
+
+  void _updateQuantity(int delta) {
+    final maxQty = (widget.listing['quantity'] is num) ? (widget.listing['quantity'] as num).toInt() : 100;
+    setState(() {
+      quantity = (quantity + delta).clamp(1, maxQty);
+      baseRate = (unitPrice * quantity).toDouble();
+      offerPrice = baseRate;
+      _offerCtrl.text = offerPrice.toInt().toString();
+    });
+  }
+
+  void _applyPreset(double factor) {
+    setState(() {
+      offerPrice = (baseRate * factor).roundToDouble();
+      _offerCtrl.text = offerPrice.toInt().toString();
+    });
+  }
+
+  void _nudgePrice(double delta) {
+    setState(() {
+      offerPrice = (offerPrice + delta).clamp(50.0, baseRate * 3.0);
+      _offerCtrl.text = offerPrice.toInt().toString();
+    });
+  }
+
+  Future<void> _submitOffer() async {
+    setState(() {
+      loading = true;
+      error = null;
+    });
+    try {
+      await widget.session.api.call(
+        '/quotes/direct-offer',
+        method: 'POST',
+        body: {
+          'listingId': widget.listing['_id'],
+          'price': offerPrice.toInt(),
+          'quantity': quantity,
+          if (_conditionsCtrl.text.trim().isNotEmpty)
+            'conditions': _conditionsCtrl.text.trim(),
+        },
+      );
+      if (mounted) {
+        setState(() {
+          loading = false;
+          success = true;
+        });
+        Future.delayed(const Duration(milliseconds: 1400), () {
+          if (mounted) {
+            Navigator.pop(context);
+            widget.onSuccess?.call();
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          loading = false;
+          error = e.toString();
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final discountRatio = baseRate > 0 ? (offerPrice - baseRate) / baseRate : 0;
+    final discountPct = (discountRatio.abs() * 100).round();
+    final isDiscount = offerPrice < baseRate;
+    final isPremium = offerPrice > baseRate;
+
+    return Container(
+      padding: EdgeInsets.only(
+        top: 20,
+        left: 20,
+        right: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      decoration: const BoxDecoration(
+        color: paper,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border(
+          top: BorderSide(color: ink, width: 2.5),
+          left: BorderSide(color: ink, width: 2.5),
+          right: BorderSide(color: ink, width: 2.5),
+        ),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: yellow,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: ink, width: 1.8),
+                    boxShadow: const [BoxShadow(color: ink, offset: Offset(1.5, 1.5))],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Text('⚡ ', style: TextStyle(fontSize: 12)),
+                      Text(
+                        'RAPIDO FARE COUNTER',
+                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: ink),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: ink),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${widget.listing['title']}',
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: ink),
+            ),
+            if (widget.listing['city'] != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  '📍 ${widget.listing['city']} • List: ${money(unitPrice)}/${widget.listing['unit'] ?? 'unit'}',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.grey.shade700),
+                ),
+              ),
+            const Divider(height: 24, thickness: 1.5, color: ink),
+            if (success)
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: mint,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: ink, width: 2),
+                  boxShadow: const [BoxShadow(color: ink, offset: Offset(3, 3))],
+                ),
+                child: Column(
+                  children: [
+                    const Text('🎉', style: TextStyle(fontSize: 36)),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Counter-Offer Dispatched!',
+                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: ink),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Your proposed price of ${money(offerPrice.toInt())} was submitted to the provider.',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ink),
+                    ),
+                  ],
+                ),
+              )
+            else ...[
+              if (error != null)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.shade700, width: 1.5),
+                  ),
+                  child: Text(
+                    error!,
+                    style: TextStyle(color: Colors.red.shade900, fontWeight: FontWeight.w700, fontSize: 12),
+                  ),
+                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Units Needed', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: ink)),
+                  Row(
+                    children: [
+                      InkWell(
+                        onTap: quantity > 1 ? () => _updateQuantity(-1) : null,
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: paper,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: ink, width: 1.8),
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(Icons.remove, size: 16, color: ink),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        child: Text(
+                          '$quantity',
+                          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: ink),
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () => _updateQuantity(1),
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: yellow,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: ink, width: 1.8),
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(Icons.add, size: 16, color: ink),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Standard Baseline Rate', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
+                  Text(money(baseRate.toInt()), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: ink)),
+                ],
+              ),
+              const SizedBox(height: 14),
+              const Text('DISCOUNT / SURGE PRESETS', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 0.8, color: Colors.grey)),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  _presetPill('-15% Fast Close', () => _applyPreset(0.85), teal),
+                  _presetPill('-10% Balanced', () => _applyPreset(0.90), yellow),
+                  _presetPill('Floor (-25%)', () => _applyPreset(0.75), lavender),
+                  _presetPill('+5% Priority', () => _applyPreset(1.05), sky),
+                ],
+              ),
+              const SizedBox(height: 14),
+              const Text('FINE-TUNE NUDGES', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 0.8, color: Colors.grey)),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  _nudgeChip('-₹500', () => _nudgePrice(-500)),
+                  _nudgeChip('-₹100', () => _nudgePrice(-100)),
+                  _nudgeChip('+₹100', () => _nudgePrice(100)),
+                  _nudgeChip('+₹500', () => _nudgePrice(500)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDiscount ? const Color(0xffecfdf5) : (isPremium ? const Color(0xfffffbeb) : Colors.white),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: ink, width: 2),
+                  boxShadow: const [BoxShadow(color: ink, offset: Offset(2, 2))],
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Your Proposed Counter-Offer', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: ink)),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isDiscount ? const Color(0xff10b981) : (isPremium ? const Color(0xfff59e0b) : Colors.grey.shade400),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            isDiscount
+                                ? '-$discountPct% Below Base'
+                                : (isPremium ? '+$discountPct% Priority' : 'Standard Rate'),
+                            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _offerCtrl,
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: ink),
+                      decoration: const InputDecoration(
+                        prefixText: '₹ ',
+                        prefixStyle: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: ink),
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      ),
+                      onChanged: (val) {
+                        final parsed = double.tryParse(val);
+                        if (parsed != null && parsed > 0) {
+                          setState(() => offerPrice = parsed);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: _conditionsCtrl,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'Special conditions or notes (optional)',
+                  hintText: 'e.g. Include delivery before 9 AM, setup assistance required',
+                ),
+              ),
+              const SizedBox(height: 16),
+              AsyncButton(
+                text: 'Dispatch ${money(offerPrice.toInt())} Offer →',
+                icon: Icons.flash_on,
+                run: _submitOffer,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _presetPill(String label, VoidCallback onTap, Color bg) => InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: ink, width: 1.5),
+            boxShadow: const [BoxShadow(color: ink, offset: Offset(1.5, 1.5))],
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: ink),
+          ),
+        ),
+      );
+
+  Widget _nudgeChip(String label, VoidCallback onTap) => InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: paper,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: ink, width: 1.2),
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: ink),
+          ),
+        ),
+      );
+}
+
+class RequestLifecycleTimeline extends StatelessWidget {
+  const RequestLifecycleTimeline({super.key, required this.status});
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    int activeIdx = 0;
+    if (status == 'completed' || status == 'closed') {
+      activeIdx = 3;
+    } else if (status == 'partial') {
+      activeIdx = 2;
+    } else if (status == 'open') {
+      activeIdx = 1;
+    }
+
+    final steps = [
+      ('1. Broadcasted', Icons.broadcast_on_personal_outlined),
+      ('2. Offers Inbound', Icons.inbox_outlined),
+      ('3. Bilateral ZOPA', Icons.handshake_outlined),
+      ('4. All Secured', Icons.check_circle_outlined),
+    ];
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: paper,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: ink, width: 1.5),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          for (int i = 0; i < steps.length; i++) ...[
+            Expanded(
+              child: Column(
+                children: [
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: i <= activeIdx ? yellow : const Color(0xffe5e0cf),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: ink, width: 1.5),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(steps[i].$2, size: 14, color: ink),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    steps[i].$1,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: i <= activeIdx ? FontWeight.w900 : FontWeight.w600,
+                      color: i <= activeIdx ? ink : Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (i < steps.length - 1)
+              Container(
+                width: 10,
+                height: 2,
+                color: i < activeIdx ? ink : Colors.grey.shade400,
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class RequestItemDistributionWidget extends StatelessWidget {
+  const RequestItemDistributionWidget({
+    super.key,
+    required this.items,
+    this.budget,
+  });
+  final List items;
+  final dynamic budget;
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    final barItems = <NeoBarItem>[];
+    final donutItems = <NeoPieItem>[];
+    final sliceColors = [teal, yellow, pink, lavender, mint, sky, peach];
+
+    for (int i = 0; i < items.length; i++) {
+      final item = items[i];
+      if (item is! Map) continue;
+      final name = '${item['category'] ?? 'Item ${i + 1}'}'.replaceAll('_', ' ');
+      final qty = (item['quantity'] is num) ? (item['quantity'] as num).toDouble() : 1.0;
+      final isSecured = item['booking'] != null;
+
+      barItems.add(
+        NeoBarItem(
+          label: name,
+          value: qty,
+          color: isSecured ? const Color(0xff10b981) : yellow,
+          valueLabel: '${qty.toInt()} units',
+        ),
+      );
+
+      donutItems.add(
+        NeoPieItem(
+          label: name,
+          value: qty,
+          color: sliceColors[i % sliceColors.length],
+        ),
+      );
+    }
+
+    return FeatureChartPanel(
+      eyebrow: 'RESOURCE FULFILMENT & CAPACITY',
+      title: 'Item Allocation & Progress Breakdown',
+      badges: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: const Color(0x334ecdc4),
+            border: Border.all(color: ink, width: 1.5),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '${items.length} Bundles',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+          ),
+        ),
+        if (budget != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: yellow,
+              border: Border.all(color: ink, width: 1.5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              'Budget: ${money(budget)}',
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+            ),
+          ),
+      ],
+      child: Column(
+        children: [
+          NeoBarChart(
+            items: barItems,
+            height: 140,
+          ),
+          const SizedBox(height: 12),
+          NeoDonutChart(
+            items: donutItems,
+            centerText: 'Units',
+            size: 140,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class FleetInventoryAnalyticsWidget extends StatelessWidget {
+  const FleetInventoryAnalyticsWidget({super.key, required this.listings});
+  final List listings;
+
+  @override
+  Widget build(BuildContext context) {
+    if (listings.isEmpty) return const SizedBox.shrink();
+
+    final catMap = <String, double>{};
+    int totalUnits = 0;
+    int activeCount = 0;
+    num totalValue = 0;
+
+    for (final l in listings) {
+      if (l is! Map) continue;
+      final cat = '${l['category'] ?? 'other'}'.replaceAll('_', ' ');
+      final qty = (l['quantity'] is num) ? (l['quantity'] as num).toInt() : 1;
+      final price = (l['price'] is num) ? (l['price'] as num) : 0;
+      totalUnits += qty;
+      totalValue += price * qty;
+      if (l['status'] == 'active') activeCount++;
+      catMap[cat] = (catMap[cat] ?? 0.0) + qty.toDouble();
+    }
+
+    final barItems = catMap.entries.map((e) => NeoBarItem(
+      label: e.key,
+      value: e.value,
+      color: teal,
+      valueLabel: '${e.value.toInt()} units',
+    )).toList();
+
+    return FeatureChartPanel(
+      eyebrow: 'FLEET COMPOSITION & YIELD',
+      title: 'Resource Inventory Fleet Telemetry',
+      badges: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: const Color(0x334ecdc4),
+            border: Border.all(color: ink, width: 1.5),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '${listings.length} Assets ($totalUnits Units)',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: yellow,
+            border: Border.all(color: ink, width: 1.5),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            'Capital: ${money(totalValue)}',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+          ),
+        ),
+      ],
+      child: Column(
+        children: [
+          NeoBarChart(items: barItems, height: 140),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: paper,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: ink, width: 1.2),
+                  ),
+                  child: Row(
+                    children: [
+                      const LivePulseDot(size: 7),
+                      const SizedBox(width: 6),
+                      Text(
+                        '$activeCount Active Live',
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: ink),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: yellow,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: ink, width: 1.2),
+                  ),
+                  child: Text(
+                    'Fleet: ${money(totalValue)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: ink),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
 class ListingsScreen extends StatelessWidget {
   const ListingsScreen({super.key, required this.session});
   final Session session;
@@ -268,6 +941,7 @@ class ListingsScreen extends StatelessWidget {
         builder: (data, reload) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            FleetInventoryAnalyticsWidget(listings: records(data)),
             AsyncButton(
               text: 'List a resource',
               icon: Icons.add,
@@ -897,6 +1571,22 @@ class _SearchScreenState extends State<SearchScreen> {
           (l) => ListingCard(
             listing: l,
             actions: [
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: yellow,
+                  foregroundColor: ink,
+                  side: const BorderSide(color: ink, width: 1.8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () => showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => RapidoNegotiateModal(session: widget.session, listing: l),
+                ),
+                icon: const Icon(Icons.flash_on, size: 16),
+                label: const Text('⚡ Counter Offer', style: TextStyle(fontWeight: FontWeight.w900)),
+              ),
               FilledButton(
                 onPressed: () => openScreen(
                   context,
@@ -1054,6 +1744,30 @@ class ListingDetail extends StatelessWidget {
                 ),
               ),
 
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: yellow,
+                        foregroundColor: ink,
+                        side: const BorderSide(color: ink, width: 1.8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: () => showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => RapidoNegotiateModal(session: session, listing: data),
+                      ),
+                      icon: const Icon(Icons.flash_on, size: 18),
+                      label: const Text('⚡ Make Counter-Offer', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
               FilledButton(
                 onPressed: () => openScreen(
                   context,
@@ -1450,6 +2164,9 @@ class RequestsScreen extends StatelessWidget {
                             _specChip('💰 Budget: ₹${r['budget']}'),
                         ],
                       ),
+                      RequestLifecycleTimeline(status: '${r['status'] ?? 'open'}'),
+                      if (items.isNotEmpty)
+                        RequestItemDistributionWidget(items: items, budget: r['budget']),
                       const SizedBox(height: 12),
 
                       Row(

@@ -205,6 +205,127 @@ class NotificationsScreen extends StatelessWidget {
   );
 }
 
+
+
+class VerificationQueueVisualizerWidget extends StatelessWidget {
+  const VerificationQueueVisualizerWidget({super.key, required this.users});
+  final List users;
+
+  @override
+  Widget build(BuildContext context) {
+    if (users.isEmpty) return const SizedBox.shrink();
+    int pending = 0;
+    int verified = 0;
+    int rejected = 0;
+
+    for (final u in users) {
+      if (u is! Map) continue;
+      final v = '${u['verification'] ?? 'pending'}'.toLowerCase();
+      if (v == 'verified' || v == 'approved') {
+        verified++;
+      } else if (v == 'rejected' || v == 'declined') {
+        rejected++;
+      } else {
+        pending++;
+      }
+    }
+
+    final donutItems = [
+      if (pending > 0)
+        NeoPieItem(label: 'Pending KYC', value: pending.toDouble(), color: yellow),
+      if (verified > 0)
+        NeoPieItem(label: 'Approved', value: verified.toDouble(), color: mint),
+      if (rejected > 0)
+        NeoPieItem(label: 'Rejected', value: rejected.toDouble(), color: pink),
+    ];
+
+    return FeatureChartPanel(
+      eyebrow: 'KYC AUDIT PIPELINE',
+      title: 'Business Verification Queue Status',
+      badges: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: pending > 0 ? yellow : mint,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: ink, width: 1.5),
+          ),
+          child: Text(
+            '$pending Pending Review',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+          ),
+        ),
+      ],
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: yellow,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: ink, width: 1.2),
+                  ),
+                  child: Column(
+                    children: [
+                      Text('$pending', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: ink)),
+                      const Text('Pending', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 10, color: ink)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: mint,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: ink, width: 1.2),
+                  ),
+                  child: Column(
+                    children: [
+                      Text('$verified', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: ink)),
+                      const Text('Approved', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 10, color: ink)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: pink,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: ink, width: 1.2),
+                  ),
+                  child: Column(
+                    children: [
+                      Text('$rejected', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: ink)),
+                      const Text('Rejected', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 10, color: ink)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (donutItems.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            NeoDonutChart(
+              items: donutItems,
+              centerText: '${users.length}',
+              centerSubtext: 'Businesses',
+              size: 130,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key, required this.session, required this.section});
   final Session session;
@@ -310,6 +431,8 @@ class _AdminScreenState extends State<AdminScreen> {
                 run: reload,
                 icon: Icons.refresh,
               ),
+              if (section == 'verifications' && records(data).isNotEmpty)
+                VerificationQueueVisualizerWidget(users: records(data)),
               if (records(data).isEmpty)
                 const Empty(text: 'No records in this queue.'),
               ...records(data).map(

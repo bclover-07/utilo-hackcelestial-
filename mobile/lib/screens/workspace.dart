@@ -8,9 +8,16 @@ import 'intelligence.dart';
 import 'account_admin.dart';
 
 class Destination {
-  const Destination(this.path, this.title, this.icon, {this.category = 'Main'});
-  final String path, title, category;
+  const Destination(this.path, this.title, this.icon);
+  final String path, title;
   final IconData icon;
+}
+
+class NavSection {
+  const NavSection(this.title, this.destinations);
+  final String title;
+  final List<Destination> destinations;
+  List<Destination> get items => destinations;
 }
 
 const supportedLanguages = [
@@ -30,17 +37,6 @@ const supportedLanguages = [
   {'code': 'te', 'name': 'Telugu', 'native': 'తెలుగు'},
 ];
 
-const sharedDestinations = [
-  Destination('negotiations', 'Quotes & negotiations', Icons.forum_outlined, category: 'Deals'),
-  Destination('bookings', 'Bookings & calendar', Icons.event_available, category: 'Deals'),
-  Destination('reviews', 'Reviews & reputation', Icons.star_outline, category: 'Deals'),
-  Destination('disputes', 'Disputes & mediation', Icons.flag_outlined, category: 'Deals'),
-  Destination('market-pulse', 'Live market pulse', Icons.radar, category: 'Intelligence'),
-  Destination('analytics', 'Market analytics', Icons.bar_chart, category: 'Intelligence'),
-  Destination('notifications', 'Alerts & updates', Icons.notifications_outlined, category: 'Account'),
-  Destination('profile', 'Business profile & KYC', Icons.business_outlined, category: 'Account'),
-];
-
 class Workspace extends StatefulWidget {
   const Workspace({super.key, required this.session});
   final Session session;
@@ -56,34 +52,83 @@ class _WorkspaceState extends State<Workspace> {
 
   Session get s => widget.session;
 
-  List<Destination> get destinations => s.admin
-      ? const [
-          Destination('', 'Platform overview', Icons.dashboard_outlined, category: 'Overview'),
-          Destination('verifications', 'KYC verifications', Icons.verified_outlined, category: 'Operations'),
-          Destination('disputes', 'Dispute arbitration', Icons.gavel, category: 'Operations'),
-          Destination('moderation', 'Content moderation', Icons.shield_outlined, category: 'Operations'),
-          Destination('categories', 'Categories taxonomy', Icons.category_outlined, category: 'Configuration'),
-          Destination('analytics', 'Marketplace liquidity', Icons.bar_chart, category: 'Intelligence'),
-          Destination('settings', 'Policies & integrations', Icons.settings_outlined, category: 'Configuration'),
-          Destination('agents', 'AI operations & agents', Icons.auto_awesome, category: 'Intelligence'),
-        ]
-      : [
-          const Destination('', 'Overview summary', Icons.dashboard_outlined, category: 'Main'),
-          if (s.mode == 'provider') ...const [
-            Destination('listings', 'My listings', Icons.inventory_2_outlined, category: 'Inventory'),
-            Destination('calendar', 'Availability & calendar', Icons.calendar_month, category: 'Inventory'),
-            Destination('smart-pricing', 'Smart pricing advisor', Icons.currency_rupee, category: 'Intelligence'),
-            Destination('forecast', 'Demand outlook', Icons.trending_up, category: 'Intelligence'),
-            Destination('performance', 'Provider performance', Icons.stars_outlined, category: 'Intelligence'),
-          ] else ...const [
-            Destination('search', 'Discover resources', Icons.search, category: 'Discovery'),
-            Destination('planner', 'AI Conductor', Icons.hub_outlined, category: 'Discovery'),
-            Destination('requests', 'My requirements (RFQs)', Icons.campaign_outlined, category: 'Discovery'),
-            Destination('compare', 'Saved & compare', Icons.favorite_border, category: 'Discovery'),
-          ],
-          const Destination('agents', 'Agent Studio', Icons.auto_awesome, category: 'Intelligence'),
-          ...sharedDestinations,
-        ];
+  List<NavSection> get navSections {
+    if (s.admin) {
+      return const [
+        NavSection('OPERATIONS STUDIO', [
+          Destination('', 'Platform overview', Icons.dashboard_outlined),
+          Destination('verifications', 'Business KYC verifications', Icons.verified_outlined),
+          Destination('disputes', 'Dispute arbitration', Icons.shield_outlined),
+          Destination('moderation', 'Content moderation', Icons.gavel),
+          Destination('categories', 'Categories taxonomy', Icons.category_outlined),
+          Destination('analytics', 'Marketplace liquidity', Icons.bar_chart),
+          Destination('settings', 'Policies & integrations', Icons.settings_outlined),
+          Destination('agents', 'AI operations & agents', Icons.auto_awesome),
+        ]),
+      ];
+    }
+
+    if (s.mode == 'provider') {
+      return const [
+        NavSection('MAIN', [
+          Destination('', 'Overview', Icons.dashboard_outlined),
+        ]),
+        NavSection('INVENTORY & YIELD', [
+          Destination('listings', 'My listings', Icons.inventory_2_outlined),
+          Destination('calendar', 'Availability & Calendar', Icons.calendar_month),
+          Destination('smart-pricing', 'Smart pricing & demand', Icons.currency_rupee),
+          Destination('forecast', 'Demand outlook', Icons.trending_up),
+          Destination('performance', 'Provider performance', Icons.stars_outlined),
+        ]),
+        NavSection('DEALS & FULFILMENT', [
+          Destination('negotiations', 'Incoming RFQs & Chat', Icons.forum_outlined),
+          Destination('bookings', 'Confirmed bookings', Icons.event_available),
+          Destination('reviews', 'Reviews & reputation', Icons.star_outline),
+          Destination('disputes', 'Disputes & mediation', Icons.flag_outlined),
+        ]),
+        NavSection('MARKET INTELLIGENCE', [
+          Destination('agents', 'Agent Studio', Icons.auto_awesome),
+          Destination('market-pulse', 'Live market pulse', Icons.radar),
+          Destination('analytics', 'Market analytics', Icons.bar_chart),
+        ]),
+        NavSection('SETTINGS', [
+          Destination('profile', 'Settings', Icons.business_outlined),
+          Destination('notifications', 'Alerts & updates', Icons.notifications_outlined),
+        ]),
+      ];
+    }
+
+    return const [
+      NavSection('MAIN', [
+        Destination('', 'Overview', Icons.dashboard_outlined),
+      ]),
+      NavSection('DISCOVER & PLAN', [
+        Destination('search', 'Discover resources', Icons.search),
+        Destination('planner', 'AI Conductor', Icons.hub_outlined),
+        Destination('requests', 'My requirements (RFQs)', Icons.campaign_outlined),
+        Destination('compare', 'Saved & compare', Icons.favorite_border),
+      ]),
+      NavSection('DEALS & BOOKINGS', [
+        Destination('negotiations', 'Active quotes & chat', Icons.forum_outlined),
+        Destination('bookings', 'My bookings & calendar', Icons.event_available),
+        Destination('reviews', 'Reviews given & received', Icons.star_outline),
+        Destination('disputes', 'Disputes & claims', Icons.flag_outlined),
+      ]),
+      NavSection('MARKET INTELLIGENCE', [
+        Destination('agents', 'Agent Studio', Icons.auto_awesome),
+        Destination('market-pulse', 'Live market pulse', Icons.radar),
+        Destination('analytics', 'Market analytics', Icons.bar_chart),
+      ]),
+      NavSection('SETTINGS', [
+        Destination('profile', 'Settings', Icons.business_outlined),
+        Destination('notifications', 'Alerts & updates', Icons.notifications_outlined),
+      ]),
+    ];
+  }
+
+  List<Destination> get destinations => [
+    for (final sec in navSections) ...sec.destinations,
+  ];
 
   void go(String path) {
     setState(() => selected = path);
@@ -239,25 +284,6 @@ class _WorkspaceState extends State<Workspace> {
     );
   }
 
-  int _bottomIndex() {
-    if (selected == '') return 0;
-    if (s.admin) {
-      if (selected == 'verifications') return 1;
-      if (selected == 'disputes') return 2;
-      if (selected == 'analytics') return 3;
-    } else {
-      if (s.mode == 'provider') {
-        if (selected == 'listings') return 1;
-        if (selected == 'calendar') return 2;
-        if (selected == 'bookings') return 3;
-      } else {
-        if (selected == 'search') return 1;
-        if (selected == 'planner') return 2;
-        if (selected == 'bookings') return 3;
-      }
-    }
-    return 4; // More
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -268,228 +294,346 @@ class _WorkspaceState extends State<Workspace> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        titleSpacing: 4,
+        backgroundColor: paper,
+        scrolledUnderElevation: 0,
+        elevation: 0,
+        titleSpacing: 0,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(2),
+          child: Divider(height: 2, thickness: 2, color: ink),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.menu_rounded, color: ink, size: 24),
+          tooltip: 'Menu',
+          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        ),
         title: FittedBox(
           fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              const LivePulseDot(size: 8),
+              const SizedBox(width: 8),
               const Text(
-                'utlio ✳',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                'UTLIO',
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: -0.5, color: ink),
               ),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: s.admin
-                      ? Colors.purple.shade700
-                      : s.mode == 'provider'
-                      ? const Color(0xFF0F766E)
-                      : const Color(0xFF1D4ED8),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  s.admin ? 'ADMIN' : s.mode.toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
-                  ),
-                ),
+              const Text(
+                ' ✳',
+                style: TextStyle(color: Color(0xFFD97706), fontWeight: FontWeight.w900, fontSize: 16),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 5),
+                child: Text('/', style: TextStyle(color: Colors.black38, fontWeight: FontWeight.w700, fontSize: 13)),
+              ),
+              Text(
+                title,
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: ink),
               ),
             ],
           ),
         ),
         actions: [
           if (!s.admin)
-            InkWell(
-              borderRadius: BorderRadius.circular(10),
-              onTap: isSwitchingMode ? null : toggleMode,
-              child: Container(
-                margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: yellow,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: ink, width: 1.8),
-                  boxShadow: const [BoxShadow(color: ink, offset: Offset(1.5, 1.5))],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    isSwitchingMode
-                        ? const SizedBox(
-                            width: 12,
-                            height: 12,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: ink),
-                          )
-                        : const Icon(Icons.swap_horiz_rounded, size: 15, color: ink),
-                    const SizedBox(width: 4),
-                    Text(
-                      s.mode == 'provider' ? 'Seeker' : 'Provider',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        color: ink,
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
+              decoration: BoxDecoration(
+                color: paper,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: ink, width: 1.8),
+                boxShadow: const [BoxShadow(color: ink, offset: Offset(1.5, 1.5))],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  InkWell(
+                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
+                    onTap: isSwitchingMode || s.mode == 'seeker' ? null : toggleMode,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: s.mode == 'seeker' ? yellow : Colors.transparent,
+                        borderRadius: const BorderRadius.horizontal(left: Radius.circular(8)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.search, size: 12, color: ink),
+                          const SizedBox(width: 3),
+                          const Text('Seeker', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: ink)),
+                          if (s.mode == 'seeker') ...[
+                            const SizedBox(width: 4),
+                            const LivePulseDot(size: 4),
+                          ],
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  Container(width: 1.5, height: 16, color: ink),
+                  InkWell(
+                    borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+                    onTap: isSwitchingMode || s.mode == 'provider' ? null : toggleMode,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: s.mode == 'provider' ? yellow : Colors.transparent,
+                        borderRadius: const BorderRadius.horizontal(right: Radius.circular(8)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.inventory_2_outlined, size: 12, color: ink),
+                          const SizedBox(width: 3),
+                          const Text('Provider', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: ink)),
+                          if (s.mode == 'provider') ...[
+                            const SizedBox(width: 4),
+                            const LivePulseDot(size: 4),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           IconButton(
             visualDensity: VisualDensity.compact,
             padding: const EdgeInsets.all(6),
             tooltip: 'Language / भाषा',
-            icon: const Icon(Icons.translate, size: 19),
+            icon: const Icon(Icons.translate, size: 18, color: ink),
             onPressed: () => showLanguagePicker(context),
           ),
           IconButton(
             visualDensity: VisualDensity.compact,
             padding: const EdgeInsets.all(6),
-            tooltip: 'Alerts',
-            icon: const Icon(Icons.notifications_outlined, size: 19),
+            tooltip: 'Alerts & Notifications',
+            icon: const Icon(Icons.notifications_outlined, size: 19, color: ink),
             onPressed: () => go('notifications'),
           ),
-          const SizedBox(width: 4),
+          InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => go('profile'),
+            child: Container(
+              margin: const EdgeInsets.only(left: 4, right: 10),
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: yellow,
+                shape: BoxShape.circle,
+                border: Border.all(color: ink, width: 2),
+                boxShadow: const [BoxShadow(color: ink, offset: Offset(1.5, 1.5))],
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                ((s.user?['name'] ?? s.user?['email'] ?? 'U') as String).substring(0, 1).toUpperCase(),
+                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: ink),
+              ),
+            ),
+          ),
         ],
       ),
       drawer: Drawer(
         backgroundColor: paper,
         child: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.all(16),
+          child: Column(
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: yellow,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: ink, width: 2),
+                        boxShadow: const [BoxShadow(color: ink, offset: Offset(2, 2))],
+                      ),
+                      alignment: Alignment.center,
+                      child: const Text('U', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: ink)),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: const [
+                              Text(
+                                'utlio',
+                                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: -0.5, color: ink),
+                              ),
+                              Text('✳', style: TextStyle(fontSize: 18, color: Color(0xFFD97706), fontWeight: FontWeight.w900)),
+                            ],
+                          ),
+                          Text(
+                            s.admin ? 'OPERATIONS STUDIO' : '${s.mode.toUpperCase()} WORKSPACE',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.grey.shade700,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: ink, size: 20),
+                      tooltip: 'Close menu',
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, thickness: 1.5, color: ink),
+              if (!s.admin)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: yellow,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: ink, width: 2),
+                      color: sky,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: ink, width: 1.8),
                       boxShadow: const [BoxShadow(color: ink, offset: Offset(2, 2))],
                     ),
-                    alignment: Alignment.center,
-                    child: const Text('✳', style: TextStyle(fontSize: 22)),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'utlio',
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'ROLE: ${s.mode.toUpperCase()}',
+                              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: ink),
+                            ),
+                            Text(
+                              s.mode == 'provider' ? 'Monetizing Capacity' : 'Finding Resources',
+                              style: TextStyle(fontSize: 10, color: Colors.grey.shade800, fontWeight: FontWeight.w600),
+                            ),
+                          ],
                         ),
-                        Text(
-                          s.admin ? 'Operations Command' : '${s.mode.toUpperCase()} WORKSPACE',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.grey.shade700,
+                        InkWell(
+                          onTap: isSwitchingMode ? null : toggleMode,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: yellow,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: ink, width: 1.5),
+                            ),
+                            child: isSwitchingMode
+                                ? const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2, color: ink))
+                                : Text(
+                                    s.mode == 'provider' ? 'Switch Seeker' : 'Switch Provider',
+                                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+                                  ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ],
+                ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  children: [
+                    for (final section in navSections) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8, top: 12, bottom: 6),
+                        child: Text(
+                          section.title,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.grey.shade600,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ),
+                      for (final d in section.items) ...[
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 4),
+                          decoration: BoxDecoration(
+                            color: selected == d.path ? yellow : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            border: selected == d.path ? Border.all(color: ink, width: 1.8) : null,
+                            boxShadow: selected == d.path ? const [BoxShadow(color: ink, offset: Offset(2, 2))] : null,
+                          ),
+                          child: ListTile(
+                            dense: true,
+                            visualDensity: const VisualDensity(vertical: -2),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                            leading: Icon(d.icon, color: ink, size: 18),
+                            title: Text(
+                              d.title,
+                              style: TextStyle(
+                                fontWeight: selected == d.path ? FontWeight.w900 : FontWeight.w700,
+                                fontSize: 13,
+                                color: ink,
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.pop(context);
+                              go(d.path);
+                            },
+                          ),
+                        ),
+                      ],
+                    ],
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
-              if (!s.admin)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: sky,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: ink, width: 2),
-                    boxShadow: const [BoxShadow(color: ink, offset: Offset(3, 3))],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              const Divider(height: 1, thickness: 1.5, color: ink),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: mint,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: ink, width: 1.8),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        ((s.user?['name'] ?? s.user?['email'] ?? 'U') as String).substring(0, 1).toUpperCase(),
+                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: ink),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'ROLE: ${s.mode.toUpperCase()}',
-                            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
+                            identity(s.user),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: ink),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: s.mode == 'provider' ? const Color(0xFF0F766E) : const Color(0xFF1D4ED8),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              s.mode == 'provider' ? 'EARNING' : 'HIRING',
-                              style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900),
-                            ),
+                          Text(
+                            s.user?['email']?.toString() ?? '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 10, color: Colors.grey.shade700),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        s.mode == 'provider'
-                            ? 'Switch to find and hire equipment/services'
-                            : 'Switch to list equipment and manage earnings',
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                      const SizedBox(height: 10),
-                      AsyncButton(
-                        text: s.mode == 'provider' ? 'Switch to Seeker' : 'Switch to Provider',
-                        icon: Icons.swap_horiz,
-                        run: toggleMode,
-                      ),
-                    ],
-                  ),
-                ),
-              const SizedBox(height: 16),
-              ...choices.map(
-                (d) => ListTile(
-                  dense: true,
-                  selected: selected == d.path,
-                  selectedTileColor: yellow,
-                  selectedColor: ink,
-                  leading: Icon(d.icon, color: ink, size: 20),
-                  title: Text(
-                    d.title,
-                    style: TextStyle(
-                      fontWeight: selected == d.path ? FontWeight.w900 : FontWeight.w600,
-                      fontSize: 13.5,
                     ),
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    go(d.path);
-                  },
+                    IconButton(
+                      icon: const Icon(Icons.logout, size: 18, color: ink),
+                      tooltip: 'Log out',
+                      onPressed: s.logout,
+                    ),
+                  ],
                 ),
               ),
-              const Divider(height: 28),
-              ListTile(
-                dense: true,
-                leading: const Icon(Icons.translate, color: ink, size: 20),
-                title: const Text('Change Language / भाषा', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
-                onTap: () {
-                  Navigator.pop(context);
-                  showLanguagePicker(context);
-                },
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                child: Text(
-                  identity(s.user),
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700, fontWeight: FontWeight.w600),
-                ),
-              ),
-              AsyncButton(text: 'Log out', icon: Icons.logout, run: s.logout),
             ],
           ),
         ),
@@ -519,16 +663,30 @@ class _WorkspaceState extends State<Workspace> {
                         run: toggleMode,
                       ),
                     const SizedBox(height: 8),
-                    ...choices.map(
-                      (d) => ListTile(
-                        dense: true,
-                        selected: selected == d.path,
-                        selectedTileColor: yellow,
-                        leading: Icon(d.icon, size: 18),
-                        title: Text(d.title, style: const TextStyle(fontSize: 13)),
-                        onTap: () => go(d.path),
+                    for (final section in navSections) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(left: 6, top: 10, bottom: 4),
+                        child: Text(
+                          section.title,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.grey.shade600,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
                       ),
-                    ),
+                      for (final d in section.items) ...[
+                        ListTile(
+                          dense: true,
+                          selected: selected == d.path,
+                          selectedTileColor: yellow,
+                          leading: Icon(d.icon, size: 18),
+                          title: Text(d.title, style: const TextStyle(fontSize: 13)),
+                          onTap: () => go(d.path),
+                        ),
+                      ],
+                    ],
                     const Divider(),
                     ListTile(
                       dense: true,
@@ -606,86 +764,7 @@ class _WorkspaceState extends State<Workspace> {
           ),
         ],
       ),
-      bottomNavigationBar: MediaQuery.sizeOf(context).width >= 1000
-          ? null
-          : NavigationBar(
-              selectedIndex: _bottomIndex(),
-              onDestinationSelected: (i) {
-                if (i == 0) {
-                  go('');
-                } else if (i == 1) {
-                  go(s.admin ? 'verifications' : (s.mode == 'provider' ? 'listings' : 'search'));
-                } else if (i == 2) {
-                  go(s.admin ? 'disputes' : (s.mode == 'provider' ? 'calendar' : 'planner'));
-                } else if (i == 3) {
-                  go(s.admin ? 'analytics' : 'bookings');
-                } else if (i == 4) {
-                  _scaffoldKey.currentState?.openDrawer();
-                }
-              },
-              destinations: [
-                const NavigationDestination(
-                  icon: Icon(Icons.dashboard_outlined),
-                  selectedIcon: Icon(Icons.dashboard),
-                  label: 'Home',
-                ),
-                NavigationDestination(
-                  icon: Icon(
-                    s.admin
-                        ? Icons.verified_outlined
-                        : s.mode == 'provider'
-                        ? Icons.inventory_2_outlined
-                        : Icons.search,
-                  ),
-                  selectedIcon: Icon(
-                    s.admin
-                        ? Icons.verified
-                        : s.mode == 'provider'
-                        ? Icons.inventory_2
-                        : Icons.search,
-                  ),
-                  label: s.admin
-                      ? 'KYC'
-                      : s.mode == 'provider'
-                      ? 'Listings'
-                      : 'Discover',
-                ),
-                NavigationDestination(
-                  icon: Icon(
-                    s.admin
-                        ? Icons.gavel_outlined
-                        : s.mode == 'provider'
-                        ? Icons.calendar_month_outlined
-                        : Icons.hub_outlined,
-                  ),
-                  selectedIcon: Icon(
-                    s.admin
-                        ? Icons.gavel
-                        : s.mode == 'provider'
-                        ? Icons.calendar_month
-                        : Icons.hub,
-                  ),
-                  label: s.admin
-                      ? 'Disputes'
-                      : s.mode == 'provider'
-                      ? 'Calendar'
-                      : 'Planner',
-                ),
-                NavigationDestination(
-                  icon: Icon(
-                    s.admin ? Icons.bar_chart_outlined : Icons.event_available_outlined,
-                  ),
-                  selectedIcon: Icon(
-                    s.admin ? Icons.bar_chart : Icons.event_available,
-                  ),
-                  label: s.admin ? 'Liquidity' : 'Bookings',
-                ),
-                const NavigationDestination(
-                  icon: Icon(Icons.menu),
-                  label: 'More',
-                ),
-              ],
-            ),
+      bottomNavigationBar: null,
     );
   }
 

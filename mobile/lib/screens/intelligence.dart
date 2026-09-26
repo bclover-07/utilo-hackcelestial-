@@ -845,6 +845,230 @@ class Bars extends StatelessWidget {
   }
 }
 
+
+
+class DynamicSurgeCurveWidget extends StatelessWidget {
+  const DynamicSurgeCurveWidget({super.key, required this.autoPilot});
+  final Map<String, dynamic> autoPilot;
+
+  @override
+  Widget build(BuildContext context) {
+    final recommended = (autoPilot['recommendedDynamicPrice'] is num)
+        ? (autoPilot['recommendedDynamicPrice'] as num).toDouble()
+        : 1000.0;
+    final surge = (autoPilot['surgeMultiplier'] is num)
+        ? (autoPilot['surgeMultiplier'] as num).toDouble()
+        : 1.0;
+    final base = recommended / (surge > 0 ? surge : 1.0);
+    final floor = (autoPilot['floorPrice'] is num)
+        ? (autoPilot['floorPrice'] as num).toDouble()
+        : base * 0.8;
+    final ceiling = (autoPilot['ceilingPrice'] is num)
+        ? (autoPilot['ceilingPrice'] as num).toDouble()
+        : base * 1.6;
+
+    final points = [
+      NeoAreaPoint(label: '0.8x Low', value: (base * 0.8).roundToDouble()),
+      NeoAreaPoint(label: '1.0x Base', value: base.roundToDouble()),
+      NeoAreaPoint(label: '${surge}x Live', value: recommended),
+      NeoAreaPoint(label: '1.35x Peak', value: (base * 1.35).roundToDouble()),
+      NeoAreaPoint(label: '1.6x High', value: (base * 1.6).roundToDouble()),
+    ];
+
+    return FeatureChartPanel(
+      eyebrow: 'DYNAMIC AUTO-PILOT ELASTICITY',
+      title: 'Demand-Surge Price Curve (Floor ${money(floor.toInt())} → Ceiling ${money(ceiling.toInt())})',
+      badges: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: const Color(0xff10b981),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: ink, width: 1.5),
+          ),
+          child: Text(
+            'Live: ${surge}x',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Colors.white),
+          ),
+        ),
+      ],
+      child: NeoAreaChart(
+        points: points,
+        height: 150,
+        fillColor: const Color(0xffa8e6cf),
+        strokeColor: const Color(0xff059669),
+      ),
+    );
+  }
+}
+
+class MarketComparisonChartWidget extends StatelessWidget {
+  const MarketComparisonChartWidget({
+    super.key,
+    required this.comparables,
+    this.suggestedPrice,
+  });
+  final List comparables;
+  final dynamic suggestedPrice;
+
+  @override
+  Widget build(BuildContext context) {
+    if (comparables.isEmpty) return const SizedBox.shrink();
+
+    final barItems = <NeoBarItem>[];
+    for (int i = 0; i < comparables.length; i++) {
+      final c = comparables[i];
+      if (c is! Map) continue;
+      final name = '${c['_id'] ?? 'Sample ${i + 1}'}'.replaceAll('_', ' ');
+      final avg = (c['avgPrice'] is num) ? (c['avgPrice'] as num).toDouble() : 0.0;
+      final min = (c['minPrice'] is num) ? (c['minPrice'] as num).toDouble() : avg * 0.8;
+      final max = (c['maxPrice'] is num) ? (c['maxPrice'] as num).toDouble() : avg * 1.3;
+
+      barItems.add(
+        NeoBarItem(
+          label: '$name Floor',
+          value: min,
+          color: mint,
+          valueLabel: money(min.toInt()),
+        ),
+      );
+      barItems.add(
+        NeoBarItem(
+          label: '$name Avg',
+          value: avg,
+          color: yellow,
+          valueLabel: money(avg.toInt()),
+        ),
+      );
+      barItems.add(
+        NeoBarItem(
+          label: '$name Ceiling',
+          value: max,
+          color: pink,
+          valueLabel: money(max.toInt()),
+        ),
+      );
+    }
+
+    return FeatureChartPanel(
+      eyebrow: 'BENCHMARK DISTRIBUTION',
+      title: 'Competitive Price Spectrum',
+      badges: [
+        if (suggestedPrice != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: yellow,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: ink, width: 1.5),
+            ),
+            child: Text(
+              'Target: ${money(suggestedPrice)}',
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+            ),
+          ),
+      ],
+      child: NeoBarChart(
+        items: barItems,
+        height: 160,
+      ),
+    );
+  }
+}
+
+class HorizonProjectionWidget extends StatelessWidget {
+  const HorizonProjectionWidget({super.key, required this.projections});
+  final List projections;
+
+  @override
+  Widget build(BuildContext context) {
+    if (projections.isEmpty) return const SizedBox.shrink();
+
+    final points = <NeoAreaPoint>[];
+    for (final p in projections) {
+      if (p is! Map) continue;
+      final horizon = '${p['horizon'] ?? p['label'] ?? 'Horizon'}';
+      final val = (p['demandScore'] ?? p['value'] ?? p['projected'] ?? 10) as num;
+      points.add(NeoAreaPoint(label: horizon, value: val.toDouble()));
+    }
+
+    if (points.isEmpty) return const SizedBox.shrink();
+
+    return FeatureChartPanel(
+      eyebrow: 'HORIZON PREDICTIVE VELOCITY',
+      title: 'Projected Multi-Week Demand Horizon',
+      badges: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: lavender,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: ink, width: 1.5),
+          ),
+          child: const Text(
+            '30-Day Outlook',
+            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+          ),
+        ),
+      ],
+      child: NeoAreaChart(
+        points: points,
+        height: 150,
+        fillColor: const Color(0xffc3b1e1),
+        strokeColor: const Color(0xff6b46c1),
+        valuePrefix: '',
+        unitSuffix: ' idx',
+      ),
+    );
+  }
+}
+
+class AgentStudioTelemetryWidget extends StatelessWidget {
+  const AgentStudioTelemetryWidget({super.key, required this.recentActivity});
+  final List recentActivity;
+
+  @override
+  Widget build(BuildContext context) {
+    if (recentActivity.isEmpty) return const SizedBox.shrink();
+
+    final agentCounts = <String, double>{};
+    for (final a in recentActivity) {
+      if (a is! Map) continue;
+      final kind = '${a['kind'] ?? a['agent'] ?? 'Agent'}'.replaceAll('_', ' ');
+      agentCounts[kind] = (agentCounts[kind] ?? 0.0) + 1.0;
+    }
+
+    final barItems = agentCounts.entries.map((e) => NeoBarItem(
+      label: e.key,
+      value: e.value,
+      color: sky,
+      valueLabel: '${e.value.toInt()} runs',
+    )).toList();
+
+    return FeatureChartPanel(
+      eyebrow: 'WORKER AGENT TELEMETRY',
+      title: 'Agent Studio Execution Frequency',
+      badges: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: mint,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: ink, width: 1.5),
+          ),
+          child: Text(
+            '${recentActivity.length} Executions',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+          ),
+        ),
+      ],
+      child: NeoBarChart(
+        items: barItems,
+        height: 140,
+      ),
+    );
+  }
+}
 class AgentScreen extends StatefulWidget {
   const AgentScreen({super.key, required this.session, required this.section});
   final Session session;
@@ -1123,6 +1347,7 @@ class _AgentScreenState extends State<AgentScreen> {
 
                 // AutoPilot Recommendation Card for Smart Pricing
                 if (result['autoPilotRecommendation'] != null) ...[
+                  DynamicSurgeCurveWidget(autoPilot: Map<String, dynamic>.from(result['autoPilotRecommendation'])),
                   Container(
                     padding: const EdgeInsets.all(14),
                     margin: const EdgeInsets.only(bottom: 12),
@@ -1201,6 +1426,10 @@ class _AgentScreenState extends State<AgentScreen> {
                 // Comparables for Smart Pricing
                 if (result['comparables'] != null &&
                     (result['comparables'] as List).isNotEmpty) ...[
+                  MarketComparisonChartWidget(
+                    comparables: records(result['comparables']),
+                    suggestedPrice: result['suggestedPrice'] ?? result['autoPilotRecommendation']?['recommendedDynamicPrice'],
+                  ),
                   const Text(
                     'Market Comparables',
                     style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
@@ -1234,6 +1463,8 @@ class _AgentScreenState extends State<AgentScreen> {
                     ),
                 ],
 
+                if (result['horizonProjections'] != null && records(result['horizonProjections']).isNotEmpty)
+                  HorizonProjectionWidget(projections: records(result['horizonProjections'])),
                 // Observations & Trends for Demand Forecast
                 if (result['observations'] != null) ...[
                   const Text(

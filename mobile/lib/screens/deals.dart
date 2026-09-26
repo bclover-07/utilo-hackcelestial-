@@ -92,6 +92,233 @@ class QuotesScreen extends StatelessWidget {
   );
 }
 
+
+
+class ZopaDistributionWidget extends StatelessWidget {
+  const ZopaDistributionWidget({super.key, required this.zopa});
+  final Map<String, dynamic>? zopa;
+
+  @override
+  Widget build(BuildContext context) {
+    if (zopa == null) return const SizedBox.shrink();
+    final minVal = (zopa!['min'] is num) ? (zopa!['min'] as num).toDouble() : 0.0;
+    final currentVal = (zopa!['current'] is num) ? (zopa!['current'] as num).toDouble() : 0.0;
+    final maxVal = (zopa!['max'] is num) ? (zopa!['max'] as num).toDouble() : 0.0;
+
+    final items = [
+      NeoBarItem(
+        label: 'Seeker Target',
+        value: minVal,
+        color: teal,
+        valueLabel: money(minVal.toInt()),
+      ),
+      NeoBarItem(
+        label: 'Current Offer',
+        value: currentVal,
+        color: yellow,
+        valueLabel: money(currentVal.toInt()),
+      ),
+      NeoBarItem(
+        label: 'Provider Ask',
+        value: maxVal,
+        color: pink,
+        valueLabel: money(maxVal.toInt()),
+      ),
+    ];
+
+    return FeatureChartPanel(
+      eyebrow: 'BILATERAL ZOPA METRICS',
+      title: 'Zone of Possible Agreement Distribution',
+      badges: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: yellow,
+            border: Border.all(color: ink, width: 1.5),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            'Spread: ${money((maxVal - minVal).abs().toInt())}',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+          ),
+        ),
+      ],
+      child: NeoBarChart(
+        items: items,
+        isHorizontal: true,
+        height: 120,
+      ),
+    );
+  }
+}
+
+class OfferConvergenceWidget extends StatelessWidget {
+  const OfferConvergenceWidget({super.key, required this.offers});
+  final List offers;
+
+  @override
+  Widget build(BuildContext context) {
+    if (offers.length < 2) return const SizedBox.shrink();
+
+    final points = <NeoLinePoint>[];
+    for (int i = 0; i < offers.length; i++) {
+      final o = offers[i];
+      if (o is! Map) continue;
+      final price = (o['price'] is num) ? (o['price'] as num).toDouble() : 0.0;
+      points.add(NeoLinePoint(xLabel: 'R${i + 1}', yValue: price));
+    }
+
+    if (points.length < 2) return const SizedBox.shrink();
+
+    return FeatureChartPanel(
+      eyebrow: 'PRICE CONVERGENCE',
+      title: 'Offer Trajectory (${offers.length} Rounds)',
+      badges: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: mint,
+            border: Border.all(color: ink, width: 1.5),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '${money(offers.first['price'])} → ${money(offers.last['price'])}',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+          ),
+        ),
+      ],
+      child: NeoLineChart(
+        points: points,
+        height: 140,
+      ),
+    );
+  }
+}
+
+class ReviewReputationAnalyticsWidget extends StatelessWidget {
+  const ReviewReputationAnalyticsWidget({super.key, required this.reviews});
+  final List reviews;
+
+  @override
+  Widget build(BuildContext context) {
+    if (reviews.isEmpty) return const SizedBox.shrink();
+
+    final counts = [0, 0, 0, 0, 0]; // 1★ to 5★
+    double totalScore = 0;
+
+    for (final r in reviews) {
+      if (r is! Map) continue;
+      final score = (r['score'] is num) ? (r['score'] as num).toInt() : 5;
+      final clamped = score.clamp(1, 5);
+      counts[clamped - 1]++;
+      totalScore += score;
+    }
+
+    final avg = (totalScore / reviews.length).toStringAsFixed(1);
+    final barItems = [
+      NeoBarItem(label: '5★', value: counts[4].toDouble(), color: teal, valueLabel: '${counts[4]}'),
+      NeoBarItem(label: '4★', value: counts[3].toDouble(), color: mint, valueLabel: '${counts[3]}'),
+      NeoBarItem(label: '3★', value: counts[2].toDouble(), color: yellow, valueLabel: '${counts[2]}'),
+      NeoBarItem(label: '2★', value: counts[1].toDouble(), color: peach, valueLabel: '${counts[1]}'),
+      NeoBarItem(label: '1★', value: counts[0].toDouble(), color: pink, valueLabel: '${counts[0]}'),
+    ];
+
+    return FeatureChartPanel(
+      eyebrow: 'REPUTATION & INTEGRITY',
+      title: 'Reputation Score & Rating Spread',
+      badges: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: yellow,
+            border: Border.all(color: ink, width: 1.5),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '★ $avg Avg',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: ink),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: const Color(0x334ecdc4),
+            border: Border.all(color: ink, width: 1.5),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '${reviews.length} Verified',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+          ),
+        ),
+      ],
+      child: NeoBarChart(
+        items: barItems,
+        height: 120,
+      ),
+    );
+  }
+}
+
+class DisputeResolutionAnalyticsWidget extends StatelessWidget {
+  const DisputeResolutionAnalyticsWidget({super.key, required this.disputes});
+  final List disputes;
+
+  @override
+  Widget build(BuildContext context) {
+    if (disputes.isEmpty) return const SizedBox.shrink();
+
+    int openCount = 0;
+    int resolvedCount = 0;
+    int mediationCount = 0;
+
+    for (final d in disputes) {
+      if (d is! Map) continue;
+      final st = '${d['status'] ?? 'open'}'.toLowerCase();
+      if (st == 'resolved') {
+        resolvedCount++;
+      } else if (st == 'mediation' || st == 'under_review') {
+        mediationCount++;
+      } else {
+        openCount++;
+      }
+    }
+
+    final donutItems = [
+      if (resolvedCount > 0)
+        NeoPieItem(label: 'Resolved', value: resolvedCount.toDouble(), color: teal),
+      if (mediationCount > 0)
+        NeoPieItem(label: 'Mediation', value: mediationCount.toDouble(), color: yellow),
+      if (openCount > 0)
+        NeoPieItem(label: 'Open Claims', value: openCount.toDouble(), color: pink),
+    ];
+
+    return FeatureChartPanel(
+      eyebrow: 'ESCROW & RESOLUTION GUARANTEE',
+      title: 'Dispute Arbitration Status',
+      badges: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: resolvedCount > openCount ? mint : yellow,
+            border: Border.all(color: ink, width: 1.5),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '$resolvedCount Resolved',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+          ),
+        ),
+      ],
+      child: NeoDonutChart(
+        items: donutItems,
+        centerText: '${disputes.length}',
+        centerSubtext: 'Claims',
+        size: 130,
+      ),
+    );
+  }
+}
 class QuoteScreen extends StatefulWidget {
   const QuoteScreen({super.key, required this.session, required this.id});
   final Session session;
@@ -165,6 +392,19 @@ class _QuoteScreenState extends State<QuoteScreen> {
                             ),
                         ],
                       ),
+                      ZopaDistributionWidget(
+                        zopa: (q['zopa'] is Map)
+                            ? Map<String, dynamic>.from(q['zopa'])
+                            : (last != null
+                                ? {
+                                    'min': ((last['price'] as num) * 0.85).round(),
+                                    'current': last['price'],
+                                    'max': ((last['price'] as num) * 1.15).round(),
+                                  }
+                                : null),
+                      ),
+                      if (offers.length >= 2)
+                        OfferConvergenceWidget(offers: offers),
                       if (offers.isEmpty)
                         const Text('The provider can send the first quote.'),
                       ...offers.map(
@@ -841,6 +1081,8 @@ class ReviewsScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
+              if (list.isNotEmpty)
+                ReviewReputationAnalyticsWidget(reviews: list),
               if (list.isEmpty)
                 const Empty(
                   text:
@@ -946,6 +1188,8 @@ class DisputesScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
+              if (list.isNotEmpty)
+                DisputeResolutionAnalyticsWidget(disputes: list),
               if (list.isEmpty)
                 const Empty(
                   text:
