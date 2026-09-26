@@ -17,6 +17,12 @@ export function broadcastMessage(quoteId, message) {
   }
 }
 
+export function emitToUser(userId, event, payload) {
+  if (ioInstance && userId) {
+    ioInstance.to(`user_${String(userId)}`).emit(event, payload);
+  }
+}
+
 export function initSocketServer(httpServer) {
   const io = new SocketIOServer(httpServer, {
     cors: {

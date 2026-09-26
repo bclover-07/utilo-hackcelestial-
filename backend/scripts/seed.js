@@ -736,6 +736,45 @@ async function seed() {
 
   console.log(`✔ 3 completed past bookings with 6 bilateral reviews.`);
 
+  // ─── 8b. INVENTORY OFFLINE DEALS & REAL-TIME DEMO RENTALS ─────────
+  const offlineBk1 = await Booking.create({
+    listing: roundTables._id,
+    provider: provider._id,
+    start: new Date(Date.now() - 6 * 3600000),
+    end: new Date(Date.now() + 18 * 3600000),
+    quantity: 12,
+    price: 9600,
+    deposit: 3000,
+    status: "in_progress",
+    isOfflineDeal: true,
+    offlineClient: {
+      name: "Rajesh Singhania (Elite Caterers)",
+      phone: "+91 98111 22334",
+      email: "rajesh@elitecaterers.in",
+      notes: "Cash advance paid at Bandra warehouse. Handover confirmed.",
+    },
+  });
+
+  const overdueBk = await Booking.create({
+    listing: foldChairs._id,
+    provider: provider._id,
+    start: new Date(Date.now() - 30 * 3600000),
+    end: new Date(Date.now() - 3 * 3600000),
+    quantity: 50,
+    price: 3500,
+    deposit: 1500,
+    status: "in_progress",
+    isOfflineDeal: true,
+    offlineClient: {
+      name: "Sunita Kapoor (Studio 9 Decor)",
+      phone: "+91 98222 33445",
+      email: "sunita@studio9decor.in",
+      notes: "Corporate anniversary setup. Awaiting van return to warehouse.",
+    },
+  });
+
+  console.log(`✔ 2 inventory demo rentals (1 expiring soon offline deal, 1 overdue return).`);
+
   // ─── 9. DISPUTES ──────────────────────────────────────────────────
   await Dispute.create({
     booking: pastBkA._id, openedBy: seeker._id,
@@ -813,8 +852,35 @@ async function seed() {
     { user: admin._id, title: "New Business Registered", body: "Priya Sharma Productions joined as a Seeker.", href: "/admin/verifications", readAt: new Date() },
     { user: admin._id, title: "Dispute Filed", body: "Priya filed a dispute about AC delay during load-in.", href: "/admin/disputes", readAt: new Date() },
     { user: admin._id, title: "Dispute Resolved", body: "AC chiller dispute resolved amicably.", href: "/admin/disputes", readAt: new Date() },
+    {
+      user: provider._id,
+      title: "⚠️ Rental Expired: White Resin Folding Chairs",
+      body: "Rental duration ended for Sunita Kapoor (Studio 9 Decor). Verify return to free inventory or repost to marketplace.",
+      href: "/dashboard/inventory",
+      kind: "rental_expiry",
+      relatedBooking: overdueBk._id,
+      relatedListing: foldChairs._id,
+    },
+    {
+      user: provider._id,
+      title: "Rental Ending Soon: Round Banquet Tables",
+      body: "Rental concludes within 18 hours for Rajesh Singhania (Elite Caterers).",
+      href: "/dashboard/inventory",
+      kind: "rental_expiry",
+      relatedBooking: offlineBk1._id,
+      relatedListing: roundTables._id,
+    },
+    {
+      user: provider._id,
+      title: "Offline Deal Logged: Round Banquet Tables",
+      body: "Rented 12 units to Rajesh Singhania (Elite Caterers).",
+      href: "/dashboard/inventory",
+      kind: "offline_deal",
+      relatedBooking: offlineBk1._id,
+      relatedListing: roundTables._id,
+    },
   ]);
-  console.log(`✔ 14 notifications.`);
+  console.log(`✔ 17 notifications.`);
 
   // ─── 14. EVENT PLANS (AI Conductor) ───────────────────────────────
   await EventPlan.create([

@@ -12,6 +12,7 @@ import { assert } from "../middlewares/errors.js";
 import { peakReserved, search } from "./matchingService.js";
 import { notify } from "./notificationService.js";
 import { logWorkProcess } from "./workProcessService.js";
+import { emitToUser } from "../socket.js";
 export async function ownListing(user, id, session) {
   const l = await Listing.findOne({ _id: id, owner: user._id }).session(
     session || null,
@@ -117,6 +118,11 @@ export async function setStatus(user, id, body) {
     409,
     "Resource changed or is under administrator review. Refresh first.",
   );
+  emitToUser(user._id, "inventory_changed", {
+    type: "status_changed",
+    listingId: updated._id,
+    status: updated.status,
+  });
   return updated;
 }
 export async function block(user, id, raw) {

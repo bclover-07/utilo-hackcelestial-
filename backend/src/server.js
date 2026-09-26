@@ -8,6 +8,7 @@ import { initSocketServer } from "./socket.js";
 import { connectDatabase } from "./services/database.js";
 validateConfig();
 const disconnectDatabase = await connectDatabase(config);
+await mongoose.connection.db?.collection("bookings").dropIndex("quote_1").catch(() => {});
 await Promise.all(Object.values(mongoose.models).map((m) => m.init()));
 
 for (const [slug, name, color, requiredFields] of [

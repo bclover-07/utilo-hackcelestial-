@@ -12,6 +12,7 @@ import {
 import { participantQuery } from "./quoteService.js";
 import { assert } from "../middlewares/errors.js";
 import { notify } from "./notificationService.js";
+import { emitToUser } from "../socket.js";
 export async function getBooking(user, id, session) {
   const b = await Booking.findOne({
     _id: id,
@@ -93,7 +94,7 @@ export async function transition(user, id, raw) {
     }
     b.status = status;
     await b.save({ session });
-    for (const uid of [b.provider, b.seeker])
+    for (const uid of [b.provider, b.seeker].filter(Boolean))
       await notify(
         uid,
         `Booking ${status.replace("_", " ")}`,
@@ -101,6 +102,11 @@ export async function transition(user, id, raw) {
         "/dashboard/bookings",
         session,
       );
+    emitToUser(b.provider, "inventory_changed", {
+      type: "booking_transition",
+      bookingId: b._id,
+      status,
+    });
     return b;
   });
 }

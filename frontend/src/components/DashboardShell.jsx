@@ -29,6 +29,7 @@ import {
   CheckCircle,
   Sliders,
   ArrowLeftRight,
+  Boxes,
 } from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useTranslation } from "@/lib/i18n";
@@ -45,6 +46,7 @@ const providerSections = [
     title: "INVENTORY & YIELD",
     categoryKey: "inventory",
     links: [
+      ["inventory", "Inventory Hub & Offline Deals", <Boxes size={17} key="inventory" />],
       ["listings", "My listings", <Package size={17} key="listings" />],
       ["calendar", "Availability & Calendar", <Calendar size={17} key="calendar" />],
       ["smart-pricing", "Smart pricing & demand", <DollarSign size={17} key="pricing" />],
