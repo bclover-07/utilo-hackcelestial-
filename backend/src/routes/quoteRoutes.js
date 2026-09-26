@@ -14,6 +14,7 @@ const aiLimit = rateLimit({
 });
 
 quoteRoutes.get("/quotes", c.quotes);
+quoteRoutes.post("/quotes/direct-offer", verifiedBusiness, c.directOffer);
 quoteRoutes.post("/quotes/:id/offers", verifiedBusiness, c.offer);
 quoteRoutes.post("/quotes/:id/accept", verifiedBusiness, c.accept);
 quoteRoutes.post("/quotes/:id/decline", c.decline);

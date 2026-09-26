@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import {
   useData,
@@ -15,11 +16,263 @@ import {
   money,
 } from "./ui";
 import { ListingCard } from "./Inventory";
+
+export function RapidoNegotiateModal({ listing, onClose }) {
+  const router = useRouter();
+  const [quantity, setQuantity] = useState(1);
+  const [days, setDays] = useState(1);
+  const unitPrice = listing.price || 1000;
+  const baseRate = unitPrice * quantity * days;
+  const [offerPrice, setOfferPrice] = useState(baseRate);
+  const [conditions, setConditions] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  const handleQuantityChange = (delta) => {
+    const next = Math.max(1, Math.min(listing.quantity || 100, quantity + delta));
+    setQuantity(next);
+    const newBase = unitPrice * next * days;
+    setOfferPrice(newBase);
+  };
+
+  const discountRatio = baseRate > 0 ? (offerPrice - baseRate) / baseRate : 0;
+  const discountPct = Math.round(Math.abs(discountRatio) * 100);
+
+  const applyPreset = (factor) => {
+    setOfferPrice(Math.round(baseRate * factor));
+  };
+
+  const nudgePrice = (delta) => {
+    setOfferPrice((prev) => Math.max(50, prev + delta));
+  };
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      const res = await api("/quotes/direct-offer", {
+        method: "POST",
+        body: {
+          listingId: listing._id,
+          price: Number(offerPrice),
+          quantity: Number(quantity),
+          conditions: conditions.trim() || undefined,
+        },
+      });
+      setSuccess(true);
+      setTimeout(() => {
+        router.push(`/dashboard/negotiations?selected=${res.quoteId}`);
+      }, 1100);
+    } catch (err) {
+      setError(err.message || "Failed to submit offer.");
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="rapido-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="rapido-modal-card">
+        <div className="rapido-header">
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <span className="rapido-badge-tag">⚡ RAPIDO FARE COUNTER</span>
+              <span className="spec-chip">📍 {listing.city}</span>
+            </div>
+            <h2 style={{ margin: 0, fontSize: "1.35rem" }}>{listing.title}</h2>
+            {listing.ownerName && (
+              <p style={{ margin: "4px 0 0", fontSize: "0.85rem", color: "#555" }}>
+                Offered by <strong>{listing.ownerName}</strong> {listing.ownerVerification === "verified" && "✓ Verified"}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            className="quiet"
+            style={{ fontSize: "1.4rem", padding: "2px 8px", cursor: "pointer", border: "none", background: "none" }}
+            onClick={onClose}
+          >
+            ✕
+          </button>
+        </div>
+
+        {success ? (
+          <div className="success" style={{ textAlign: "center", padding: "2rem" }}>
+            <h3 style={{ margin: "0 0 8px" }}>🎉 Counter-Offer Dispatched!</h3>
+            <p style={{ margin: "0 0 12px" }}>
+              Your proposed price of <strong>{money(offerPrice)}</strong> was sent to {listing.ownerName || "the provider"}.
+            </p>
+            <p className="hint">Connecting to live negotiation chat room…</p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {/* Units & Base Price Overview */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div style={{ background: "#FAF8F5", padding: "10px 14px", border: "2px solid #20201e", borderRadius: 12 }}>
+                <span className="eyebrow" style={{ color: "#7B61A8" }}>QUANTITY NEEDED</span>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4 }}>
+                  <button type="button" className="rapido-stepper-btn" onClick={() => handleQuantityChange(-1)} disabled={quantity <= 1}>−</button>
+                  <strong style={{ fontSize: "1.2rem" }}>{quantity} {listing.unit || "unit"}</strong>
+                  <button type="button" className="rapido-stepper-btn" onClick={() => handleQuantityChange(1)} disabled={quantity >= (listing.quantity || 100)}>+</button>
+                </div>
+                <small style={{ color: "#666", display: "block", marginTop: 4 }}>Pool: {listing.quantity} available</small>
+              </div>
+
+              <div style={{ background: "#FAF8F5", padding: "10px 14px", border: "2px solid #20201e", borderRadius: 12 }}>
+                <span className="eyebrow" style={{ color: "#7B61A8" }}>LISTED BASE RATE</span>
+                <div style={{ marginTop: 4 }}>
+                  <strong style={{ fontSize: "1.3rem", display: "block" }}>{money(baseRate)}</strong>
+                  <small style={{ color: "#666" }}>{money(listing.price)} / {listing.unit || "unit"}</small>
+                </div>
+              </div>
+            </div>
+
+            {/* Rapido Fare Box */}
+            <div className="rapido-bid-box">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span className="eyebrow" style={{ color: "#20201e" }}>YOUR COUNTER-OFFER (INR)</span>
+                <span style={{ fontSize: "0.8rem", fontWeight: 700 }}>Rapido Dynamic Bidding</span>
+              </div>
+
+              {/* Preset Chips */}
+              <div className="rapido-preset-strip">
+                <button type="button" className={`rapido-chip ${discountRatio === -0.15 ? "active" : ""}`} onClick={() => applyPreset(0.85)}>
+                  −15% Saver ({money(Math.round(baseRate * 0.85))})
+                </button>
+                <button type="button" className={`rapido-chip ${discountRatio === -0.1 ? "active" : ""}`} onClick={() => applyPreset(0.9)}>
+                  −10% Value ({money(Math.round(baseRate * 0.9))})
+                </button>
+                <button type="button" className={`rapido-chip ${offerPrice === baseRate ? "active" : ""}`} onClick={() => applyPreset(1)}>
+                  Listed Rate ({money(baseRate)})
+                </button>
+                <button type="button" className={`rapido-chip ${discountRatio === 0.05 ? "active" : ""}`} onClick={() => applyPreset(1.05)}>
+                  +5% Priority ({money(Math.round(baseRate * 1.05))})
+                </button>
+                <button type="button" className={`rapido-chip ${discountRatio === 0.1 ? "active" : ""}`} onClick={() => applyPreset(1.1)}>
+                  +10% Rush ({money(Math.round(baseRate * 1.1))})
+                </button>
+              </div>
+
+              {/* Stepper & Custom Price Input */}
+              <div className="rapido-stepper-row">
+                <button type="button" className="rapido-stepper-btn" onClick={() => nudgePrice(-250)}>−₹250</button>
+                <button type="button" className="rapido-stepper-btn" onClick={() => nudgePrice(-100)}>−₹100</button>
+                <input
+                  type="number"
+                  className="rapido-price-input"
+                  min="50"
+                  step="50"
+                  value={offerPrice}
+                  onChange={(e) => setOfferPrice(Number(e.target.value) || 0)}
+                  required
+                />
+                <button type="button" className="rapido-stepper-btn" onClick={() => nudgePrice(100)}>+₹100</button>
+                <button type="button" className="rapido-stepper-btn" onClick={() => nudgePrice(250)}>+₹250</button>
+              </div>
+
+              {/* Dynamic Bargain Indicator */}
+              <div style={{ marginTop: 12 }}>
+                {discountRatio < -0.2 ? (
+                  <div className="bargain-gauge-pill" style={{ background: "#FFE2DB", borderColor: "#76271D" }}>
+                    <span>⚠️ Aggressive Discount (−{discountPct}%)</span>
+                    <small>Provider may decline or counter-offer higher.</small>
+                  </div>
+                ) : discountRatio < 0 ? (
+                  <div className="bargain-gauge-pill" style={{ background: "#DDF4D1", borderColor: "#244C24" }}>
+                    <span>🟢 Competitive Fair Offer (−{discountPct}%)</span>
+                    <small>High acceptance probability by provider.</small>
+                  </div>
+                ) : discountRatio === 0 ? (
+                  <div className="bargain-gauge-pill" style={{ background: "#E0F2FE", borderColor: "#0369A1" }}>
+                    <span>⭐ Full Listed Rate</span>
+                    <small>Standard terms, instant provider priority.</small>
+                  </div>
+                ) : (
+                  <div className="bargain-gauge-pill" style={{ background: "#EDE9FE", borderColor: "#6D28D9" }}>
+                    <span>⚡ Priority Surge Offer (+{discountPct}%)</span>
+                    <small>Maximum priority for peak or urgent events.</small>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Optional Special Conditions Note */}
+            <div>
+              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, marginBottom: 4 }}>
+                Special Conditions / Notes to Provider (Optional)
+              </label>
+              <textarea
+                style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: "2px solid #20201e", fontSize: "0.9rem", minHeight: 60, background: "#fff" }}
+                placeholder="e.g. Need 8 AM load-in setup, own transportation arranged, etc."
+                value={conditions}
+                onChange={(e) => setConditions(e.target.value)}
+                maxLength={500}
+              />
+            </div>
+
+            {error && <div className="error" role="alert">{error}</div>}
+
+            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+              <button
+                type="submit"
+                className="button"
+                style={{ flex: 1, background: "#FFE66D", border: "2px solid #20201e", fontWeight: 800, fontSize: "1rem", padding: "12px", cursor: "pointer" }}
+                disabled={loading || offerPrice <= 0}
+              >
+                {loading ? "Dispatching Offer…" : `🚀 Send Offer of ${money(offerPrice)} & Open Chat`}
+              </button>
+              <button
+                type="button"
+                className="button quiet"
+                style={{ padding: "12px 18px", cursor: "pointer" }}
+                onClick={onClose}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function SearchPage() {
   const categories = useData("/categories"),
     [result, setResult] = useState(null),
-    [filters, setFilters] = useState(null);
+    [filters, setFilters] = useState(null),
+    [selectedCategory, setSelectedCategory] = useState(""),
+    [rapidoListing, setRapidoListing] = useState(null);
   const [paging, setPaging] = useState(false), [pageError, setPageError] = useState("");
+
+  // Automatically load all vetted resources on mount like an e-commerce catalog
+  useEffect(() => {
+    let active = true;
+    api("/search", { method: "POST", body: {} })
+      .then((res) => {
+        if (active) {
+          setResult(res);
+          setFilters({});
+        }
+      })
+      .catch((err) => console.error("Auto-load search error:", err));
+    return () => { active = false; };
+  }, []);
+
+  async function filterByCategory(slug) {
+    setSelectedCategory(slug);
+    setPageError("");
+    const newFilters = { ...filters, category: slug || undefined, page: 1 };
+    setFilters(newFilters);
+    try {
+      const res = await api("/search", { method: "POST", body: newFilters });
+      setResult(res);
+    } catch (err) {
+      setPageError(err.message);
+    }
+  }
+
   async function changePage(page) {
     if (paging) return;
     setPaging(true); setPageError("");
@@ -27,16 +280,50 @@ export function SearchPage() {
     catch (error) { setPageError(error.message); }
     finally { setPaging(false); }
   }
+
+  const categoryIcons = {
+    banquet_hall: "🏛️",
+    chairs: "🪑",
+    tables: "🍽️",
+    av_equipment: "🔊",
+    linens: "✨",
+    kitchen: "👨‍🍳",
+  };
+
   return (
     <>
       <Heading
         title="Good things. Closer than you think."
-        description="Find resources that fit your dates, quantity and budget."
+        description="Browse available hospitality resources, filter by category, or propose a custom counter-offer directly."
       >
         <Link className="button lavender" href="/dashboard/requests/create">
-          Post a request ↗
+          Post an RFQ ↗
         </Link>
       </Heading>
+
+      {/* Category Quick-Filter Strip */}
+      <div className="category-filter-bar">
+        <button
+          type="button"
+          className={`category-pill-btn ${!selectedCategory ? "active" : ""}`}
+          onClick={() => filterByCategory("")}
+        >
+          <span>✨</span>
+          <span>All Resources ({result ? result.total : "…"})</span>
+        </button>
+        {categories.data?.map((c) => (
+          <button
+            key={c._id}
+            type="button"
+            className={`category-pill-btn ${selectedCategory === c.slug ? "active" : ""}`}
+            onClick={() => filterByCategory(c.slug)}
+          >
+            <span>{categoryIcons[c.slug] || "📦"}</span>
+            <span>{c.name}</span>
+          </button>
+        ))}
+      </div>
+
       <section className="panel">
         <State resource={categories}>
           {(data) => (
@@ -67,6 +354,7 @@ export function SearchPage() {
                 setResult(null);
                 const response = await api("/search", { method: "POST", body });
                 setFilters(body);
+                setSelectedCategory(body.category || "");
                 setResult(response);
                 return `${response.total} resources matched your filters.`;
               }}
@@ -77,7 +365,7 @@ export function SearchPage() {
                   name="query"
                   placeholder="Resource name"
                 />
-                <Field as="select" label="Category" name="category">
+                <Field as="select" label="Category" name="category" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
                   <option value="">All categories</option>
                   {data.map((c) => (
                     <option key={c._id} value={c.slug}>
@@ -146,11 +434,12 @@ export function SearchPage() {
           )}
         </State>
       </section>
+
       {result && (
         <>
           <div className="section-heading">
             <h2>
-              {result.total} matches <small>· ranked by fit</small>
+              {result.total} {result.total === 1 ? "resource" : "resources"} available <small>· ranked by fit & availability</small>
             </h2>
             <Action
               className="quiet"
@@ -158,8 +447,8 @@ export function SearchPage() {
                 await api("/saved-searches", {
                   method: "POST",
                   body: {
-                    name: `${filters.category || "Resources"} in ${filters.city || "all cities"}`,
-                    filters,
+                    name: `${filters?.category || "Resources"} in ${filters?.city || "all cities"}`,
+                    filters: filters || {},
                   },
                 });
               }}
@@ -171,11 +460,28 @@ export function SearchPage() {
             <div className="card-grid">
               {result.items.map((l, i) => (
                 <ListingCard key={l._id} listing={l} index={i}>
+                  {l.isOwnListing ? (
+                    <Link
+                      className="button quiet"
+                      href="/dashboard/listings"
+                    >
+                      Manage in Listings ↗
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      className="button"
+                      style={{ background: "#FFE66D", border: "2px solid #20201e", fontWeight: 800, cursor: "pointer" }}
+                      onClick={() => setRapidoListing(l)}
+                    >
+                      🤝 Counter Offer / Negotiate ₹
+                    </button>
+                  )}
                   <Link
-                    className="button"
+                    className="button quiet"
                     href={`/dashboard/resources/${l._id}`}
                   >
-                    View resource
+                    View details ↗
                   </Link>
                   <Action
                     className="quiet"
@@ -195,20 +501,34 @@ export function SearchPage() {
             />
           )}
           {result.total > 24 && (
-            <nav className="search-pagination" aria-label="Resource results pages"><button className="quiet" disabled={paging || result.page <= 1} onClick={() => changePage(result.page - 1)}>← Previous</button><span role="status">{paging ? "Loading results…" : `Page ${result.page} of ${Math.ceil(result.total / 24)}`}</span><button className="quiet" disabled={paging || result.page >= Math.ceil(result.total / 24)} onClick={() => changePage(result.page + 1)}>Next →</button></nav>
+            <nav className="search-pagination" aria-label="Resource results pages">
+              <button className="quiet" disabled={paging || result.page <= 1} onClick={() => changePage(result.page - 1)}>← Previous</button>
+              <span role="status">{paging ? "Loading results…" : `Page ${result.page} of ${Math.ceil(result.total / 24)}`}</span>
+              <button className="quiet" disabled={paging || result.page >= Math.ceil(result.total / 24)} onClick={() => changePage(result.page + 1)}>Next →</button>
+            </nav>
           )}
           {pageError && <p className="error" role="alert">{pageError}</p>}
           <div className="discovery-status-strip">
             <span className="live-dot" />
-            <span>AI Multi-Factor Fit Ranking · {result.total} vetted options available</span>
+            <span>Marketplace Liquidity Active · {result.total} vetted options available across Mumbai</span>
           </div>
         </>
+      )}
+
+      {/* Rapido Interactive Bidding Modal */}
+      {rapidoListing && (
+        <RapidoNegotiateModal
+          listing={rapidoListing}
+          onClose={() => setRapidoListing(null)}
+        />
       )}
     </>
   );
 }
+
 export function ResourceDetail({ id }) {
   const resource = useData(`/listings/${id}`);
+  const [rapidoListing, setRapidoListing] = useState(null);
   return (
     <State resource={resource}>
       {(l) => (
@@ -311,13 +631,34 @@ export function ResourceDetail({ id }) {
                 </div>
               )}
 
-              <div style={{ marginTop: "1.25rem" }}>
+              <div style={{ marginTop: "1.25rem", display: "flex", flexDirection: "column", gap: 10 }}>
+                {l.isOwnListing ? (
+                  <Link className="button quiet" href="/dashboard/listings">
+                    Manage this Resource in Listings ↗
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    className="button"
+                    style={{ background: "#20201e", color: "#fff", border: "2px solid #20201e", fontWeight: 800, padding: "12px", cursor: "pointer" }}
+                    onClick={() => setRapidoListing(l)}
+                  >
+                    ⚡ Propose Counter-Offer (Rapido)
+                  </button>
+                )}
                 <Action className="button lavender" run={() => api(`/favorites/${id}`, { method: "POST" })}>
                   Save to Shortlist ♡
                 </Action>
               </div>
             </section>
           </div>
+
+          {rapidoListing && (
+            <RapidoNegotiateModal
+              listing={rapidoListing}
+              onClose={() => setRapidoListing(null)}
+            />
+          )}
           <details className="panel">
             <summary>Report this listing</summary>
             <ActionForm

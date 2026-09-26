@@ -250,3 +250,133 @@ export async function message(user, id, raw) {
   );
   return populated;
 }
+
+export async function directOffer(user, raw) {
+  const schema = z.object({
+    listingId: z.string().regex(/^[a-f\d]{24}$/i, "Invalid listing ID"),
+    price: z.coerce.number().positive().max(1e8),
+    quantity: z.coerce.number().int().positive().default(1),
+    start: z.coerce.date().optional(),
+    end: z.coerce.date().optional(),
+    conditions: z.string().max(3000).default(""),
+  });
+  const data = schema.parse(raw);
+
+  const listing = await Listing.findOne({
+    _id: data.listingId,
+    status: "active",
+    moderationHold: { $ne: true },
+  });
+  assert(listing, 404, "Resource listing not found or not active.");
+  assert(
+    String(listing.owner) !== String(user._id),
+    400,
+    "You cannot initiate a negotiation on your own listing.",
+  );
+  assert(
+    data.quantity <= listing.quantity,
+    400,
+    `Only ${listing.quantity} units are available.`,
+  );
+
+  const start =
+    data.start && data.start > new Date()
+      ? data.start
+      : new Date(Date.now() + 24 * 3600000);
+  const end =
+    data.end && data.end > start
+      ? data.end
+      : new Date(+start + Math.max(listing.minHours, 8) * 3600000);
+
+  return mongoose.connection.transaction(async (session) => {
+    const [request] = await Request.create(
+      [
+        {
+          title: `Direct RFQ: ${listing.title}`,
+          seeker: user._id,
+          items: [
+            {
+              category: listing.category,
+              quantity: data.quantity,
+              capacity: listing.capacity,
+              specs:
+                data.conditions ||
+                `Rapido counter-offer negotiation for ${listing.title}`,
+            },
+          ],
+          city: listing.city,
+          location: {
+            type: "Point",
+            coordinates: listing.location.coordinates,
+          },
+          radiusKm: 25,
+          start,
+          end,
+          budget: data.price,
+          urgency: "routine",
+          delivery: listing.delivery,
+          status: "open",
+        },
+      ],
+      { session },
+    );
+
+    const [quote] = await Quote.create(
+      [
+        {
+          request: request._id,
+          listing: listing._id,
+          provider: listing.owner,
+          seeker: user._id,
+          itemIndex: 0,
+          offers: [
+            {
+              by: user._id,
+              price: data.price,
+              conditions:
+                data.conditions || "Initial Rapido counter-offer proposed.",
+            },
+          ],
+          status: "offered",
+          version: 1,
+        },
+      ],
+      { session },
+    );
+
+    const [msg] = await Message.create(
+      [
+        {
+          quote: quote._id,
+          sender: user._id,
+          text: `🤝 Proposed direct offer: INR ${data.price} (${data.quantity} unit${data.quantity > 1 ? "s" : ""}). ${data.conditions ? `Notes: "${data.conditions}"` : ""}`,
+        },
+      ],
+      { session },
+    );
+
+    try {
+      const populatedMsg = await Message.findById(msg._id)
+        .populate("sender", "name")
+        .session(session)
+        .lean();
+      broadcastMessage(quote._id, populatedMsg);
+    } catch {}
+
+    await notify(
+      listing.owner,
+      "New Rapido Counter-Offer",
+      `${user.name} proposed INR ${data.price} for ${listing.title}.`,
+      "/dashboard/negotiations",
+      session,
+    );
+
+    return {
+      quoteId: quote._id,
+      requestId: request._id,
+      price: data.price,
+      status: "offered",
+      message: "Offer submitted successfully. Negotiation channel opened.",
+    };
+  });
+}

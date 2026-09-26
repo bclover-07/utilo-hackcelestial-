@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { getSocket } from "@/lib/socket";
 import { useAuth } from "@/context/AuthContext";
@@ -73,9 +74,18 @@ function OfferConvergenceChart({ offers }) {
   );
 }
 export function NegotiationsPage() {
+  const searchParams = useSearchParams();
+  const paramSelected = searchParams ? searchParams.get("selected") : null;
   const resource = useData("/quotes"),
-    [selected, setSelected] = useState("");
+    [selected, setSelected] = useState(paramSelected || "");
   const { user, dashboardRole } = useAuth();
+
+  useEffect(() => {
+    if (paramSelected) {
+      setSelected(paramSelected);
+    }
+  }, [paramSelected]);
+
   return (
     <>
       <Heading
@@ -84,11 +94,13 @@ export function NegotiationsPage() {
       />
       <State resource={resource}>
         {(data) => {
-          const filtered = data.filter(
-            (q) =>
+          const filtered = data.filter((q) => {
+            if (paramSelected && q._id === paramSelected) return true;
+            return (
               q[dashboardRole === "provider" ? "provider" : "seeker"]?._id ===
-              user._id,
-          );
+              user._id
+            );
+          });
           const current =
             filtered.find((q) => q._id === selected) || filtered[0];
           return filtered.length ? (

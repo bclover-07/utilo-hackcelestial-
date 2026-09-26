@@ -38,7 +38,7 @@ export function estimate(listing, filters) {
     (filters.delivery ? listing.deliveryFee : 0)
   );
 }
-export function rank(listing, filters, rating) {
+export function rank(listing, filters, rating, user = null) {
   const total = estimate(listing, filters);
   const distance =
     listing.distanceMeters == null ? null : listing.distanceMeters / 1000;
@@ -52,8 +52,13 @@ export function rank(listing, filters, rating) {
     (100 * factors.reduce((s, f) => s + f.weight * f.value, 0)) /
       factors.reduce((s, f) => s + f.weight, 0),
   );
+  const isOwnListing = user ? String(listing.owner) === String(user._id) : false;
   return {
     ...listing,
+    isOwnListing,
+    ownerName: listing.ownerDetails?.name || "Verified Provider",
+    ownerVerification: listing.ownerDetails?.verification || "verified",
+    ownerCity: listing.ownerDetails?.city || listing.city,
     estimatedTotal: total,
     distanceKm: distance,
     rating: rating?.average ?? null,
@@ -80,7 +85,6 @@ export function rank(listing, filters, rating) {
 export async function search(raw, user, { log = false, session, all = false } = {}) {
   const f = searchSchema.parse(raw);
   const query = { status: "active", moderationHold: { $ne: true } };
-  if (user) query.owner = { $ne: user._id };
   if (f.category) query.category = f.category;
   if (f.city)
     query.city = {
@@ -112,7 +116,21 @@ export async function search(raw, user, { log = false, session, all = false } = 
   const candidates = await Listing.aggregate([
     ...pipeline,
     { $limit: 200 },
-    { $project: { embedding: 0 } },
+    {
+      $lookup: {
+        from: "businessprofiles",
+        localField: "owner",
+        foreignField: "_id",
+        as: "ownerProfile",
+        pipeline: [{ $project: { name: 1, verification: 1, city: 1 } }],
+      },
+    },
+    {
+      $addFields: {
+        ownerDetails: { $arrayElemAt: ["$ownerProfile", 0] },
+      },
+    },
+    { $project: { embedding: 0, ownerProfile: 0 } },
   ]).session(session || null);
   const ids = candidates.map((l) => l._id);
   const blocks = f.start
@@ -146,6 +164,7 @@ export async function search(raw, user, { log = false, session, all = false } = 
         { ...l, availableQuantity: l.quantity - (f.start ? peakReserved(blocks.filter(b => String(b.listing) === String(l._id)), f.start, f.end) : 0) },
         f,
         ratings.find((r) => String(r._id) === String(l.owner)),
+        user,
       ),
     )
     .sort((a, b) => b.score - a.score);

@@ -32,4 +32,5 @@ export const quoteController = {
   }),
 
   message: send((req) => quotes.message(req.user, recordId(req), req.body)),
+  directOffer: send((req) => quotes.directOffer(req.user, req.body)),
 };

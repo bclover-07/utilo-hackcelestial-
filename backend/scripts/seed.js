@@ -359,40 +359,42 @@ async function seed() {
     },
   ];
 
+  const priyaIndices = [6, 7, 8, 9, 10, 11, 12]; // cocktailTables, jblSound, ledWall, projector, lightingRig, pagodaTent, linens
   const listings = [];
-  for (const data of listingsData) {
-    const l = await Listing.create({ owner: provider._id, status: "active", ...data });
+  for (let idx = 0; idx < listingsData.length; idx++) {
+    const ownerId = priyaIndices.includes(idx) ? seeker._id : provider._id;
+    const l = await Listing.create({ owner: ownerId, status: "active", ...listingsData[idx] });
     listings.push(l);
   }
-  console.log(`✔ ${listings.length} listings created for Arjun.\n`);
+  console.log(`✔ 8 listings created for Arjun, 7 listings created for Priya (15 total).\n`);
 
   // Quick reference
   const [ballroom, terrace, boardroom, chiavari, foldChairs, roundTables, cocktailTables,
     jblSound, ledWall, projector, lightingRig, pagodaTent, linens, banquetKitchen, mobileKitchen] = listings;
 
-  // ─── 6. REQUESTS (RFQs) from Priya ───────────────────────────────
+  // ─── 6. REQUESTS (RFQs) ──────────────────────────────────────────
   const d = (days) => new Date(Date.now() + days * 86400000);
 
+  // Priya's requests
   const req1 = await Request.create({
     seeker: seeker._id,
     title: "Annual Tech Leaders Summit & Awards Night 2026",
     items: [
       { category: "banquet_hall", quantity: 1, capacity: 400, specs: "Pillar-less ballroom with stage, VIP lounge, and green rooms" },
       { category: "chairs", quantity: 250, capacity: 1, specs: "Gold Chiavari chairs with ivory cushions" },
-      { category: "av_equipment", quantity: 1, capacity: 1, specs: "Concert line-array sound with wireless mics" },
     ],
     location: { type: "Point", coordinates: [72.85, 19.07] },
     city: "Mumbai", radiusKm: 30,
     start: d(5), end: new Date(d(5).getTime() + 12 * 3600000),
-    budget: 140000, urgency: "routine", delivery: true, status: "partial",
+    budget: 95000, urgency: "routine", delivery: true, status: "partial",
   });
 
   const req2 = await Request.create({
     seeker: seeker._id,
     title: "Fintech Founders Networking Lounge & Demo Night",
     items: [
-      { category: "av_equipment", quantity: 1, capacity: 1, specs: "4K laser projector and motorized screen" },
       { category: "tables", quantity: 15, capacity: 10, specs: "Round banquet dining tables with covers" },
+      { category: "kitchen", quantity: 1, capacity: 1, specs: "Commercial banquet kitchen for catering" },
     ],
     location: { type: "Point", coordinates: [72.86, 19.08] },
     city: "Mumbai", radiusKm: 25,
@@ -406,7 +408,6 @@ async function seed() {
     items: [
       { category: "banquet_hall", quantity: 1, capacity: 250, specs: "Outdoor terrace with skyline backdrop and fairy lights" },
       { category: "chairs", quantity: 200, capacity: 1, specs: "Gold Chiavari chairs" },
-      { category: "av_equipment", quantity: 1, capacity: 1, specs: "20×10ft Ultra-HD LED backdrop video wall" },
     ],
     location: { type: "Point", coordinates: [72.83, 19.12] },
     city: "Mumbai", radiusKm: 30,
@@ -414,25 +415,26 @@ async function seed() {
     budget: 180000, urgency: "routine", delivery: true, status: "partial",
   });
 
+  // Arjun's request (Arjun as Seeker needing AV Equipment from Priya)
   const req4 = await Request.create({
-    seeker: seeker._id,
-    title: "Luxury Auto Expo & Media Premiere",
+    seeker: provider._id,
+    title: "Luxury Auto Expo & Concert Premiere",
     items: [
-      { category: "av_equipment", quantity: 1, capacity: 1, specs: "Concert line-array sound and intelligent lighting rig" },
-      { category: "linens", quantity: 2, capacity: 50, specs: "Modular weatherproof pagoda tents" },
+      { category: "av_equipment", quantity: 1, capacity: 1, specs: "JBL VTX concert line-array sound and wireless mics" },
+      { category: "av_equipment", quantity: 1, capacity: 1, specs: "20×10ft P2.6 Ultra-HD LED video wall" },
     ],
     location: { type: "Point", coordinates: [72.87, 19.05] },
     city: "Mumbai", radiusKm: 25,
     start: d(14), end: new Date(d(14).getTime() + 10 * 3600000),
-    budget: 95000, urgency: "urgent", delivery: true, status: "open",
+    budget: 65000, urgency: "urgent", delivery: true, status: "open",
   });
 
-  console.log(`✔ 4 RFQ requirements created for Priya.`);
+  console.log(`✔ 4 RFQ requirements created (3 Priya, 1 Arjun).`);
 
   // ─── 7. QUOTES & NEGOTIATIONS ─────────────────────────────────────
   const ago = (hrs) => new Date(Date.now() - hrs * 3600000);
 
-  // Quote 1: Ballroom for Tech Summit (active negotiation)
+  // Quote 1: Ballroom for Tech Summit (Priya Seeker, Arjun Provider — active negotiation)
   const q1 = await Quote.create({
     request: req1._id, itemIndex: 0,
     provider: provider._id, seeker: seeker._id, listing: ballroom._id,
@@ -450,41 +452,41 @@ async function seed() {
     { quote: q1._id, sender: seeker._id, text: "That works! Reviewing contract terms with our event committee now.", createdAt: ago(0.5) },
   ]);
 
-  // Quote 2: Sound system for Tech Summit (accepted → booking)
+  // Quote 2: Chiavari Chairs for Tech Summit (Priya Seeker, Arjun Provider — accepted → booking)
   const q2 = await Quote.create({
-    request: req1._id, itemIndex: 2,
-    provider: provider._id, seeker: seeker._id, listing: jblSound._id,
+    request: req1._id, itemIndex: 1,
+    provider: provider._id, seeker: seeker._id, listing: chiavari._id,
     status: "accepted", version: 2,
     offers: [
-      { by: provider._id, price: 22000, conditions: "JBL VTX line array with Soundcraft console, 4 Shure wireless mics, and FOH engineer.", at: ago(12) },
-      { by: seeker._id, price: 20000, conditions: "Accepted at corporate rate for full 12-hour event.", at: ago(6) },
+      { by: provider._id, price: 22500, conditions: "250 Gold Chiavari chairs with ivory velvet cushions and delivery.", at: ago(12) },
+      { by: seeker._id, price: 20000, conditions: "Accepted at ₹20K package rate.", at: ago(6) },
     ],
   });
   await Message.create([
-    { quote: q2._id, sender: provider._id, text: "Hey Priya! Our JBL VTX system is pre-calibrated for keynote speeches and award ceremonies.", createdAt: ago(12) },
-    { quote: q2._id, sender: seeker._id, text: "Perfect! We need 4 lapels and 2 wireless handhelds. Counter at ₹20K.", createdAt: ago(6) },
-    { quote: q2._id, sender: provider._id, text: "Confirmed! Our lead engineer Rahul will arrive at 7 AM for full soundcheck.", createdAt: ago(5) },
+    { quote: q2._id, sender: provider._id, text: "Hey Priya! All 250 Chiavari chairs are pristine with plush velvet cushions.", createdAt: ago(12) },
+    { quote: q2._id, sender: seeker._id, text: "Perfect! Sending confirmed counter of ₹20K for the set.", createdAt: ago(6) },
+    { quote: q2._id, sender: provider._id, text: "Confirmed! Delivery scheduled 7 AM morning of the event.", createdAt: ago(5) },
   ]);
 
   // Booking 1 from Quote 2
   const bk1 = await Booking.create({
-    quote: q2._id, request: req1._id, listing: jblSound._id,
-    provider: provider._id, seeker: seeker._id, itemIndex: 2,
+    quote: q2._id, request: req1._id, listing: chiavari._id,
+    provider: provider._id, seeker: seeker._id, itemIndex: 1,
     start: req1.start, end: req1.end,
-    quantity: 1, price: 20000, deposit: 5000, commission: 1000,
-    conditions: "Full concert sound reinforcement with FOH engineer.",
-    logistics: "Equipment truck to BKC service bay at 7 AM.",
+    quantity: 250, price: 20000, deposit: 3000, commission: 1000,
+    conditions: "250 Gold Chiavari chairs with cushions.",
+    logistics: "Equipment delivery truck to BKC service bay at 7 AM.",
     cancellationHours: 24, status: "confirmed",
   });
   await Availability.create({
-    listing: jblSound._id, booking: bk1._id,
-    start: req1.start, end: req1.end, quantity: 1,
+    listing: chiavari._id, booking: bk1._id,
+    start: req1.start, end: req1.end, quantity: 250,
     reason: "Booking — Tech Leaders Summit",
   });
-  req1.items[2].booking = bk1._id;
+  req1.items[1].booking = bk1._id;
   await req1.save();
 
-  // Quote 3: Terrace for Wedding Sangeet (accepted → booking)
+  // Quote 3: Terrace for Wedding Sangeet (Priya Seeker, Arjun Provider — accepted → booking)
   const q3 = await Quote.create({
     request: req3._id, itemIndex: 0,
     provider: provider._id, seeker: seeker._id, listing: terrace._id,
@@ -519,24 +521,24 @@ async function seed() {
   req3.items[0].booking = bk2._id;
   await req3.save();
 
-  // Quote 4: LED Wall for Wedding (active negotiation)
+  // Quote 4: JBL Concert Sound for Auto Expo (Arjun Seeker, Priya Provider — active negotiation!)
   const q4 = await Quote.create({
-    request: req3._id, itemIndex: 2,
-    provider: provider._id, seeker: seeker._id, listing: ledWall._id,
+    request: req4._id, itemIndex: 0,
+    provider: seeker._id, seeker: provider._id, listing: jblSound._id,
     status: "offered", version: 2,
     offers: [
-      { by: provider._id, price: 32000, conditions: "20×10ft P2.6 Ultra-HD LED with Novastar 4K processor and custom truss.", at: ago(7) },
-      { by: seeker._id, price: 28000, conditions: "₹28K if live video rehearsal is limited to 2 afternoon hours?", at: ago(2) },
+      { by: seeker._id, price: 22000, conditions: "JBL VTX concert sound reinforcement with Soundcraft console & FOH engineer.", at: ago(7) },
+      { by: provider._id, price: 19500, conditions: "Arjun: Can we do ₹19.5K? We're taking sound + LED wall for the Auto Expo.", at: ago(2) },
     ],
   });
   await Message.create([
-    { quote: q4._id, sender: provider._id, text: "The P2.6 LED has 3840Hz refresh — zero flicker for your wedding cinematographers!", createdAt: ago(7) },
-    { quote: q4._id, sender: seeker._id, text: "Exactly what our video director insisted on. Counter-offer at ₹28K for sangeet night.", createdAt: ago(2) },
-    { quote: q4._id, sender: provider._id, text: "Reviewing rigging schedule with crew. Should work if setup starts at 11 AM!", createdAt: ago(1) },
+    { quote: q4._id, sender: seeker._id, text: "Hi Arjun! The JBL VTX system is available for your Auto Expo dates with our senior audio engineer.", createdAt: ago(7) },
+    { quote: q4._id, sender: provider._id, text: "Great! We need punchy bass for the vehicle reveals. Proposed ₹19,500 for the 1-day showcase.", createdAt: ago(2) },
+    { quote: q4._id, sender: seeker._id, text: "Sounds fair for the bundle deal! Let's lock it in after we confirm power specs.", createdAt: ago(1) },
   ]);
 
   console.log(`✔ 4 quotes with chat messages seeded.`);
-  console.log(`✔ 2 confirmed bookings (Sound + Terrace).`);
+  console.log(`✔ 2 confirmed bookings (Chiavari + Terrace).`);
 
   // ─── 8. PAST COMPLETED BOOKINGS + REVIEWS ─────────────────────────
   const pastA_start = new Date(Date.now() - 14 * 86400000);
@@ -574,33 +576,33 @@ async function seed() {
   const pastB_start = new Date(Date.now() - 10 * 86400000);
   const pastB_end = new Date(pastB_start.getTime() + 6 * 3600000);
   const pastReqB = await Request.create({
-    seeker: seeker._id,
+    seeker: provider._id,
     title: "Cinema Arts Preview & Filmmakers Gala (Completed)",
-    items: [{ category: "av_equipment", quantity: 1, capacity: 1, specs: "4K laser projector and motorized screen" }],
+    items: [{ category: "av_equipment", quantity: 1, capacity: 1, specs: "20×10ft LED Video Wall" }],
     location: { type: "Point", coordinates: [72.83, 19.12] },
     city: "Mumbai", radiusKm: 25,
     start: pastB_start, end: pastB_end,
-    budget: 20000, urgency: "routine", delivery: true, status: "confirmed",
+    budget: 35000, urgency: "routine", delivery: true, status: "confirmed",
   });
   const pastQB = await Quote.create({
     request: pastReqB._id, itemIndex: 0,
-    provider: provider._id, seeker: seeker._id, listing: projector._id,
+    provider: seeker._id, seeker: provider._id, listing: ledWall._id,
     status: "accepted", version: 2,
-    offers: [{ by: provider._id, price: 18000, conditions: "4K laser projection package.", at: new Date(pastB_start.getTime() - 2 * 86400000) }],
+    offers: [{ by: seeker._id, price: 32000, conditions: "Ultra-HD LED wall package with processor.", at: new Date(pastB_start.getTime() - 2 * 86400000) }],
   });
   const pastBkB = await Booking.create({
-    quote: pastQB._id, request: pastReqB._id, listing: projector._id,
-    provider: provider._id, seeker: seeker._id, itemIndex: 0,
+    quote: pastQB._id, request: pastReqB._id, listing: ledWall._id,
+    provider: seeker._id, seeker: provider._id, itemIndex: 0,
     start: pastB_start, end: pastB_end,
-    quantity: 1, price: 18000, deposit: 5000, commission: 900,
-    conditions: "4K laser projection package.", logistics: "Delivered and rigged at venue.",
+    quantity: 1, price: 32000, deposit: 8000, commission: 1600,
+    conditions: "Ultra-HD LED wall package.", logistics: "Delivered and rigged at venue.",
     cancellationHours: 24, status: "completed",
   });
   pastReqB.items[0].booking = pastBkB._id;
   await pastReqB.save();
   await Rating.create([
-    { booking: pastBkB._id, from: seeker._id, to: provider._id, score: 5, comment: "Crisp 14,000 lumens 4K projection. Arjun's tech was punctual and extremely helpful." },
-    { booking: pastBkB._id, from: provider._id, to: seeker._id, score: 4, comment: "Great production team. Clear cues and smooth equipment handover." },
+    { booking: pastBkB._id, from: provider._id, to: seeker._id, score: 5, comment: "Crisp 4K display from Priya's production team! Flawless visuals and setup." },
+    { booking: pastBkB._id, from: seeker._id, to: provider._id, score: 5, comment: "Great collaboration with Arjun's event managers. Fast turnaround." },
   ]);
 
   // Past Booking C: Chairs + Tables bundle (for more review data)

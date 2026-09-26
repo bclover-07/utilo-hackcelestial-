@@ -92,9 +92,23 @@ export function ListingCard({ listing, children, index = 0 }) {
         )}
       </div>
       <div className="listing-body">
-        <div className="listing-header-row">
-          <h3>{listing.title}</h3>
+        <div className="listing-header-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+          <h3 style={{ margin: 0 }}>{listing.title}</h3>
+          {listing.isOwnListing && (
+            <span className="badge" style={{ background: "#FFE66D", border: "2px solid #20201e", fontSize: "0.75rem", fontWeight: 800, whiteSpace: "nowrap" }}>
+              👑 Your Listing
+            </span>
+          )}
         </div>
+
+        {listing.ownerName && (
+          <div className="listing-provider-line" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.82rem", color: "#555", margin: "4px 0 8px" }}>
+            <span>🏢 {listing.ownerName}</span>
+            {listing.ownerVerification === "verified" && (
+              <span style={{ color: "#059669", fontWeight: 800 }}>✓ Verified</span>
+            )}
+          </div>
+        )}
 
         <div className="spec-chip-strip">
           <span className="spec-chip">📍 {listing.city}</span>
