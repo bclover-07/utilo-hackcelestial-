@@ -237,15 +237,25 @@ export function ListingCard({ listing, children, index = 0 }) {
           </div>
         </div>
 
-        {listing.reasons?.length > 0 && (
-          <div className="reason-pills-wrap">
-            {listing.reasons.map((r) => (
-              <span key={r} className="reason-chip">
-                <span className="chip-check">✓</span> {r}
-              </span>
-            ))}
-          </div>
-        )}
+        {(() => {
+          const meaningfulReasons = (listing.reasons || []).filter(
+            (r) =>
+              !r.includes("not requested") &&
+              !r.includes("No budget constraint") &&
+              !r.includes("No reviews yet") &&
+              !r.includes("Select dates")
+          );
+          if (!meaningfulReasons.length) return null;
+          return (
+            <div className="reason-pills-wrap">
+              {meaningfulReasons.slice(0, 2).map((r) => (
+                <span key={r} className="reason-chip">
+                  <span className="chip-check">✓</span> {r}
+                </span>
+              ))}
+            </div>
+          );
+        })()}
 
         <div className="actions">{children}</div>
       </div>

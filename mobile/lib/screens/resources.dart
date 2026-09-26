@@ -210,13 +210,21 @@ class ListingCard extends StatelessWidget {
             ),
           ),
 
-          if (reasons.isNotEmpty) ...[
+          final meaningfulReasons = reasons.where((r) {
+            final s = r.toString();
+            return !s.contains('not requested') &&
+                !s.contains('No budget constraint') &&
+                !s.contains('No reviews yet') &&
+                !s.contains('Select dates');
+          }).take(2).toList();
+
+          if (meaningfulReasons.isNotEmpty) ...[
             const SizedBox(height: 8),
             Wrap(
               spacing: 6,
               runSpacing: 4,
               children: [
-                for (final r in reasons)
+                for (final r in meaningfulReasons)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(

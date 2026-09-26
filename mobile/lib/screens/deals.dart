@@ -6,6 +6,7 @@ import '../ui/widgets.dart';
 import '../ui/theme.dart';
 import '../services/local_ai.dart';
 import 'resources.dart';
+import 'video_call.dart';
 
 Future<void> shareDownload(
   Api api,
@@ -533,7 +534,16 @@ class _QuoteScreenState extends State<QuoteScreen> {
                     ],
                   ),
                 ),
-                MessageThread(session: widget.session, quoteId: widget.id),
+                MessageThread(
+                  session: widget.session,
+                  quoteId: widget.id,
+                  partnerName: identity(
+                    q['provider']?['_id'] == widget.session.user?['_id']
+                        ? q['seeker']
+                        : q['provider'],
+                  ),
+                  listingTitle: identity(q['listing']),
+                ),
                 AiResultButton(
                   api: widget.session.api,
                   path: '/ai/sentiment',
@@ -554,9 +564,13 @@ class MessageThread extends StatefulWidget {
     super.key,
     required this.session,
     required this.quoteId,
+    this.partnerName = 'Peer',
+    this.listingTitle = 'Resource Negotiation',
   });
   final Session session;
   final String quoteId;
+  final String partnerName;
+  final String listingTitle;
   @override
   State<MessageThread> createState() => _MessageThreadState();
 }
@@ -565,10 +579,12 @@ class _MessageThreadState extends State<MessageThread> {
   final message = TextEditingController();
   Timer? timer;
   Future<void> Function()? reload;
+  bool _requestingCall = false;
+
   @override
   void initState() {
     super.initState();
-    timer = Timer.periodic(const Duration(seconds: 15), (_) {
+    timer = Timer.periodic(const Duration(seconds: 10), (_) {
       reload?.call().catchError((Object _) {});
     });
   }
@@ -619,57 +635,368 @@ class _MessageThreadState extends State<MessageThread> {
               source: conversationText(messages),
             ),
             if (messages.isEmpty)
-              const Text('Start the conversation with your booking partner.'),
-            ...messages.map(
-              (m) => Align(
-                alignment: m['sender']?['_id'] == widget.session.user?['_id']
-                    ? Alignment.centerRight
-                    : Alignment.centerLeft,
-                child: Container(
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Text('Start the conversation or request a video call with your partner.'),
+              ),
+            ...messages.map((m) {
+              final isMe = m['sender']?['_id'] == widget.session.user?['_id'];
+              final isVideo = m['type'] == 'video_call';
+
+              if (isVideo) {
+                final vCall = (m['videoCall'] is Map) ? (m['videoCall'] as Map) : {};
+                final callStatus = (vCall['status'] ?? 'requested').toString();
+                final roomId = (vCall['roomId'] ?? 'room_${widget.quoteId}').toString();
+                final callerId = (vCall['caller'] is Map) ? vCall['caller']['_id'] : vCall['caller'];
+                final isCaller = callerId == widget.session.user?['_id'] || isMe;
+                final durationSecs = vCall['durationSeconds'] ?? 0;
+
+                Color cardBg;
+                Color badgeBg;
+                String statusLabel;
+                IconData statusIcon;
+
+                switch (callStatus) {
+                  case 'accepted':
+                    cardBg = const Color(0xFFECFDF5);
+                    badgeBg = const Color(0xFF10B981);
+                    statusLabel = 'ACTIVE VIDEO CALL';
+                    statusIcon = Icons.videocam;
+                    break;
+                  case 'declined':
+                    cardBg = const Color(0xFFFEF2F2);
+                    badgeBg = const Color(0xFFEF4444);
+                    statusLabel = 'CALL DECLINED';
+                    statusIcon = Icons.videocam_off;
+                    break;
+                  case 'ended':
+                    cardBg = const Color(0xFFF3F4F6);
+                    badgeBg = const Color(0xFF6B7280);
+                    statusLabel = durationSecs > 0 ? 'CALL ENDED (${durationSecs}s)' : 'CALL COMPLETED';
+                    statusIcon = Icons.call_end;
+                    break;
+                  default:
+                    cardBg = const Color(0xFFFEF9C3);
+                    badgeBg = yellow;
+                    statusLabel = 'LIVE VIDEO CALL REQUEST';
+                    statusIcon = Icons.ring_volume;
+                }
+
+                return Container(
                   margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: m['sender']?['_id'] == widget.session.user?['_id']
-                        ? teal
-                        : paper,
-                    border: Border.all(color: ink, width: 2),
+                    color: cardBg,
+                    border: Border.all(color: ink, width: 1.5),
                     borderRadius: BorderRadius.circular(12),
+                    boxShadow: const [BoxShadow(color: ink, offset: Offset(2, 2.5))],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: badgeBg,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: ink, width: 1.2),
+                            ),
+                            child: Icon(statusIcon, size: 14, color: badgeBg == const Color(0xFF10B981) || badgeBg == const Color(0xFFEF4444) ? Colors.white : ink),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  statusLabel,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.5,
+                                    color: ink,
+                                  ),
+                                ),
+                                Text(
+                                  '${identity(m['sender'])} • ${m['createdAt'] ?? 'Just now'}',
+                                  style: const TextStyle(fontSize: 10, color: Colors.black54),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${m['text'] ?? 'Video Call Session'}',
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: ink),
+                      ),
+                      const SizedBox(height: 10),
+                      if (callStatus == 'requested') ...[
+                        if (!isCaller) ...[
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.call, size: 15, color: Colors.white),
+                                  label: const Text(
+                                    'Accept Call',
+                                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: Colors.white),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF059669),
+                                    side: const BorderSide(color: ink, width: 1.5),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                  ),
+                                  onPressed: () async {
+                                    try {
+                                      await widget.session.api.call(
+                                        '/quotes/${widget.quoteId}/video-call/respond',
+                                        method: 'POST',
+                                        body: {
+                                          'action': 'accept',
+                                          'roomId': roomId,
+                                          'messageId': m['_id'],
+                                        },
+                                      );
+                                      if (context.mounted) {
+                                        await Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => VideoCallScreen(
+                                              session: widget.session,
+                                              quoteId: widget.quoteId,
+                                              roomId: roomId,
+                                              partnerName: widget.partnerName,
+                                              listingTitle: widget.listingTitle,
+                                              isInitiator: false,
+                                              messageId: m['_id']?.toString(),
+                                            ),
+                                          ),
+                                        );
+                                        await refresh();
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+                                      }
+                                    }
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(color: ink, width: 1.5),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                ),
+                                onPressed: () async {
+                                  try {
+                                    await widget.session.api.call(
+                                      '/quotes/${widget.quoteId}/video-call/respond',
+                                      method: 'POST',
+                                      body: {
+                                        'action': 'decline',
+                                        'roomId': roomId,
+                                        'messageId': m['_id'],
+                                      },
+                                    );
+                                    await refresh();
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+                                    }
+                                  }
+                                },
+                                child: const Text('Decline', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: ink)),
+                              ),
+                            ],
+                          ),
+                        ] else ...[
+                          Row(
+                            children: [
+                              const Text('Waiting for peer to join...', style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Colors.black54)),
+                              const Spacer(),
+                              TextButton.icon(
+                                icon: const Icon(Icons.open_in_new, size: 14, color: ink),
+                                label: const Text('Open Room', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: ink)),
+                                onPressed: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => VideoCallScreen(
+                                      session: widget.session,
+                                      quoteId: widget.quoteId,
+                                      roomId: roomId,
+                                      partnerName: widget.partnerName,
+                                      listingTitle: widget.listingTitle,
+                                      isInitiator: true,
+                                      messageId: m['_id']?.toString(),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ] else if (callStatus == 'accepted') ...[
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.videocam, size: 15, color: ink),
+                          label: const Text('Rejoin Video Call', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: ink)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: yellow,
+                            side: const BorderSide(color: ink, width: 1.5),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                          ),
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => VideoCallScreen(
+                                session: widget.session,
+                                quoteId: widget.quoteId,
+                                roomId: roomId,
+                                partnerName: widget.partnerName,
+                                listingTitle: widget.listingTitle,
+                                isInitiator: false,
+                                messageId: m['_id']?.toString(),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              }
+
+              return Align(
+                alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isMe ? teal : paper,
+                    border: Border.all(color: ink, width: 1.5),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: const [BoxShadow(color: ink, offset: Offset(1.5, 1.5))],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${identity(m['sender'])} • ${m['createdAt']}',
-                        style: const TextStyle(fontSize: 11),
+                        '${identity(m['sender'])} • ${m['createdAt'] ?? ''}',
+                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.black54),
                       ),
-                      SelectableText('${m['text']}'),
+                      const SizedBox(height: 4),
+                      SelectableText(
+                        '${m['text']}',
+                        style: const TextStyle(fontSize: 13, color: ink),
+                      ),
                     ],
                   ),
                 ),
-              ),
-            ),
+              );
+            }),
             TextField(
               controller: message,
-              maxLines: 3,
+              maxLines: 2,
               maxLength: 4000,
-              decoration: const InputDecoration(labelText: 'Message'),
+              decoration: const InputDecoration(labelText: 'Write message...'),
             ),
-            AsyncButton(
-              text: 'Send message',
-              icon: Icons.send_outlined,
-              run: () async {
-                if (message.text.trim().isEmpty) {
-                  throw const ApiFailure('Write a message first.');
-                }
-                await widget.session.api.call(
-                  '/quotes/${widget.quoteId}/messages',
-                  method: 'POST',
-                  body: {'text': message.text},
-                );
-                message.clear();
-                await refresh();
-                return 'Message sent.';
-              },
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  child: AsyncButton(
+                    text: 'Send message',
+                    icon: Icons.send_outlined,
+                    run: () async {
+                      if (message.text.trim().isEmpty) {
+                        throw const ApiFailure('Write a message first.');
+                      }
+                      await widget.session.api.call(
+                        '/quotes/${widget.quoteId}/messages',
+                        method: 'POST',
+                        body: {'text': message.text},
+                      );
+                      message.clear();
+                      await refresh();
+                      return 'Message sent.';
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: _requestingCall
+                      ? null
+                      : () async {
+                          setState(() => _requestingCall = true);
+                          try {
+                            final res = await widget.session.api.call(
+                              '/quotes/${widget.quoteId}/video-call/request',
+                              method: 'POST',
+                            );
+                            final roomId = res is Map ? res['roomId'] as String? : null;
+                            final msgId = res is Map ? res['messageId'] as String? : null;
+                            await refresh();
+                            if (context.mounted && roomId != null) {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => VideoCallScreen(
+                                    session: widget.session,
+                                    quoteId: widget.quoteId,
+                                    roomId: roomId,
+                                    partnerName: widget.partnerName,
+                                    listingTitle: widget.listingTitle,
+                                    isInitiator: true,
+                                    messageId: msgId,
+                                  ),
+                                ),
+                              );
+                              await refresh();
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Video call error: $e')),
+                              );
+                            }
+                          } finally {
+                            if (mounted) setState(() => _requestingCall = false);
+                          }
+                        },
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: lavender,
+                      border: Border.all(color: ink, width: 1.5),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: const [BoxShadow(color: ink, offset: Offset(1.5, 1.5))],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _requestingCall ? Icons.hourglass_top : Icons.videocam_outlined,
+                          size: 18,
+                          color: ink,
+                        ),
+                        const SizedBox(width: 6),
+                        const Text(
+                          'Video Call',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: ink),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

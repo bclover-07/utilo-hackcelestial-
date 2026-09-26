@@ -345,7 +345,7 @@ export function SearchPage() {
         {/* LEFT / MAIN COLUMN: DIRECT LISTINGS */}
         <div className="discovery-main-content">
           {/* Quick Search & Sort Bar */}
-          <div style={{ display: "flex", gap: "12px", alignItems: "center", background: "#FAF8F5", padding: "12px 16px", borderRadius: "14px", border: "2px solid #20201e", boxShadow: "3px 3px 0 #20201e" }}>
+          <div style={{ display: "flex", gap: "12px", alignItems: "center", background: "#FAF8F5", padding: "10px 16px", borderRadius: "14px", border: "1.5px solid #20201e", boxShadow: "2px 2px 0 #20201e" }}>
             <span style={{ fontSize: "1.2rem" }}>🔍</span>
             <input
               type="text"
@@ -383,7 +383,7 @@ export function SearchPage() {
                           <button
                             type="button"
                             className="button"
-                            style={{ background: "#FFE66D", border: "2px solid #20201e", fontWeight: 800, cursor: "pointer" }}
+                            style={{ background: "#FFE66D", border: "1.5px solid #20201e", fontWeight: 800, cursor: "pointer", boxShadow: "1.5px 1.5px 0 #20201e", transition: "all 0.15s ease" }}
                             onClick={() => setRapidoListing(l)}
                           >
                             🤝 Counter Offer / Negotiate ₹
@@ -433,48 +433,49 @@ export function SearchPage() {
         </div>
 
         {/* RIGHT COLUMN: POST OPTIONS & WORK PROCESSES */}
+        {/* RIGHT COLUMN: POST OPTIONS & WORK PROCESSES */}
         <aside className="discovery-sidebar">
           {/* Post Option 1: Provider Listing */}
           <div className="discovery-post-card" style={{ background: "#FFF9DB" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span className="eyebrow" style={{ color: "#B8860B" }}>PROVIDER REVENUE</span>
-              <span className="badge" style={{ background: "#FFE66D", border: "1.5px solid #20201e", fontSize: "0.75rem", fontWeight: 700 }}>Earn Rental ₹</span>
+              <span className="eyebrow" style={{ color: "#B8860B", margin: 0, fontSize: "0.68rem" }}>PROVIDER REVENUE</span>
+              <span className="badge" style={{ background: "#FFE66D", border: "1px solid #20201e", fontSize: "0.72rem", fontWeight: 700, padding: "2px 7px" }}>Earn ₹</span>
             </div>
-            <h3>🏢 List Your Resources</h3>
-            <p>Have venue space, audio equipment, chairs, or setups idle between dates? Monetize them in minutes.</p>
+            <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 800 }}>🏢 List Your Resources</h4>
+            <p style={{ margin: 0, fontSize: "0.8rem", color: "#555", lineHeight: 1.35 }}>Monetize idle venues, audio systems & gear.</p>
             <Link
               href="/dashboard/listings/create"
               className="button"
-              style={{ background: "#20201e", color: "#fff", textAlign: "center", textDecoration: "none", fontWeight: 800, padding: "10px 14px", borderRadius: "10px" }}
+              style={{ background: "#20201e", color: "#fff", textAlign: "center", textDecoration: "none", fontWeight: 800, padding: "8px 12px", borderRadius: "10px", fontSize: "0.82rem", minHeight: "36px" }}
             >
-              + Post a Resource Listing ↗
+              + Post a Listing ↗
             </Link>
           </div>
 
           {/* Post Option 2: Seeker Custom RFQ */}
           <div className="discovery-post-card" style={{ background: "#E8F5E9" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span className="eyebrow" style={{ color: "#2E7D32" }}>SEEKER RFQ</span>
-              <span className="badge" style={{ background: "#A8E6CF", border: "1.5px solid #20201e", fontSize: "0.75rem", fontWeight: 700 }}>Custom Deal</span>
+              <span className="eyebrow" style={{ color: "#2E7D32", margin: 0, fontSize: "0.68rem" }}>SEEKER RFQ</span>
+              <span className="badge" style={{ background: "#A8E6CF", border: "1px solid #20201e", fontSize: "0.72rem", fontWeight: 700, padding: "2px 7px" }}>Custom Deal</span>
             </div>
-            <h3>📢 Post a Requirement</h3>
-            <p>Need a custom multi-category package or specific dates? Broadcast an RFQ to verified suppliers.</p>
+            <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 800 }}>📢 Post a Requirement</h4>
+            <p style={{ margin: 0, fontSize: "0.8rem", color: "#555", lineHeight: 1.35 }}>Broadcast custom RFQs to verified suppliers.</p>
             <Link
               href="/dashboard/requests/create"
               className="button"
-              style={{ background: "#4ECDC4", color: "#171915", textAlign: "center", textDecoration: "none", fontWeight: 800, padding: "10px 14px", borderRadius: "10px", border: "2px solid #20201e" }}
+              style={{ background: "#4ECDC4", color: "#171915", textAlign: "center", textDecoration: "none", fontWeight: 800, padding: "8px 12px", borderRadius: "10px", border: "1.5px solid #20201e", fontSize: "0.82rem", minHeight: "36px" }}
             >
               Post Custom RFQ ↗
             </Link>
           </div>
 
           {/* Quick Filters Accordion */}
-          <details className="panel" style={{ background: "#fff", padding: "12px 14px", border: "2px solid #20201e", borderRadius: "14px", boxShadow: "3px 3px 0 #20201e" }}>
-            <summary style={{ cursor: "pointer", fontWeight: 700, fontSize: "0.9rem" }}>
+          <details className="panel" style={{ background: "#fff", padding: "10px 12px", border: "1.5px solid #20201e", borderRadius: "12px", boxShadow: "2px 2px 0 #20201e" }}>
+            <summary style={{ cursor: "pointer", fontWeight: 700, fontSize: "0.84rem", padding: "2px 0" }}>
               ⚡ Advanced Filter & Budget
             </summary>
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>
-              <label style={{ fontSize: "0.8rem", fontWeight: 700 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px" }}>
+              <label style={{ fontSize: "0.76rem", fontWeight: 700 }}>
                 Filter City
                 <input
                   type="text"
@@ -485,10 +486,10 @@ export function SearchPage() {
                     setFilters(newFilters);
                     api("/search", { method: "POST", body: newFilters }).then(setResult);
                   }}
-                  style={{ width: "100%", padding: "6px 8px", border: "1.5px solid #20201e", borderRadius: "8px", marginTop: "4px" }}
+                  style={{ width: "100%", padding: "6px 8px", border: "1.5px solid #20201e", borderRadius: "8px", marginTop: "3px", minHeight: "34px", fontSize: "0.82rem" }}
                 />
               </label>
-              <label style={{ fontSize: "0.8rem", fontWeight: 700 }}>
+              <label style={{ fontSize: "0.76rem", fontWeight: 700 }}>
                 Max Budget (INR)
                 <input
                   type="number"
@@ -499,14 +500,14 @@ export function SearchPage() {
                     setFilters(newFilters);
                     api("/search", { method: "POST", body: newFilters }).then(setResult);
                   }}
-                  style={{ width: "100%", padding: "6px 8px", border: "1.5px solid #20201e", borderRadius: "8px", marginTop: "4px" }}
+                  style={{ width: "100%", padding: "6px 8px", border: "1.5px solid #20201e", borderRadius: "8px", marginTop: "3px", minHeight: "34px", fontSize: "0.82rem" }}
                 />
               </label>
             </div>
           </details>
 
           {/* User's Work Process History from DB */}
-          <WorkProcessWidget title="Your Work Processes" maxItems={4} />
+          <WorkProcessWidget title="Your Work Processes" maxItems={3} />
         </aside>
       </div>
 

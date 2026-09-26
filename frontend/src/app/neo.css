@@ -19,9 +19,9 @@
   --border-width: 1.5px;
   --shadow-sm: 1.5px 1.5px 0 var(--ink);
   --shadow-md: 2px 2px 0 var(--ink);
-  --shadow-lg: 3px 4px 0 var(--ink);
-  --shadow-xl: 4px 5px 0 var(--ink);
-  --shadow-hover: 3px 4px 0 var(--ink);
+  --shadow-lg: 2.5px 3px 0 var(--ink);
+  --shadow-xl: 3px 4px 0 var(--ink);
+  --shadow-hover: 2.5px 3px 0 var(--ink);
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 ::selection {
@@ -85,8 +85,8 @@ button.quiet,
 }
 button:not(:disabled):hover,
 .button:hover {
-  transform: translate(-1.5px, -2px);
-  box-shadow: 3px 4px 0 var(--ink);
+  transform: translate(-1px, -1.5px);
+  box-shadow: 2.5px 3px 0 var(--ink);
 }
 button:not(:disabled):active,
 .button:active {
@@ -175,8 +175,8 @@ input[type="range"] {
 .pulse-card:hover,
 .offer-card:hover,
 .agent-card:hover {
-  box-shadow: 3px 4px 0 var(--ink);
-  transform: translateY(-2px);
+  box-shadow: 2.5px 3px 0 var(--ink);
+  transform: translateY(-1.5px);
 }
 .panel {
   background-color: var(--paper-card);
@@ -188,11 +188,11 @@ input[type="range"] {
   .stat:hover,
   .agent-card:hover,
   .sim-item-card:hover {
-    transform: translate(-1.5px, -2px);
-    box-shadow: 3px 4px 0 var(--ink);
+    transform: translate(-1px, -1.5px);
+    box-shadow: 2.5px 3px 0 var(--ink);
   }
   .panel:focus-within {
-    box-shadow: 3px 4px 0 var(--ink);
+    box-shadow: 2.5px 3px 0 var(--ink);
   }
 }
 .badge,
@@ -5513,8 +5513,8 @@ body {
 /* Marketplace Split Layout (Direct Listings + Right Post Options) */
 .discovery-marketplace-container {
   display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 24px;
+  grid-template-columns: 1fr 310px;
+  gap: 22px;
   align-items: start;
   margin-top: 1rem;
 }
@@ -5534,56 +5534,68 @@ body {
 .discovery-sidebar {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
   position: sticky;
-  top: 90px;
+  top: 75px;
+  max-height: calc(100vh - 85px);
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-width: thin;
 }
 
 .discovery-post-card {
   background: var(--paper-card, #fffef8);
-  border: 3px solid var(--ink);
-  border-radius: 16px;
-  padding: 18px;
-  box-shadow: 4px 4px 0 var(--ink);
+  border: 1.5px solid var(--ink);
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: 2px 2px 0 var(--ink);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.discovery-post-card h3 {
+.discovery-post-card:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 2.5px 3px 0 var(--ink);
+}
+
+.discovery-post-card h3,
+.discovery-post-card h4 {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 0.98rem;
+  font-weight: 800;
 }
 
 .discovery-post-card p {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: 0.8rem;
   color: #555;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .work-process-panel {
   background: #FAF8F5;
-  border: 2px solid var(--ink);
-  border-radius: 14px;
-  padding: 14px;
-  box-shadow: 3px 3px 0 var(--ink);
+  border: 1.5px solid var(--ink);
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 2px 2px 0 var(--ink);
 }
 
 .work-process-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .work-process-item {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 8px;
   background: #fff;
-  border: 1.5px solid var(--ink);
-  border-radius: 10px;
-  padding: 8px 10px;
+  border: 1px solid var(--ink);
+  border-radius: 8px;
+  padding: 6px 8px;
 }
 
 .work-process-icon {
