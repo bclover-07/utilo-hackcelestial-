@@ -1,4 +1,4 @@
-import { model, ref } from "./helpers.js";
+import { Schema, model, ref } from "./helpers.js";
 
 export const Message = model("Message", {
   quote: ref("Quote"),
@@ -16,8 +16,8 @@ export const Message = model("Message", {
       default: "requested",
     },
     roomId: String,
-    caller: ref("BusinessProfile"),
-    recipient: ref("BusinessProfile"),
+    caller: { type: Schema.Types.ObjectId, ref: "BusinessProfile", required: false },
+    recipient: { type: Schema.Types.ObjectId, ref: "BusinessProfile", required: false },
     durationSeconds: { type: Number, default: 0 },
   },
 });
