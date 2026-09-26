@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import LocalAi from "./LocalAi";
 import Link from "next/link";
 import Image from "next/image";
@@ -229,11 +229,11 @@ export function ListingCard({ listing, children, index = 0 }) {
 
         <div className="stock-meter-container">
           <div className="stock-meter-labels">
-            <span>Inventory Capacity</span>
-            <strong>{listing.quantity} ready</strong>
+            <span>Current Availability</span>
+            <strong>{Math.max(0, (listing.quantity || 1) - (listing.occupiedQuantity || 0))} ready / {listing.occupiedQuantity || 0} booked</strong>
           </div>
           <div className="stock-meter-track">
-            <div className="stock-meter-fill" style={{ width: `${stockRatio}%` }} />
+            <div className="stock-meter-fill" style={{ width: `${Math.min(100, Math.max(0, ((listing.occupiedQuantity || 0) / (listing.quantity || 1)) * 100))}%`, background: (listing.occupiedQuantity || 0) >= (listing.quantity || 1) ? '#FF6B6B' : '#FFB347' }} />
           </div>
         </div>
 
@@ -717,7 +717,7 @@ export function AvailabilityPage() {
     <>
       <Heading
         title="Room for the next booking."
-        description="Block off direct bookings, maintenance, and dates you need for yourself."
+        description="View your calendar and block off dates."
       />
       <State resource={listings}>
         {(data) =>
@@ -736,7 +736,7 @@ export function AvailabilityPage() {
                   </option>
                 ))}
               </Field>
-              {selected && <AvailabilityDetail key={selected} id={selected} />}
+              {selected && <AvailabilityDetail key={selected} id={selected} listing={data.find(l => l._id === selected)} />}
             </>
           ) : (
             <Empty
@@ -787,75 +787,187 @@ function AvailabilityOccupancyTimeline({ blocks }) {
   );
 }
 
-function AvailabilityDetail({ id }) {
+function AvailabilityDetail({ id, listing }) {
   const blocks = useData(`/listings/${id}/availability`);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      blocks.reload();
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [blocks]);
+
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+
+  const startOffset = firstDay.getDay(); 
+  const daysInMonth = lastDay.getDate();
+
+  const days = [];
+  for (let i = 0; i < startOffset; i++) {
+    days.push(null);
+  }
+  for (let i = 1; i <= daysInMonth; i++) {
+    days.push(new Date(year, month, i));
+  }
+
+  const getBlocksForDay = (date) => {
+    if (!date || !blocks.data) return [];
+    return blocks.data.filter(b => {
+      const bStart = new Date(b.start);
+      const bEnd = new Date(b.end);
+      const dStart = new Date(date);
+      dStart.setHours(0,0,0,0);
+      const dEnd = new Date(date);
+      dEnd.setHours(23,59,59,999);
+      return (bStart <= dEnd && bEnd >= dStart);
+    });
+  };
+
+  const selectedBlocks = selectedDate ? getBlocksForDay(selectedDate) : [];
+
   return (
     <div className="split-layout">
-      <section className="panel">
-        <h2>Block a date range</h2>
-        <ActionForm
-          label="Reserve these units"
-          onSubmit={async (form) => {
-            const body = Object.fromEntries(form);
-            body.start = new Date(body.start).toISOString();
-            body.end = new Date(body.end).toISOString();
-            await api(`/listings/${id}/availability`, { method: "POST", body });
-            await blocks.reload();
-          }}
-        >
-          <Field label="Starts" name="start" type="datetime-local" required />
-          <Field label="Ends" name="end" type="datetime-local" required />
-          <Field
-            label="Units to block"
-            name="quantity"
-            type="number"
-            min="1"
-            required
-          />
-          <Field label="Reason" name="reason" required />
-        </ActionForm>
-      </section>
-      <section className="stack">
-        <h2>Reserved time</h2>
+      <section className="panel" style={{ flex: 2, background: '#fff', border: '2px solid #171915' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 style={{ margin: 0 }}>Calendar</h2>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button className="quiet" onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>←</button>
+            <strong style={{ minWidth: '150px', textAlign: 'center', fontSize: '1.1rem' }}>{currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</strong>
+            <button className="quiet" onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>→</button>
+          </div>
+        </div>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', textAlign: 'center', fontWeight: 800, paddingBottom: '8px', borderBottom: '2px solid #171915' }}>
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <div key={d}>{d}</div>)}
+        </div>
+        
         <State resource={blocks}>
-          {(data) =>
-            data.length ? (
-              <>
+          {(data) => (
+            <>
+              {data && data.length > 0 && (
                 <AvailabilityOccupancyTimeline blocks={data} />
-                {data.map((b) => (
-                  <article className="panel" key={b._id}>
-                    <Badge>
-                      {b.booking ? "Confirmed booking" : "Owner block"}
-                    </Badge>
-                    <h3>{b.reason}</h3>
-                    <p>
-                      {date(b.start)} → {date(b.end)}
-                    </p>
-                    <p>{b.quantity} units reserved</p>
-                    {!b.booking && (
-                      <Action
-                        className="quiet"
-                        run={async () => {
-                          await api(`/listings/${id}/availability/${b._id}`, {
-                            method: "DELETE",
-                          });
-                          await blocks.reload();
-                        }}
-                      >
-                        Remove block
-                      </Action>
-                    )}
-                  </article>
-                ))}
-              </>
-            ) : (
-              <Empty
-                title="A clear calendar."
-                text="No upcoming reservations or blocks for this resource."
-              />
-            )
-          }
+              )}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', marginTop: '12px' }}>
+                {days.map((dateItem, i) => {
+                  if (!dateItem) return <div key={`empty-${i}`} style={{ padding: '20px', background: 'transparent' }} />
+                  const dayBlocks = getBlocksForDay(dateItem);
+                  const isSelected = selectedDate?.toDateString() === dateItem.toDateString();
+                  
+                  const bookedQuantity = dayBlocks.reduce((acc, b) => acc + (b.quantity || 1), 0);
+                  const totalQuantity = listing?.quantity || 1;
+                  const isFull = bookedQuantity >= totalQuantity;
+                  const isPartial = bookedQuantity > 0 && bookedQuantity < totalQuantity;
+
+                  return (
+                    <div 
+                      key={i} 
+                      onClick={() => setSelectedDate(dateItem)}
+                      style={{ 
+                        padding: '4px',
+                        minHeight: '65px',
+                        background: isSelected ? '#FFE66D' : (isFull ? '#FF6B6B' : (isPartial ? '#FFB347' : '#F9F9F9')),
+                        border: isSelected ? '2px solid #171915' : '1px solid #ddd',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        transition: 'transform 0.1s ease',
+                        transform: isSelected ? 'scale(1.03)' : 'none',
+                        position: 'relative',
+                        boxShadow: isSelected ? '2px 2px 0 #171915' : 'none'
+                      }}
+                    >
+                      <span style={{ fontSize: '1rem', fontWeight: 800, color: isFull ? '#fff' : '#171915' }}>{dateItem.getDate()}</span>
+                      {dayBlocks.length > 0 ? (
+                        <span style={{ fontSize: '0.65rem', marginTop: 'auto', background: isFull ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)', color: isFull ? '#fff' : '#171915', padding: '2px 4px', borderRadius: '4px', fontWeight: 700 }}>
+                          {bookedQuantity}/{totalQuantity} booked
+                        </span>
+                      ) : (
+                         <span style={{ fontSize: '0.65rem', marginTop: 'auto', color: '#888', fontWeight: 600 }}>Available</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </State>
+      </section>
+
+      <section className="stack" style={{ flex: 1 }}>
+        {selectedDate ? (
+          <>
+            <div className="panel" style={{ background: '#A8E6CF', border: '2px solid #171915', boxShadow: '4px 4px 0 #171915' }}>
+              <h3 style={{ margin: '0 0 12px 0' }}>{selectedDate.toDateString()}</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.9rem' }}>
+                <p style={{ margin: 0 }}><strong>Inventory:</strong> {listing?.quantity || 1} {listing?.unit || 'units'}</p>
+                <p style={{ margin: 0 }}><strong>Price:</strong> {money(listing?.price)} / {listing?.unit}</p>
+                <p style={{ margin: 0 }}><strong>Deposit:</strong> {listing?.deposit ? money(listing.deposit) : 'No deposit required'}</p>
+                <p style={{ margin: 0 }}><strong>Cancellation:</strong> Cancel up to {listing?.cancellationHours || 0} hours prior for refund.</p>
+              </div>
+            </div>
+            {selectedBlocks.length > 0 ? (
+              selectedBlocks.map(b => (
+                <article className="panel" key={b._id} style={{ border: '2px solid #171915' }}>
+                  <Badge>{b.booking ? `Confirmed Booking` : "Owner Block"}</Badge>
+                  <h3 style={{ margin: '8px 0' }}>{b.reason}</h3>
+                  {b.booking?.seeker && (
+                     <p style={{ margin: '4px 0', fontSize: '0.9rem' }}><strong>Booked By:</strong> {b.booking.seeker.name}</p>
+                  )}
+                  {b.booking?.status && (
+                     <p style={{ margin: '4px 0', fontSize: '0.9rem' }}><strong>Status:</strong> {b.booking.status}</p>
+                  )}
+                  <p style={{ margin: '4px 0', fontSize: '0.9rem', color: '#555' }}>
+                    {date(b.start)} <br/>↓<br/> {date(b.end)}
+                  </p>
+                  <p style={{ margin: '8px 0 0 0', fontWeight: 800 }}>{b.quantity} units reserved</p>
+                  {!b.booking && (
+                    <Action
+                      className="quiet"
+                      run={async () => {
+                        await api(`/listings/${id}/availability/${b._id}`, { method: "DELETE" });
+                        await blocks.reload();
+                      }}
+                    >
+                      Remove block
+                    </Action>
+                  )}
+                </article>
+              ))
+            ) : (
+              <Empty title="Fully Available" text={`No bookings or blocks for this date. You have all ${listing?.quantity} units free.`} />
+            )}
+
+            <div className="panel" style={{ border: '2px solid #171915' }}>
+              <h4 style={{ margin: '0 0 12px 0' }}>Add Manual Block</h4>
+              <ActionForm
+                label="Block Dates"
+                onSubmit={async (form) => {
+                  const body = Object.fromEntries(form);
+                  body.start = new Date(body.start).toISOString();
+                  body.end = new Date(body.end).toISOString();
+                  await api(`/listings/${id}/availability`, { method: "POST", body });
+                  await blocks.reload();
+                }}
+              >
+                <Field label="Starts" name="start" type="datetime-local" defaultValue={`${selectedDate.toISOString().split('T')[0]}T00:00`} required />
+                <Field label="Ends" name="end" type="datetime-local" defaultValue={`${selectedDate.toISOString().split('T')[0]}T23:59`} required />
+                <Field label="Units to block" name="quantity" type="number" min="1" max={listing?.quantity} defaultValue={1} required />
+                <Field label="Reason" name="reason" defaultValue="Maintenance or Owner Use" required />
+              </ActionForm>
+            </div>
+          </>
+        ) : (
+          <Empty title="Select a date" text="Click any date on the calendar to view booking details, policies, and availability." />
+        )}
       </section>
     </div>
   );

@@ -9,12 +9,26 @@ const recordId = (req) => id.parse(req.params.id);
 export const listingController = {
   categories: send(async () => Category.find().sort({ name: 1 }).lean()),
 
-  listings: send((req) =>
-    Listing.find({ owner: req.user._id, status: { $ne: "archived" } })
+  listings: send(async (req) => {
+    const userListings = await Listing.find({ owner: req.user._id, status: { $ne: "archived" } })
       .select("-embedding")
       .sort({ createdAt: -1 })
-      .lean(),
-  ),
+      .lean();
+    
+    const now = new Date();
+    const blocks = await Availability.find({
+      listing: { $in: userListings.map(l => l._id) },
+      start: { $lte: now },
+      end: { $gt: now }
+    }).lean();
+
+    for (const l of userListings) {
+      const activeBlocks = blocks.filter(b => String(b.listing) === String(l._id));
+      l.occupiedQuantity = activeBlocks.reduce((acc, b) => acc + (b.quantity || 1), 0);
+    }
+    
+    return userListings;
+  }),
 
   listing: send(async (req) => {
     const l = await Listing.findById(recordId(req))
@@ -46,6 +60,10 @@ export const listingController = {
       listing: req.params.id,
       end: { $gt: new Date() },
     })
+      .populate({
+        path: "booking",
+        populate: { path: "seeker", select: "name" },
+      })
       .sort({ start: 1 })
       .lean();
   }),

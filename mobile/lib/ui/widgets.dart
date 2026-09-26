@@ -95,6 +95,7 @@ class PageBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scrollbar(
     child: SingleChildScrollView(
+      primary: true,
       padding: EdgeInsets.fromLTRB(
         MediaQuery.sizeOf(context).width < 400 ? 12 : 20,
         18,

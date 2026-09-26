@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 import { Notification, BusinessProfile } from "../models/index.js";
-import { emitToUser } from "../socket.js";
+import { emitToUser, getIO } from "../socket.js";
 
 export async function notify(user, title, body, href, sessionOrMeta, maybeMeta) {
   let session = null;
@@ -26,6 +26,7 @@ export async function notify(user, title, body, href, sessionOrMeta, maybeMeta) 
   const created = docs[0];
 
   try {
+    emitToUser(user, "notification", created);
     emitToUser(user, "notification_new", created);
     emitToUser(user, "inventory_changed", {
       kind: meta.kind,

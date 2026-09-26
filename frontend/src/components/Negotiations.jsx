@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { getSocket } from "@/lib/socket";
 import { useAuth } from "@/context/AuthContext";
+import { Video, PhoneCall, PhoneOff } from "lucide-react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -145,6 +146,94 @@ function QuoteDetail({ q, reload }) {
     [selectedOfferConditions, setSelectedOfferConditions] = useState(null),
     [socketMessages, setSocketMessages] = useState([]),
     [socketActive, setSocketActive] = useState(false);
+
+  // Counterparty info
+  const isProvider = String(q.provider?._id) === String(user._id);
+  const counterparty = isProvider ? q.seeker : q.provider;
+  const partnerName = counterparty?.name || (isProvider ? "Seeker" : "Provider");
+  const partnerRole = isProvider ? "Seeker" : "Provider";
+  const partnerId = counterparty?._id;
+
+  // Video call interaction state
+  const [requestingCall, setRequestingCall] = useState(false);
+  const [callAlert, setCallAlert] = useState("");
+
+  const handleRequestVideoCall = async () => {
+    if (requestingCall) return;
+    setRequestingCall(true);
+    setCallAlert("");
+    try {
+      const res = await api(`/quotes/${q._id}/video-call/request`, {
+        method: "POST",
+      });
+      if (res && res.message) {
+        setSocketMessages((prev) => {
+          if (prev.some((m) => String(m._id) === String(res.message._id))) return prev;
+          return [...prev, res.message];
+        });
+      }
+      window.dispatchEvent(
+        new CustomEvent("utlio:open-video-call", {
+          detail: {
+            quoteId: String(q._id),
+            roomId: res.roomId,
+            partnerId: String(partnerId),
+            partnerName,
+            partnerRole,
+            listingTitle: q.listing?.title || "Asset Negotiation",
+            isInitiator: true,
+            messageId: res.messageId || res.message?._id,
+          },
+        })
+      );
+      setCallAlert("Video call request dispatched to provider.");
+    } catch (err) {
+      setCallAlert(err.message || "Failed to request video call.");
+    } finally {
+      setRequestingCall(false);
+    }
+  };
+
+  const handleAcceptVideoCall = async (msg) => {
+    const roomId = msg.videoCall?.roomId || `call_${q._id}`;
+    const messageId = msg._id;
+    try {
+      await api(`/quotes/${q._id}/video-call/respond`, {
+        method: "POST",
+        body: { action: "accept", roomId, messageId },
+      });
+      window.dispatchEvent(
+        new CustomEvent("utlio:open-video-call", {
+          detail: {
+            quoteId: String(q._id),
+            roomId,
+            partnerId: String(msg.sender?._id || partnerId),
+            partnerName: msg.sender?.name || partnerName,
+            partnerRole,
+            listingTitle: q.listing?.title || "Asset Negotiation",
+            isInitiator: false,
+            messageId,
+          },
+        })
+      );
+    } catch (err) {
+      console.error("Failed to accept call:", err);
+    }
+  };
+
+  const handleDeclineVideoCall = async (msg) => {
+    const roomId = msg.videoCall?.roomId || `call_${q._id}`;
+    const messageId = msg._id;
+    try {
+      await api(`/quotes/${q._id}/video-call/respond`, {
+        method: "POST",
+        body: { action: "decline", roomId, messageId, reason: "Declined by user." },
+      });
+    } catch (err) {
+      console.error("Failed to decline call:", err);
+    }
+  };
+
   const last = q.offers.at(-1),
     mine = last?.by?._id === user._id;
   const open = ["invited", "offered"].includes(q.status),
@@ -159,7 +248,7 @@ function QuoteDetail({ q, reload }) {
     ),
   ];
 
-  // Socket.io real-time room joining and messaging
+  // Socket.io real-time room joining, messaging & video call events
   useEffect(() => {
     const socket = getSocket();
     if (!socket) return;
@@ -194,7 +283,53 @@ function QuoteDetail({ q, reload }) {
       }
     }
 
+    function handleCallAccepted(data) {
+      if (String(data.quoteId) === String(q._id)) {
+        setSocketMessages((prev) =>
+          prev.map((m) =>
+            m.type === "video_call" && m.videoCall?.roomId === data.roomId
+              ? { ...m, videoCall: { ...m.videoCall, status: "accepted" } }
+              : m
+          )
+        );
+      }
+    }
+
+    function handleCallDeclined(data) {
+      if (String(data.quoteId) === String(q._id)) {
+        setSocketMessages((prev) =>
+          prev.map((m) =>
+            m.type === "video_call" && m.videoCall?.roomId === data.roomId
+              ? { ...m, videoCall: { ...m.videoCall, status: "declined" } }
+              : m
+          )
+        );
+      }
+    }
+
+    function handleCallEnded(data) {
+      if (String(data.quoteId) === String(q._id)) {
+        setSocketMessages((prev) =>
+          prev.map((m) =>
+            m.type === "video_call" && m.videoCall?.roomId === data.roomId
+              ? {
+                  ...m,
+                  videoCall: {
+                    ...m.videoCall,
+                    status: "ended",
+                    durationSeconds: data.durationSeconds,
+                  },
+                }
+              : m
+          )
+        );
+      }
+    }
+
     socket.on("new_message", handleNewMessage);
+    socket.on("video_call_accepted", handleCallAccepted);
+    socket.on("video_call_declined", handleCallDeclined);
+    socket.on("video_call_ended", handleCallEnded);
 
     return () => {
       clearTimeout(timer);
@@ -202,6 +337,9 @@ function QuoteDetail({ q, reload }) {
       socket.off("connect", handleConnect);
       socket.off("disconnect", handleDisconnect);
       socket.off("new_message", handleNewMessage);
+      socket.off("video_call_accepted", handleCallAccepted);
+      socket.off("video_call_declined", handleCallDeclined);
+      socket.off("video_call_ended", handleCallEnded);
     };
   }, [q._id]);
 
@@ -363,37 +501,228 @@ function QuoteDetail({ q, reload }) {
         </div>
         {realtimeMessages.length ? (
           <div className="messages" aria-live="polite">
-            {realtimeMessages.map((m) => (
-              <div
-                key={m._id}
-                className={`message ${m.sender?._id === user._id ? "mine" : ""}`}
-              >
-                <small>
-                  {m.sender?.name} · {date(m.createdAt)}
-                </small>
-                <p>{m.text}</p>
-              </div>
-            ))}
+            {realtimeMessages.map((m) => {
+              const isMine = m.sender?._id === user._id;
+
+              if (m.type === "video_call") {
+                const status = m.videoCall?.status || "requested";
+                return (
+                  <div
+                    key={m._id}
+                    className={`message video-call-message ${isMine ? "mine" : ""}`}
+                    style={{
+                      background: isMine ? "#EDE9FE" : "#FEF3C7",
+                      border: "2px solid #20201e",
+                      borderRadius: "14px",
+                      padding: "12px 16px",
+                      boxShadow: "3px 3px 0 #20201e",
+                      alignSelf: isMine ? "flex-end" : "flex-start",
+                      maxWidth: "380px",
+                      width: "100%",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          background: "#20201e",
+                          color: "#FFE66D",
+                          fontSize: "0.72rem",
+                          fontWeight: 800,
+                          padding: "2px 8px",
+                          borderRadius: "6px",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "5px",
+                        }}
+                      >
+                        <Video size={13} /> LIVE VIDEO CALL
+                      </span>
+                      <small style={{ color: "#555" }}>
+                        {date(m.createdAt)}
+                      </small>
+                    </div>
+
+                    <p style={{ margin: "2px 0 10px", fontWeight: 700, fontSize: "0.88rem", color: "#20201e" }}>
+                      {m.text}
+                    </p>
+
+                    {/* Status & Action Buttons */}
+                    {status === "requested" && (
+                      <div>
+                        {isMine ? (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                              fontSize: "0.8rem",
+                              color: "#78350f",
+                              fontWeight: 600,
+                            }}
+                          >
+                            <span
+                              style={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: "50%",
+                                background: "#f59e0b",
+                                display: "inline-block",
+                              }}
+                            />
+                            Awaiting response from {partnerName}...
+                          </div>
+                        ) : (
+                          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "6px" }}>
+                            <button
+                              type="button"
+                              onClick={() => handleAcceptVideoCall(m)}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                background: "#10b981",
+                                color: "#fff",
+                                border: "1.5px solid #20201e",
+                                borderRadius: "8px",
+                                padding: "6px 14px",
+                                fontWeight: 800,
+                                fontSize: "0.82rem",
+                                cursor: "pointer",
+                                boxShadow: "2px 2px 0 #20201e",
+                              }}
+                            >
+                              <PhoneCall size={14} /> Accept Call
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeclineVideoCall(m)}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                background: "#FAF8F5",
+                                color: "#ef4444",
+                                border: "1.5px solid #20201e",
+                                borderRadius: "8px",
+                                padding: "6px 12px",
+                                fontWeight: 700,
+                                fontSize: "0.82rem",
+                                cursor: "pointer",
+                                boxShadow: "2px 2px 0 #20201e",
+                              }}
+                            >
+                              <PhoneOff size={14} /> Decline
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {status === "accepted" && (
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span
+                          style={{
+                            color: "#059669",
+                            fontWeight: 700,
+                            fontSize: "0.82rem",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: "50%",
+                              background: "#10b981",
+                            }}
+                          />
+                          Call Accepted & Active
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleAcceptVideoCall(m)}
+                          style={{
+                            background: "#4ECDC4",
+                            color: "#20201e",
+                            border: "1.5px solid #20201e",
+                            borderRadius: "6px",
+                            padding: "4px 10px",
+                            fontWeight: 800,
+                            fontSize: "0.78rem",
+                            cursor: "pointer",
+                            boxShadow: "1.5px 1.5px 0 #20201e",
+                          }}
+                        >
+                          Rejoin Call →
+                        </button>
+                      </div>
+                    )}
+
+                    {status === "declined" && (
+                      <span style={{ color: "#ef4444", fontWeight: 700, fontSize: "0.82rem" }}>
+                        ❌ Video call was declined
+                      </span>
+                    )}
+
+                    {status === "ended" && (
+                      <span style={{ color: "#6b7280", fontSize: "0.82rem", fontWeight: 600 }}>
+                        📞 Call ended {m.videoCall?.durationSeconds ? `(${Math.floor(m.videoCall.durationSeconds / 60)}m ${m.videoCall.durationSeconds % 60}s)` : ""}
+                      </span>
+                    )}
+                  </div>
+                );
+              }
+
+              return (
+                <div
+                  key={m._id}
+                  className={`message ${isMine ? "mine" : ""}`}
+                >
+                  <small>
+                    {m.sender?.name} · {date(m.createdAt)}
+                  </small>
+                  <p>{m.text}</p>
+                </div>
+              );
+            })}
           </div>
         ) : messages.loading ? (
           <p>Loading messages...</p>
         ) : (
           <p>Start the conversation with your booking partner.</p>
         )}
-        <ActionForm
-          label="Send message"
-          onSubmit={async (form) => {
-            const result = await api(`/quotes/${q._id}/messages`, {
-              method: "POST",
-              body: Object.fromEntries(form),
-            });
-            if (result && result._id) {
-              setRealtimeMessages((prev) => {
-                if (prev.some((m) => String(m._id) === String(result._id))) return prev;
-                return [...prev, result];
+        <form
+          className="form-stack"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const form = new FormData(e.currentTarget);
+            const text = form.get("text");
+            if (!text || !String(text).trim()) return;
+            const textarea = e.currentTarget.querySelector('textarea[name="text"]');
+            try {
+              const result = await api(`/quotes/${q._id}/messages`, {
+                method: "POST",
+                body: { text: String(text).trim() },
               });
+              if (textarea) textarea.value = "";
+              if (result && result._id) {
+                setSocketMessages((prev) => {
+                  if (prev.some((m) => String(m._id) === String(result._id))) return prev;
+                  return [...prev, result];
+                });
+              }
+            } catch (err) {
+              console.error("Message send error:", err);
             }
-            return "Message sent.";
           }}
         >
           <Field
@@ -405,7 +734,77 @@ function QuoteDetail({ q, reload }) {
             maxLength={4000}
             placeholder="Type your message to the counter-party here..."
           />
-        </ActionForm>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              flexWrap: "wrap",
+              marginTop: "4px",
+            }}
+          >
+            <button
+              type="submit"
+              className="button"
+              style={{
+                background: "#FAF8F5",
+                color: "#20201e",
+                border: "2px solid #20201e",
+                borderRadius: "12px",
+                padding: "9px 18px",
+                fontWeight: 800,
+                fontSize: "0.88rem",
+                cursor: "pointer",
+                boxShadow: "2.5px 2.5px 0 #20201e",
+                transition: "all 0.15s ease",
+              }}
+            >
+              Send message
+            </button>
+
+            <button
+              type="button"
+              onClick={handleRequestVideoCall}
+              disabled={requestingCall}
+              className="button"
+              style={{
+                background: "#FFE66D",
+                color: "#20201e",
+                border: "2px solid #20201e",
+                borderRadius: "12px",
+                padding: "9px 18px",
+                fontWeight: 800,
+                fontSize: "0.88rem",
+                cursor: requestingCall ? "not-allowed" : "pointer",
+                boxShadow: "2.5px 2.5px 0 #20201e",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                transition: "all 0.15s ease",
+              }}
+              title="Request a live peer-to-peer video call with the provider"
+            >
+              <Video size={17} color="#20201e" />
+              <span>
+                {requestingCall ? "Requesting Call..." : "Send request for video call"}
+              </span>
+            </button>
+          </div>
+
+          {callAlert && (
+            <p
+              style={{
+                marginTop: "6px",
+                fontSize: "0.82rem",
+                fontWeight: 700,
+                color: callAlert.includes("Failed") ? "#ef4444" : "#059669",
+              }}
+            >
+              {callAlert}
+            </p>
+          )}
+        </form>
       </section>
 
       <details className="panel" style={{ background: "#F5F0FF" }}>
