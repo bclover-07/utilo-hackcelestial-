@@ -307,16 +307,6 @@ export function Overview({ admin = false }) {
               <Trend data={data} />
               <BookingMix data={data} />
             </div>
-
-            <section className="panel" style={{ marginTop: "24px" }}>
-              <span className="eyebrow">
-                {admin ? "THE MARKETPLACE JOURNEY" : "EXCHANGE PROTOCOL"}
-              </span>
-              <h2 style={{ marginTop: 10 }}>
-                Transparent, quantity-aware fulfilment.
-              </h2>
-              <ExchangeWorkflow compact />
-            </section>
           </>
         )}
       </State>

@@ -231,6 +231,46 @@ export function ListingEditor({ id = "" }) {
     </State>
   );
 }
+const DEFAULT_CATEGORY_FIELDS = {
+  banquet_hall: [
+    { key: "air_conditioning", label: "Air Conditioning (AC)", type: "boolean" },
+    { key: "parking_capacity", label: "Parking Capacity (vehicles)", type: "number" },
+    { key: "stage_available", label: "Stage & Performance Area", type: "boolean" },
+    { key: "catering_allowed", label: "Outside Catering Allowed", type: "boolean" },
+    { key: "sound_system", label: "Built-in Sound / PA System", type: "boolean" },
+    { key: "power_backup", label: "Generator / Power Backup", type: "boolean" },
+  ],
+  chairs: [
+    { key: "chair_type", label: "Chair Style (Banquet, Folding, Cushion)", type: "text" },
+    { key: "material", label: "Frame Material (Steel, Wood, Plastic)", type: "text" },
+    { key: "stackable", label: "Stackable / Easy Storage", type: "boolean" },
+    { key: "cushion_included", label: "Padded Cushion Included", type: "boolean" },
+    { key: "weight_capacity_kg", label: "Max Load Capacity (kg)", type: "number" },
+  ],
+  tables: [
+    { key: "shape", label: "Table Shape (Round, Rectangular, High-boy)", type: "text" },
+    { key: "seating_per_table", label: "Seats per Table", type: "number" },
+    { key: "material", label: "Surface Material", type: "text" },
+    { key: "folding", label: "Foldable Legs", type: "boolean" },
+  ],
+  av_equipment: [
+    { key: "equipment_type", label: "Equipment Type (Speaker, Mic, Screen, Projector)", type: "text" },
+    { key: "power_output_watts", label: "Power Output / Brightness (Watts/Lumens)", type: "number" },
+    { key: "wireless", label: "Wireless / Bluetooth Enabled", type: "boolean" },
+    { key: "setup_assistance", label: "On-site Technician Included", type: "boolean" },
+  ],
+  linens: [
+    { key: "fabric_material", label: "Fabric Material (Satin, Polyester, Velvet)", type: "text" },
+    { key: "color_options", label: "Color / Theme Options", type: "text" },
+    { key: "waterproof", label: "Waterproof / Outdoor Rated", type: "boolean" },
+  ],
+  kitchen: [
+    { key: "appliances", label: "Included Appliances (Oven, Freezer, Fryer)", type: "text" },
+    { key: "gas_piped", label: "Piped Commercial Gas Line", type: "boolean" },
+    { key: "fssai_certified", label: "Food Grade / FSSAI Certified", type: "boolean" },
+  ],
+};
+
 function ListingForm({ initial }) {
   const cats = useData("/categories"),
     { user } = useAuth(),
@@ -238,6 +278,7 @@ function ListingForm({ initial }) {
   const [category, setCategory] = useState(initial?.category || ""),
     [description, setDescription] = useState(initial?.description || ""),
     [photos, setPhotos] = useState(initial?.photos || []);
+
   return (
     <>
       <Heading
@@ -251,183 +292,262 @@ function ListingForm({ initial }) {
       <div className="split-layout">
         <section className="panel">
           <State resource={cats}>
-            {(categories) => (
-              <ActionForm
-                label={initial ? "Save changes" : "Publish resource →"}
-                onSubmit={async (form) => {
-                  const data = Object.fromEntries(form);
-                  const attributes = {};
-                  for (const f of categories.find(
-                    (c) => c.slug === data.category,
-                  )?.requiredFields || [])
-                    attributes[f.key] =
-                      f.type === "number"
-                        ? Number(data[`attr_${f.key}`])
-                        : f.type === "boolean"
-                          ? data[`attr_${f.key}`] === "true"
-                          : data[`attr_${f.key}`];
-                  const body = {
-                    ...data,
-                    coordinates: [
-                      Number(data.longitude),
-                      Number(data.latitude),
-                    ],
-                    delivery: data.delivery === "on",
-                    attributes,
-                    photos,
-                  };
-                  await api(
-                    initial ? `/listings/${initial._id}` : "/listings",
-                    { method: initial ? "PUT" : "POST", body },
-                  );
-                  router.push("/dashboard/listings");
-                }}
-              >
-                <Field
-                  label="Resource title"
-                  name="title"
-                  defaultValue={initial?.title}
-                  required
-                  maxLength={160}
-                />
-                <Field
-                  label="Category"
-                  as="select"
-                  name="category"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  required
+            {(categories) => {
+              const selectedCatObj = categories.find((c) => c.slug === category);
+              const categoryFields =
+                selectedCatObj?.requiredFields && selectedCatObj.requiredFields.length > 0
+                  ? selectedCatObj.requiredFields
+                  : DEFAULT_CATEGORY_FIELDS[category] || [];
+
+              return (
+                <ActionForm
+                  label={initial ? "Save changes" : "Publish resource →"}
+                  onSubmit={async (form) => {
+                    const data = Object.fromEntries(form);
+                    const attributes = {};
+                    for (const f of categoryFields) {
+                      attributes[f.key] =
+                        f.type === "number"
+                          ? Number(data[`attr_${f.key}`])
+                          : f.type === "boolean"
+                            ? data[`attr_${f.key}`] === "true"
+                            : data[`attr_${f.key}`];
+                    }
+                    const body = {
+                      ...data,
+                      coordinates: [
+                        Number(data.longitude),
+                        Number(data.latitude),
+                      ],
+                      delivery: data.delivery === "on",
+                      attributes,
+                      photos,
+                    };
+                    await api(
+                      initial ? `/listings/${initial._id}` : "/listings",
+                      { method: initial ? "PUT" : "POST", body },
+                    );
+                    router.push("/dashboard/listings");
+                  }}
                 >
-                  <option value="">Choose a category</option>
-                  {categories.map((c) => (
-                    <option value={c.slug} key={c._id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </Field>
-                <Field
-                  label="Description"
-                  as="textarea"
-                  name="description"
-                  rows={4}
-                  value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  minLength={10}
-                  required
-                />
-                <LocalAi task="polish" text={description} onApply={setDescription} />
-                <div className="form-grid">
-                  {[
-                    ["quantity", "Units available", 1],
-                    ["capacity", "Capacity per unit", 1],
-                    ["price", "Price per unit (INR)", 1],
-                    ["minHours", "Minimum rental (hours)", 1],
-                    ["deposit", "Security deposit (INR)", 0],
-                    ["deliveryFee", "Delivery charge (INR)", 0],
-                    [
-                      "cancellationHours",
-                      "Free cancellation lead time (hours)",
-                      0,
-                    ],
-                  ].map(([key, label, min]) => (
+                  {/* Basic Details Section */}
+                  <div className="form-section-card">
+                    <h3 className="section-title">📌 Resource Details</h3>
                     <Field
-                      key={key}
-                      label={label}
-                      name={key}
-                      type="number"
-                      min={min}
-                      step={key === "price" ? "0.01" : "1"}
-                      defaultValue={initial?.[key] ?? (min === 0 ? 0 : "")}
+                      label="Resource title"
+                      name="title"
+                      defaultValue={initial?.title}
+                      placeholder="e.g. Grand AC Banquet Hall with Stage & Sound"
+                      required
+                      maxLength={160}
+                    />
+                    <Field
+                      label="Category"
+                      as="select"
+                      name="category"
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      required
+                    >
+                      <option value="">Choose a category</option>
+                      {categories.map((c) => (
+                        <option value={c.slug} key={c._id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </Field>
+                    <Field
+                      label="Description"
+                      as="textarea"
+                      name="description"
+                      rows={4}
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Describe amenities, ideal events, setup details, or rules..."
+                      minLength={10}
                       required
                     />
-                  ))}
-                  <Field
-                    label="Billing unit"
-                    as="select"
-                    name="unit"
-                    defaultValue={initial?.unit || "day"}
-                  >
-                    <option value="hour">Hour</option>
-                    <option value="day">Day</option>
-                    <option value="event">Event</option>
-                  </Field>
-                </div>
-                <label className="check">
-                  <input
-                    type="checkbox"
-                    name="delivery"
-                    defaultChecked={initial?.delivery}
-                  />{" "}
-                  Delivery is available
-                </label>
-                <div className="form-grid">
-                  <Field
-                    label="City"
-                    name="city"
-                    defaultValue={initial?.city || user.city}
-                    required
-                  />
-                  <Field
-                    label="Street address"
-                    name="address"
-                    defaultValue={initial?.address}
-                    required
-                  />
-                  <Field
-                    label="Latitude"
-                    name="latitude"
-                    type="number"
-                    step="any"
-                    min="-90"
-                    max="90"
-                    defaultValue={initial?.location.coordinates[1]}
-                    required
-                  />
-                  <Field
-                    label="Longitude"
-                    name="longitude"
-                    type="number"
-                    step="any"
-                    min="-180"
-                    max="180"
-                    defaultValue={initial?.location.coordinates[0]}
-                    required
-                  />
-                </div>
-                <p className="hint">
-                  Use the resource location, not your current location, for
-                  accurate distance matching.
-                </p>
-                {(
-                  categories.find((c) => c.slug === category)?.requiredFields ||
-                  []
-                ).map((f) => (
-                  <Field
-                    key={f.key}
-                    label={f.label}
-                    name={`attr_${f.key}`}
-                    as={f.type === "boolean" ? "select" : "input"}
-                    type={f.type === "number" ? "number" : "text"}
-                    defaultValue={initial?.attributes?.[f.key]}
-                    required
-                  >
-                    {f.type === "boolean" ? (
-                      <>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
-                      </>
-                    ) : undefined}
-                  </Field>
-                ))}
-                <Field
-                  label="Rental conditions & pickup instructions"
-                  as="textarea"
-                  name="conditions"
-                  rows={3}
-                  defaultValue={initial?.conditions}
-                />
-              </ActionForm>
-            )}
+                    <LocalAi task="polish" text={description} onApply={setDescription} />
+                  </div>
+
+                  {/* Pricing & Units Section */}
+                  <div className="form-section-card">
+                    <h3 className="section-title">💰 Pricing & Inventory</h3>
+                    <div className="form-grid">
+                      {[
+                        ["quantity", "Units available", 1],
+                        ["capacity", "Capacity per unit", 1],
+                        ["price", "Price per unit (INR)", 1],
+                        ["minHours", "Minimum rental (hours)", 1],
+                        ["deposit", "Security deposit (INR)", 0],
+                        ["deliveryFee", "Delivery charge (INR)", 0],
+                        [
+                          "cancellationHours",
+                          "Free cancellation lead time (hours)",
+                          0,
+                        ],
+                      ].map(([key, label, min]) => (
+                        <Field
+                          key={key}
+                          label={label}
+                          name={key}
+                          type="number"
+                          min={min}
+                          step={key === "price" ? "0.01" : "1"}
+                          defaultValue={initial?.[key] ?? (min === 0 ? 0 : "")}
+                          required
+                        />
+                      ))}
+                      <Field
+                        label="Billing unit"
+                        as="select"
+                        name="unit"
+                        defaultValue={initial?.unit || "day"}
+                      >
+                        <option value="hour">Hour</option>
+                        <option value="day">Day</option>
+                        <option value="event">Event</option>
+                      </Field>
+                    </div>
+                    <label className="check" style={{ marginTop: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <input
+                        type="checkbox"
+                        name="delivery"
+                        defaultChecked={initial?.delivery}
+                      />{" "}
+                      <strong>Delivery / Setup Service is available</strong>
+                    </label>
+                  </div>
+
+                  {/* Dynamic Category Specific Features Section */}
+                  {category ? (
+                    <div
+                      className="category-features-section"
+                      style={{
+                        background: selectedCatObj?.color ? `${selectedCatObj.color}22` : "rgba(255, 230, 109, 0.15)",
+                        border: "2px solid #171915",
+                        borderRadius: "16px",
+                        padding: "20px",
+                        margin: "20px 0",
+                        boxShadow: "4px 4px 0 #171915",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+                        <span style={{ fontSize: "1.4rem" }}>✨</span>
+                        <div>
+                          <h3 style={{ margin: 0, fontWeight: 800, fontSize: "1.1rem", textTransform: "capitalize" }}>
+                            {selectedCatObj?.name || category.replaceAll("_", " ")} Features & Specs
+                          </h3>
+                          <small style={{ color: "#444" }}>
+                            Specify category attributes so AI can match your resource to exact seeker RFQ requirements.
+                          </small>
+                        </div>
+                      </div>
+
+                      {categoryFields.length > 0 ? (
+                        <div className="form-grid">
+                          {categoryFields.map((f) => (
+                            <Field
+                              key={f.key}
+                              label={f.label}
+                              name={`attr_${f.key}`}
+                              as={f.type === "boolean" ? "select" : "input"}
+                              type={f.type === "number" ? "number" : "text"}
+                              defaultValue={
+                                initial?.attributes?.[f.key] !== undefined
+                                  ? String(initial.attributes[f.key])
+                                  : f.type === "boolean"
+                                    ? "true"
+                                    : ""
+                              }
+                              required
+                            >
+                              {f.type === "boolean" ? (
+                                <>
+                                  <option value="true">✓ Available / Yes</option>
+                                  <option value="false">✗ Not Available / No</option>
+                                </>
+                              ) : undefined}
+                            </Field>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="hint">Standard resource details apply for this category.</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        padding: "16px",
+                        background: "#fffdf4",
+                        border: "2px dashed #ccc",
+                        borderRadius: "12px",
+                        textAlign: "center",
+                        margin: "16px 0",
+                        color: "#666",
+                      }}
+                    >
+                      💡 <em>Select a category above to customize category-specific features (e.g. AC, Parking, Sound System, Chair Style).</em>
+                    </div>
+                  )}
+
+                  {/* Location & Address Section */}
+                  <div className="form-section-card">
+                    <h3 className="section-title">📍 Location & Address</h3>
+                    <div className="form-grid">
+                      <Field
+                        label="City"
+                        name="city"
+                        defaultValue={initial?.city || user?.city || ""}
+                        required
+                      />
+                      <Field
+                        label="Street address"
+                        name="address"
+                        defaultValue={initial?.address}
+                        required
+                      />
+                      <Field
+                        label="Latitude"
+                        name="latitude"
+                        type="number"
+                        step="any"
+                        min="-90"
+                        max="90"
+                        defaultValue={initial?.location?.coordinates?.[1] || 19.076}
+                        required
+                      />
+                      <Field
+                        label="Longitude"
+                        name="longitude"
+                        type="number"
+                        step="any"
+                        min="-180"
+                        max="180"
+                        defaultValue={initial?.location?.coordinates?.[0] || 72.8777}
+                        required
+                      />
+                    </div>
+                    <p className="hint">
+                      Use exact resource coordinates for precise distance & map matching.
+                    </p>
+                  </div>
+
+                  {/* Rental Conditions Section */}
+                  <div className="form-section-card">
+                    <h3 className="section-title">📋 Rental Conditions</h3>
+                    <Field
+                      label="Rental conditions & pickup instructions"
+                      as="textarea"
+                      name="conditions"
+                      rows={3}
+                      placeholder="e.g. Id proof required upon delivery; security deposit refundable within 24h post-event."
+                      defaultValue={initial?.conditions}
+                    />
+                  </div>
+                </ActionForm>
+              );
+            }}
           </State>
         </section>
         <aside className="stack">
