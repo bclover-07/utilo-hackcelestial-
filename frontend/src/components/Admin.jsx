@@ -4,6 +4,16 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import PrivateDocument from "./PrivateDocument";
 import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Cell,
+} from "recharts";
+import {
   useData,
   State,
   Empty,
@@ -16,6 +26,51 @@ import {
   money,
   colors,
 } from "./ui";
+
+function VerificationQueueVisualizer({ users }) {
+  if (!users || users.length === 0) return null;
+  const pending = users.filter((u) => u.verification === "pending").length;
+  const verified = users.filter((u) => u.verification === "verified").length;
+  const rejected = users.filter((u) => u.verification === "rejected").length;
+
+  const chartData = [
+    { name: "Pending KYC", count: pending, color: "#ffe66d" },
+    { name: "Approved", count: verified, color: "#2ed573" },
+    { name: "Rejected", count: rejected, color: "#ff4757" },
+  ];
+
+  return (
+    <div className="feature-chart-panel" style={{ background: "#FFFDF8", marginBottom: "1.5rem" }}>
+      <div className="feature-chart-header">
+        <div>
+          <span className="eyebrow" style={{ color: "#0F766E", marginBottom: 2 }}>KYC AUDIT PIPELINE</span>
+          <h3 className="feature-chart-title">Business Verification Queue Status</h3>
+        </div>
+        <span className="badge" style={{ background: pending > 0 ? "#FFE66D" : "#A8E6CF", border: "1px solid #171915" }}>
+          {pending} Pending Review
+        </span>
+      </div>
+      <div className="feature-metrics-grid">
+        <div className="feature-metric-card" style={{ borderLeft: "3px solid #ffe66d" }}>
+          <span>Pending Review</span>
+          <strong>{pending} providers</strong>
+          <small>Awaiting KYC document approval</small>
+        </div>
+        <div className="feature-metric-card" style={{ borderLeft: "3px solid #2ed573" }}>
+          <span>Approved Businesses</span>
+          <strong>{verified} verified</strong>
+          <small>Cleared compliance credentials</small>
+        </div>
+        <div className="feature-metric-card" style={{ borderLeft: "3px solid #ff4757" }}>
+          <span>Declined Applications</span>
+          <strong>{rejected} rejected</strong>
+          <small>Document mismatch or incomplete</small>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function VerificationsPage() {
   const r = useData("/admin/verifications");
   return (
@@ -27,8 +82,10 @@ export function VerificationsPage() {
       <State resource={r}>
         {(data) =>
           data.length ? (
-            <div className="card-grid">
-              {data.map((u) => (
+            <>
+              <VerificationQueueVisualizer users={data} />
+              <div className="card-grid">
+                {data.map((u) => (
                 <article className="panel verification-card-neo" key={u._id}>
                   <div className="section-heading">
                     <div>
@@ -78,6 +135,7 @@ export function VerificationsPage() {
                 </article>
               ))}
             </div>
+            </>
           ) : (
             <Empty title="No businesses to review yet." />
           )
@@ -86,6 +144,43 @@ export function VerificationsPage() {
     </>
   );
 }
+function DisputeQueueVisualizer({ disputes }) {
+  if (!disputes || disputes.length === 0) return null;
+  const openCount = disputes.filter((d) => d.status === "open").length;
+  const resolvedCount = disputes.filter((d) => d.status === "resolved" || d.resolution).length;
+
+  return (
+    <div className="feature-chart-panel" style={{ background: "#FFFDF8", marginBottom: "1.5rem" }}>
+      <div className="feature-chart-header">
+        <div>
+          <span className="eyebrow" style={{ color: "#0F766E", marginBottom: 2 }}>ADMIN MEDIATION PIPELINE</span>
+          <h3 className="feature-chart-title">Disputes & Incident Resolution Status</h3>
+        </div>
+        <span className="badge" style={{ background: openCount > 0 ? "#FF85A1" : "#A8E6CF", border: "1px solid #171915" }}>
+          {openCount} Awaiting Admin Decision
+        </span>
+      </div>
+      <div className="feature-metrics-grid">
+        <div className="feature-metric-card" style={{ borderLeft: "3px solid #ff4757" }}>
+          <span>Open Escalations</span>
+          <strong>{openCount} disputes</strong>
+          <small>Needs administrative mediation</small>
+        </div>
+        <div className="feature-metric-card" style={{ borderLeft: "3px solid #2ed573" }}>
+          <span>Settled Incidents</span>
+          <strong>{resolvedCount} resolved</strong>
+          <small>Binding resolution closed</small>
+        </div>
+        <div className="feature-metric-card" style={{ borderLeft: "3px solid #4ecdc4" }}>
+          <span>Resolution Ratio</span>
+          <strong>{disputes.length ? Math.round((resolvedCount / disputes.length) * 100) : 100}%</strong>
+          <small>Queue turnaround health</small>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AdminDisputes() {
   const r = useData("/admin/disputes"),
     [evidence, setEvidence] = useState(null);
@@ -98,8 +193,10 @@ export function AdminDisputes() {
       <State resource={r}>
         {(data) =>
           data.length ? (
-            <div className="card-grid">
-              {data.map((d) => (
+            <>
+              <DisputeQueueVisualizer disputes={data} />
+              <div className="card-grid">
+                {data.map((d) => (
                 <article className="panel" key={d._id}>
                   <Badge>{d.status}</Badge>
                   <h3>{d.openedBy?.name}</h3>
@@ -137,6 +234,7 @@ export function AdminDisputes() {
                 </article>
               ))}
             </div>
+            </>
           ) : (
             <Empty title="No disputes in the queue." />
           )

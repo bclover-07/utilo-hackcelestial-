@@ -50,6 +50,18 @@ test("Real HTTP marketplace and agent contracts on an isolated replica set", { t
       assert.equal((await call("/ai/studio",{cookie:admin.cookie})).status,403);
       assert.equal((await call("/search",{cookie:seeker.cookie,method:"POST",verify:false,body:{}})).status,403);
     });
+    await t.test("Local AI metadata is authenticated, shared with administrators, and contains no secrets", async () => {
+      assert.equal((await call("/ai/local-config")).status, 401);
+      for (const cookie of [seeker.cookie, provider.cookie, admin.cookie]) {
+        const response = await call("/ai/local-config", { cookie });
+        assert.equal(response.status, 200);
+        assert.equal(response.data.version, 2);
+        assert.equal(response.data.defaultCompact, true);
+        assert.deepEqual(Object.keys(response.data.tasks).sort(), ["polish", "summarize"]);
+        assert.equal(/api.?key|secret|token=|mongodb:/i.test(JSON.stringify(response.data)), false);
+      }
+      assert.equal((await call("/ai/local-config", { cookie: seeker.cookie, method: "POST", body: { sourceText: "private draft" } })).status, 404);
+    });
     await t.test("Search input returns actual availability and rejects incomplete dates",async()=>{
       const response=await call("/search",{cookie:seeker.cookie,method:"POST",body:{category:"chairs",start,end,quantity:2}});
       assert.equal(response.status,200); assert.equal(response.data.items[0]._id,listing._id); assert.equal(response.data.items[0].availableQuantity,3);

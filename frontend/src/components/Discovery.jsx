@@ -5,6 +5,21 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Legend,
+} from "recharts";
+import {
   useData,
   State,
   Empty,
@@ -109,7 +124,7 @@ export function RapidoNegotiateModal({ listing, onClose }) {
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {/* Units & Base Price Overview */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div style={{ background: "#FAF8F5", padding: "10px 14px", border: "2px solid #20201e", borderRadius: 12 }}>
+              <div style={{ background: "#FAF8F5", padding: "10px 14px", border: "1.5px solid #171915", borderRadius: 12 }}>
                 <span className="eyebrow" style={{ color: "#7B61A8" }}>QUANTITY NEEDED</span>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4 }}>
                   <button type="button" className="rapido-stepper-btn" onClick={() => handleQuantityChange(-1)} disabled={quantity <= 1}>−</button>
@@ -119,7 +134,7 @@ export function RapidoNegotiateModal({ listing, onClose }) {
                 <small style={{ color: "#666", display: "block", marginTop: 4 }}>Pool: {listing.quantity} available</small>
               </div>
 
-              <div style={{ background: "#FAF8F5", padding: "10px 14px", border: "2px solid #20201e", borderRadius: 12 }}>
+              <div style={{ background: "#FAF8F5", padding: "10px 14px", border: "1.5px solid #171915", borderRadius: 12 }}>
                 <span className="eyebrow" style={{ color: "#7B61A8" }}>LISTED BASE RATE</span>
                 <div style={{ marginTop: 4 }}>
                   <strong style={{ fontSize: "1.3rem", display: "block" }}>{money(baseRate)}</strong>
@@ -131,7 +146,7 @@ export function RapidoNegotiateModal({ listing, onClose }) {
             {/* Rapido Fare Box */}
             <div className="rapido-bid-box">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span className="eyebrow" style={{ color: "#20201e" }}>YOUR COUNTER-OFFER (INR)</span>
+                <span className="eyebrow" style={{ color: "#171915" }}>YOUR COUNTER-OFFER (INR)</span>
                 <span style={{ fontSize: "0.8rem", fontWeight: 700 }}>Rapido Dynamic Bidding</span>
               </div>
 
@@ -174,22 +189,22 @@ export function RapidoNegotiateModal({ listing, onClose }) {
               {/* Dynamic Bargain Indicator */}
               <div style={{ marginTop: 12 }}>
                 {discountRatio < -0.2 ? (
-                  <div className="bargain-gauge-pill" style={{ background: "#FFE2DB", borderColor: "#76271D" }}>
+                  <div className="bargain-gauge-pill" style={{ background: "#FFE2DB", borderColor: "#171915" }}>
                     <span>⚠️ Aggressive Discount (−{discountPct}%)</span>
                     <small>Provider may decline or counter-offer higher.</small>
                   </div>
                 ) : discountRatio < 0 ? (
-                  <div className="bargain-gauge-pill" style={{ background: "#DDF4D1", borderColor: "#244C24" }}>
+                  <div className="bargain-gauge-pill" style={{ background: "#DDF4D1", borderColor: "#171915" }}>
                     <span>🟢 Competitive Fair Offer (−{discountPct}%)</span>
                     <small>High acceptance probability by provider.</small>
                   </div>
                 ) : discountRatio === 0 ? (
-                  <div className="bargain-gauge-pill" style={{ background: "#E0F2FE", borderColor: "#0369A1" }}>
+                  <div className="bargain-gauge-pill" style={{ background: "#E0F2FE", borderColor: "#171915" }}>
                     <span>⭐ Full Listed Rate</span>
                     <small>Standard terms, instant provider priority.</small>
                   </div>
                 ) : (
-                  <div className="bargain-gauge-pill" style={{ background: "#EDE9FE", borderColor: "#6D28D9" }}>
+                  <div className="bargain-gauge-pill" style={{ background: "#EDE9FE", borderColor: "#171915" }}>
                     <span>⚡ Priority Surge Offer (+{discountPct}%)</span>
                     <small>Maximum priority for peak or urgent events.</small>
                   </div>
@@ -203,7 +218,7 @@ export function RapidoNegotiateModal({ listing, onClose }) {
                 Special Conditions / Notes to Provider (Optional)
               </label>
               <textarea
-                style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: "2px solid #20201e", fontSize: "0.9rem", minHeight: 60, background: "#fff" }}
+                style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: "1.5px solid #171915", fontSize: "0.9rem", minHeight: 60, background: "#fff" }}
                 placeholder="e.g. Need 8 AM load-in setup, own transportation arranged, etc."
                 value={conditions}
                 onChange={(e) => setConditions(e.target.value)}
@@ -217,7 +232,7 @@ export function RapidoNegotiateModal({ listing, onClose }) {
               <button
                 type="submit"
                 className="button"
-                style={{ flex: 1, background: "#FFE66D", border: "2px solid #20201e", fontWeight: 800, fontSize: "1rem", padding: "12px", cursor: "pointer" }}
+                style={{ flex: 1, background: "#FFE66D", border: "1.5px solid #171915", fontWeight: 800, fontSize: "1rem", padding: "12px", cursor: "pointer" }}
                 disabled={loading || offerPrice <= 0}
               >
                 {loading ? "Dispatching Offer…" : `🚀 Send Offer of ${money(offerPrice)} & Open Chat`}
@@ -225,7 +240,7 @@ export function RapidoNegotiateModal({ listing, onClose }) {
               <button
                 type="button"
                 className="button quiet"
-                style={{ padding: "12px 18px", cursor: "pointer" }}
+                style={{ padding: "12px 18px", cursor: "pointer", border: "1.5px solid #171915" }}
                 onClick={onClose}
               >
                 Cancel
@@ -233,6 +248,166 @@ export function RapidoNegotiateModal({ listing, onClose }) {
             </div>
           </form>
         )}
+      </div>
+    </div>
+  );
+}
+
+function SearchResultVisualInsights({ items, total }) {
+  if (!items || items.length === 0) return null;
+
+  const prices = items.map((it) => it.price || 0);
+  const minP = Math.min(...prices);
+  const maxP = Math.max(...prices);
+  const avgP = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
+
+  const chartData = items.slice(0, 8).map((it) => ({
+    name: it.title?.length > 14 ? `${it.title.slice(0, 14)}…` : it.title,
+    price: it.price,
+    capacity: it.capacity || 1,
+    quantity: it.quantity || 1,
+  }));
+
+  return (
+    <div className="feature-chart-panel" style={{ background: "#FFFDF8" }}>
+      <div className="feature-chart-header">
+        <div>
+          <span className="eyebrow" style={{ color: "#0F766E", marginBottom: 2 }}>MATCH INTELLIGENCE SPECTRUM</span>
+          <h3 className="feature-chart-title">Matched Resource Price & Capacity Distribution</h3>
+        </div>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          <span className="badge" style={{ background: "#4ECDC440", border: "1.5px solid #171915" }}>
+            Avg: {money(avgP)}
+          </span>
+          <span className="badge" style={{ background: "#FFE66D", border: "1.5px solid #171915" }}>
+            Range: {money(minP)} – {money(maxP)}
+          </span>
+        </div>
+      </div>
+
+      <div style={{ width: "100%", height: 190 }}>
+        <ResponsiveContainer>
+          <BarChart data={chartData} barGap={6}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E0CF" />
+            <XAxis dataKey="name" stroke="#171915" tick={{ fontSize: 11, fontWeight: 700 }} />
+            <YAxis stroke="#171915" tick={{ fontSize: 10 }} tickFormatter={(v) => `₹${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
+            <Tooltip
+              formatter={(val, name) => [name === "price" ? money(val) : val, name === "price" ? "Rental Rate" : name === "capacity" ? "Max Capacity" : "Available Stock"]}
+              contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, fontWeight: 700 }}
+            />
+            <Legend wrapperStyle={{ fontSize: 11, fontWeight: 700, paddingTop: 4 }} />
+            <Bar dataKey="price" name="Rental Rate" fill="#4ECDC4" stroke="#171915" strokeWidth={1.5} radius={[4, 4, 0, 0]} />
+            <Bar dataKey="capacity" name="Capacity (guests)" fill="#FFE66D" stroke="#171915" strokeWidth={1.5} radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+function MultiItemComparisonRadar({ items }) {
+  if (!items || items.length === 0) return null;
+
+  const sample = items.slice(0, 4);
+  const maxPrice = Math.max(...sample.map((it) => it.price || 1), 1);
+  const maxCap = Math.max(...sample.map((it) => it.capacity || 1), 1);
+  const maxQty = Math.max(...sample.map((it) => it.quantity || 1), 1);
+
+  const radarData = [
+    {
+      subject: "Affordability",
+      ...Object.fromEntries(
+        sample.map((it, idx) => [
+          `item_${idx}`,
+          Math.round((1 - (it.price || 0) / (maxPrice * 1.2)) * 100),
+        ])
+      ),
+    },
+    {
+      subject: "Capacity",
+      ...Object.fromEntries(
+        sample.map((it, idx) => [
+          `item_${idx}`,
+          Math.round(((it.capacity || 1) / maxCap) * 100),
+        ])
+      ),
+    },
+    {
+      subject: "Fleet Stock",
+      ...Object.fromEntries(
+        sample.map((it, idx) => [
+          `item_${idx}`,
+          Math.round(((it.quantity || 1) / maxQty) * 100),
+        ])
+      ),
+    },
+    {
+      subject: "Flexibility",
+      ...Object.fromEntries(
+        sample.map((it, idx) => [
+          `item_${idx}`,
+          it.cancellationHours <= 24 ? 90 : it.cancellationHours <= 48 ? 70 : 40,
+        ])
+      ),
+    },
+    {
+      subject: "Logistics",
+      ...Object.fromEntries(
+        sample.map((it, idx) => [
+          `item_${idx}`,
+          it.delivery ? 85 : 50,
+        ])
+      ),
+    },
+  ];
+
+  const RADAR_STROKES = ["#4ECDC4", "#FF6B6B", "#C3B1E1", "#FFA502"];
+
+  return (
+    <div className="feature-chart-panel" style={{ background: "#FAF8F5", marginBottom: "2rem" }}>
+      <div className="feature-chart-header">
+        <div>
+          <span className="eyebrow" style={{ color: "#7B61A8", marginBottom: 2 }}>SHORTLIST MULTI-DIMENSIONAL RADAR</span>
+          <h3 className="feature-chart-title">Comparative Resource Benchmarking</h3>
+        </div>
+        <span className="badge" style={{ background: "#C3B1E140", border: "1.5px solid #171915" }}>
+          Comparing {sample.length} shortlisted items
+        </span>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px", alignItems: "center" }}>
+        <div style={{ width: "100%", height: 260 }}>
+          <ResponsiveContainer>
+            <RadarChart data={radarData}>
+              <PolarGrid stroke="#D4D1C8" />
+              <PolarAngleAxis dataKey="subject" tick={{ fill: "#171915", fontSize: 11, fontWeight: 700 }} />
+              <PolarRadiusAxis domain={[0, 100]} stroke="#B5B0A2" tick={{ fontSize: 9 }} />
+              <Tooltip contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, fontWeight: 700 }} />
+              {sample.map((it, idx) => (
+                <Radar
+                  key={it._id}
+                  name={it.title}
+                  dataKey={`item_${idx}`}
+                  stroke={RADAR_STROKES[idx % RADAR_STROKES.length]}
+                  fill={RADAR_STROKES[idx % RADAR_STROKES.length]}
+                  fillOpacity={0.25}
+                  strokeWidth={1.5}
+                />
+              ))}
+              <Legend wrapperStyle={{ fontSize: 11, fontWeight: 700 }} />
+            </RadarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="feature-metrics-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
+          {sample.map((it, idx) => (
+            <div key={it._id} className="feature-metric-card" style={{ borderLeft: `3px solid ${RADAR_STROKES[idx % RADAR_STROKES.length]}` }}>
+              <span>{it.title}</span>
+              <strong>{money(it.price)} <small>/{it.unit}</small></strong>
+              <small>👥 {it.capacity} guests · 📦 {it.quantity} units</small>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -456,6 +631,9 @@ export function SearchPage() {
               Save search & alerts
             </Action>
           </div>
+
+          <SearchResultVisualInsights items={result.items} total={result.total} />
+
           {result.items.length ? (
             <div className="card-grid">
               {result.items.map((l, i) => (
@@ -685,6 +863,7 @@ export function ResourceDetail({ id }) {
     </State>
   );
 }
+
 export function ComparePage() {
   const [rerun, setRerun] = useState(null);
   const favorites = useData("/favorites"),
@@ -698,57 +877,60 @@ export function ComparePage() {
       <State resource={favorites}>
         {(data) =>
           data.length ? (
-            <div className="compare-grid">
-              {data.map((l) => (
-                <section className="panel compare-card-neo" key={l._id}>
-                  <div className="compare-card-top">
-                    <Badge>{l.category?.replaceAll("_", " ")}</Badge>
-                    <span className="spec-chip">📍 {l.city}</span>
-                  </div>
-                  <h2 style={{ margin: "0.5rem 0" }}>{l.title}</h2>
+            <>
+              <MultiItemComparisonRadar items={data} />
+              <div className="compare-grid">
+                {data.map((l) => (
+                  <section className="panel compare-card-neo" key={l._id}>
+                    <div className="compare-card-top">
+                      <Badge>{l.category?.replaceAll("_", " ")}</Badge>
+                      <span className="spec-chip">📍 {l.city}</span>
+                    </div>
+                    <h2 style={{ margin: "0.5rem 0" }}>{l.title}</h2>
 
-                  <div className="compare-metrics-grid">
-                    <div className="compare-metric-card">
-                      <span>Rate</span>
-                      <strong>{money(l.price)} <small>/{l.unit}</small></strong>
+                    <div className="compare-metrics-grid">
+                      <div className="compare-metric-card">
+                        <span>Rate</span>
+                        <strong>{money(l.price)} <small>/{l.unit}</small></strong>
+                      </div>
+                      <div className="compare-metric-card">
+                        <span>Capacity</span>
+                        <strong>{l.capacity} guests</strong>
+                      </div>
+                      <div className="compare-metric-card">
+                        <span>Available</span>
+                        <strong>{l.quantity} units</strong>
+                      </div>
+                      <div className="compare-metric-card">
+                        <span>Deposit</span>
+                        <strong>{money(l.deposit)}</strong>
+                      </div>
                     </div>
-                    <div className="compare-metric-card">
-                      <span>Capacity</span>
-                      <strong>{l.capacity} guests</strong>
-                    </div>
-                    <div className="compare-metric-card">
-                      <span>Available</span>
-                      <strong>{l.quantity} units</strong>
-                    </div>
-                    <div className="compare-metric-card">
-                      <span>Deposit</span>
-                      <strong>{money(l.deposit)}</strong>
-                    </div>
-                  </div>
 
-                  <div className="compare-chips-strip">
-                    <span className="spec-chip">🚚 {l.delivery ? `Delivery ${money(l.deliveryFee)}` : "Pickup"}</span>
-                    <span className="spec-chip">⏱ Min {l.minHours}h</span>
-                    <span className="spec-chip">🛡 {l.cancellationHours}h cancel</span>
-                  </div>
+                    <div className="compare-chips-strip">
+                      <span className="spec-chip">🚚 {l.delivery ? `Delivery ${money(l.deliveryFee)}` : "Pickup"}</span>
+                      <span className="spec-chip">⏱ Min {l.minHours}h</span>
+                      <span className="spec-chip">🛡 {l.cancellationHours}h cancel</span>
+                    </div>
 
-                  <div className="compare-actions-row">
-                    <Link className="button" href={`/dashboard/resources/${l._id}`}>
-                      Full details →
-                    </Link>
-                    <Action
-                      className="quiet"
-                      run={async () => {
-                        await api(`/favorites/${l._id}`, { method: "POST" });
-                        await favorites.reload();
-                      }}
-                    >
-                      Remove
-                    </Action>
-                  </div>
-                </section>
-              ))}
-            </div>
+                    <div className="compare-actions-row">
+                      <Link className="button" href={`/dashboard/resources/${l._id}`}>
+                        Full details →
+                      </Link>
+                      <Action
+                        className="quiet"
+                        run={async () => {
+                          await api(`/favorites/${l._id}`, { method: "POST" });
+                          await favorites.reload();
+                        }}
+                      >
+                        Remove
+                      </Action>
+                    </div>
+                  </section>
+                ))}
+              </div>
+            </>
           ) : (
             <Empty
               title="Keep your favourites close."

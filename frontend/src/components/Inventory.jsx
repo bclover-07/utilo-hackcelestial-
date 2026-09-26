@@ -7,6 +7,19 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts";
+import {
   useData,
   State,
   Empty,
@@ -20,6 +33,93 @@ import {
   date,
   colors,
 } from "./ui";
+
+const FLEET_COLORS = ["#4ECDC4", "#FFE66D", "#FF6B6B", "#C3B1E1", "#78E08F", "#60C5F1", "#FFA502"];
+
+function FleetInventoryAnalytics({ listings }) {
+  if (!listings || listings.length === 0) return null;
+
+  const totalUnits = listings.reduce((acc, l) => acc + (l.quantity || 1), 0);
+  const activeCount = listings.filter((l) => l.status === "active").length;
+  const pausedCount = listings.filter((l) => l.status === "paused").length;
+  const totalValue = listings.reduce((acc, l) => acc + (l.price * (l.quantity || 1)), 0);
+
+  // Group by category
+  const catMap = {};
+  listings.forEach((l) => {
+    const cat = (l.category || "other").replaceAll("_", " ");
+    catMap[cat] = (catMap[cat] || 0) + (l.quantity || 1);
+  });
+
+  const catData = Object.entries(catMap).map(([name, units]) => ({ name, units }));
+  const statusPieData = [
+    { name: "Active Ready", value: activeCount },
+    { name: "Paused / Draft", value: pausedCount },
+  ].filter((d) => d.value > 0);
+
+  return (
+    <div className="feature-chart-panel" style={{ background: "#FFFDF8", marginBottom: "2rem" }}>
+      <div className="feature-chart-header">
+        <div>
+          <span className="eyebrow" style={{ color: "#0F766E", marginBottom: 2 }}>FLEET COMPOSITION & YIELD</span>
+          <h3 className="feature-chart-title">Resource Inventory Fleet Telemetry</h3>
+        </div>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          <span className="badge" style={{ background: "#4ECDC440", border: "1px solid #171915" }}>
+            {listings.length} Listed Assets ({totalUnits} Units)
+          </span>
+          <span className="badge" style={{ background: "#FFE66D", border: "1px solid #171915" }}>
+            Fleet Capital Value: {money(totalValue)}
+          </span>
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "16px", alignItems: "center" }}>
+        <div style={{ width: "100%", height: 180 }}>
+          <ResponsiveContainer>
+            <BarChart data={catData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E0CF" />
+              <XAxis dataKey="name" stroke="#171915" tick={{ fontSize: 10, fontWeight: 700 }} />
+              <YAxis stroke="#171915" tick={{ fontSize: 10 }} />
+              <Tooltip
+                formatter={(val) => [`${val} Units`, "Stock Capacity"]}
+                contentStyle={{ background: "#fffef8", border: "1px solid #171915", borderRadius: 10, fontWeight: 700 }}
+              />
+              <Bar dataKey="units" name="Fleet Units" fill="#4ECDC4" stroke="#171915" strokeWidth={1} radius={[4, 4, 0, 0]}>
+                {catData.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={FLEET_COLORS[index % FLEET_COLORS.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="feature-metrics-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
+          <div className="feature-metric-card" style={{ borderLeft: "3px solid #2ed573" }}>
+            <span>Active Listings</span>
+            <strong>{activeCount} live</strong>
+            <small>Open for RFQ match</small>
+          </div>
+          <div className="feature-metric-card" style={{ borderLeft: "3px solid #ffd13b" }}>
+            <span>Paused Assets</span>
+            <strong>{pausedCount} paused</strong>
+            <small>Temporarily withheld</small>
+          </div>
+          <div className="feature-metric-card" style={{ borderLeft: "3px solid #60c5f1" }}>
+            <span>Total Units</span>
+            <strong>{totalUnits} units</strong>
+            <small>Across {Object.keys(catMap).length} categories</small>
+          </div>
+          <div className="feature-metric-card" style={{ borderLeft: "3px solid #ff6b6b" }}>
+            <span>Avg Asset Yield</span>
+            <strong>{money(Math.round(totalValue / (listings.length || 1)))}</strong>
+            <small>Per active listing</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 function MatchScoreGauge({ score }) {
   const radius = 20;
   const stroke = 3.5;
@@ -167,8 +267,10 @@ export function Listings() {
       <State resource={resource}>
         {(data) =>
           data?.length ? (
-            <div className="card-grid">
-              {data.map((l, i) => (
+            <>
+              <FleetInventoryAnalytics listings={data} />
+              <div className="card-grid">
+                {data.map((l, i) => (
                 <ListingCard key={l._id} listing={l} index={i}>
                   <Badge>{l.status}</Badge>
                   {l.moderationHold && (
@@ -224,6 +326,7 @@ export function Listings() {
                 </ListingCard>
               ))}
             </div>
+            </>
           ) : (
             <Empty
               title="Your next revenue stream starts here."
@@ -439,7 +542,7 @@ function ListingForm({ initial }) {
                       className="category-features-section"
                       style={{
                         background: selectedCatObj?.color ? `${selectedCatObj.color}22` : "rgba(255, 230, 109, 0.15)",
-                        border: "2px solid #171915",
+                        border: "1px solid #171915",
                         borderRadius: "16px",
                         padding: "20px",
                         margin: "20px 0",
@@ -494,7 +597,7 @@ function ListingForm({ initial }) {
                       style={{
                         padding: "16px",
                         background: "#fffdf4",
-                        border: "2px dashed #ccc",
+                        border: "1px dashed #171915",
                         borderRadius: "12px",
                         textAlign: "center",
                         margin: "16px 0",
@@ -646,6 +749,44 @@ export function AvailabilityPage() {
     </>
   );
 }
+function AvailabilityOccupancyTimeline({ blocks }) {
+  if (!blocks || blocks.length === 0) return null;
+
+  const chartData = blocks.slice(0, 8).map((b, idx) => ({
+    name: b.reason?.length > 14 ? `${b.reason.slice(0, 14)}…` : b.reason || `Block ${idx + 1}`,
+    quantity: b.quantity || 1,
+    type: b.booking ? "Confirmed Booking" : "Owner Blackout",
+  }));
+
+  return (
+    <div className="feature-chart-panel" style={{ background: "#FAF8F5", margin: "14px 0" }}>
+      <div className="feature-chart-header">
+        <div>
+          <span className="eyebrow" style={{ color: "#7B61A8", marginBottom: 2 }}>OCCUPANCY DENSITY</span>
+          <h4 className="feature-chart-title">Reserved Units by Block Event</h4>
+        </div>
+        <span className="badge" style={{ background: "#FFE66D", border: "1px solid #171915" }}>
+          {blocks.length} Active Blocks
+        </span>
+      </div>
+      <div style={{ width: "100%", height: 160 }}>
+        <ResponsiveContainer>
+          <BarChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E0CF" />
+            <XAxis dataKey="name" stroke="#171915" tick={{ fontSize: 10, fontWeight: 700 }} />
+            <YAxis stroke="#171915" tick={{ fontSize: 10 }} />
+            <Tooltip
+              formatter={(val, name, item) => [`${val} Units (${item.payload.type})`, "Reserved Volume"]}
+              contentStyle={{ background: "#fffef8", border: "1px solid #171915", borderRadius: 8, fontWeight: 700 }}
+            />
+            <Bar dataKey="quantity" fill="#FF6B6B" stroke="#171915" strokeWidth={1} radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
 function AvailabilityDetail({ id }) {
   const blocks = useData(`/listings/${id}/availability`);
   return (
@@ -679,31 +820,34 @@ function AvailabilityDetail({ id }) {
         <State resource={blocks}>
           {(data) =>
             data.length ? (
-              data.map((b) => (
-                <article className="panel" key={b._id}>
-                  <Badge>
-                    {b.booking ? "Confirmed booking" : "Owner block"}
-                  </Badge>
-                  <h3>{b.reason}</h3>
-                  <p>
-                    {date(b.start)} → {date(b.end)}
-                  </p>
-                  <p>{b.quantity} units reserved</p>
-                  {!b.booking && (
-                    <Action
-                      className="quiet"
-                      run={async () => {
-                        await api(`/listings/${id}/availability/${b._id}`, {
-                          method: "DELETE",
-                        });
-                        await blocks.reload();
-                      }}
-                    >
-                      Remove block
-                    </Action>
-                  )}
-                </article>
-              ))
+              <>
+                <AvailabilityOccupancyTimeline blocks={data} />
+                {data.map((b) => (
+                  <article className="panel" key={b._id}>
+                    <Badge>
+                      {b.booking ? "Confirmed booking" : "Owner block"}
+                    </Badge>
+                    <h3>{b.reason}</h3>
+                    <p>
+                      {date(b.start)} → {date(b.end)}
+                    </p>
+                    <p>{b.quantity} units reserved</p>
+                    {!b.booking && (
+                      <Action
+                        className="quiet"
+                        run={async () => {
+                          await api(`/listings/${id}/availability/${b._id}`, {
+                            method: "DELETE",
+                          });
+                          await blocks.reload();
+                        }}
+                      >
+                        Remove block
+                      </Action>
+                    )}
+                  </article>
+                ))}
+              </>
             ) : (
               <Empty
                 title="A clear calendar."

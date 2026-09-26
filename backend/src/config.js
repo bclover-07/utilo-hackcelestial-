@@ -12,6 +12,7 @@ export const config = {
   jwt: process.env.JWT_SECRET,
   origin: process.env.FRONTEND_ORIGIN || "http://localhost:3000",
   production: process.env.NODE_ENV === "production",
+  allowMemoryDb: process.env.ALLOW_MEMORY_DB === "true",
 };
 export function validateConfig() {
   if (!config.mongo || !config.jwt || config.jwt.length < 32)

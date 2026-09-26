@@ -14,15 +14,19 @@ class ApiFailure implements Exception {
 
 class Api {
   Api({String? baseUrl, bool persistSession = true}) {
+    // When adb reverse tcp:4000 tcp:4000 is active, localhost:4000 works on physical Android USB devices
     final defaultHost = (kIsWeb ||
             defaultTargetPlatform == TargetPlatform.windows ||
             defaultTargetPlatform == TargetPlatform.macOS ||
             defaultTargetPlatform == TargetPlatform.linux ||
             defaultTargetPlatform == TargetPlatform.iOS)
-        ? 'http://localhost:4000/api'
-        : 'http://10.0.2.2:4000/api';
+        ? 'http://127.0.0.1:4000/api'
+        : 'http://127.0.0.1:4000/api';
     const envUrl = String.fromEnvironment('API_BASE_URL');
-    final url = baseUrl ?? (envUrl.isNotEmpty ? envUrl : defaultHost);
+    var url = baseUrl ?? (envUrl.isNotEmpty ? envUrl : defaultHost);
+    if (!kIsWeb && url.contains('localhost')) {
+      url = url.replaceFirst('localhost', '127.0.0.1');
+    }
     final uri = Uri.parse(url);
     if (!uri.hasAuthority || !['http', 'https'].contains(uri.scheme)) {
       throw ArgumentError(

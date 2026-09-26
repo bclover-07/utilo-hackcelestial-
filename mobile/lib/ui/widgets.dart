@@ -568,3 +568,342 @@ class _FieldsFormState extends State<FieldsForm> {
     ),
   );
 }
+
+class DottedBackgroundPainter extends CustomPainter {
+  const DottedBackgroundPainter();
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0x18272b18)
+      ..style = PaintingStyle.fill;
+    const spacing = 22.0;
+    const radius = 1.2;
+    for (double x = spacing / 2; x < size.width; x += spacing) {
+      for (double y = spacing / 2; y < size.height; y += spacing) {
+        canvas.drawCircle(Offset(x, y), radius, paint);
+      }
+    }
+  }
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class DottedScaffoldBackground extends StatelessWidget {
+  const DottedScaffoldBackground({super.key, required this.child});
+  final Widget child;
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+        painter: const DottedBackgroundPainter(),
+        child: child,
+      );
+}
+
+class NeoButton extends StatefulWidget {
+  const NeoButton({
+    super.key,
+    required this.text,
+    required this.onPressed,
+    this.color = yellow,
+    this.textColor = ink,
+    this.icon,
+    this.trailingIcon,
+    this.isFullWidth = false,
+    this.fontSize = 15,
+    this.padding = const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+  });
+  final String text;
+  final VoidCallback? onPressed;
+  final Color color;
+  final Color textColor;
+  final IconData? icon;
+  final IconData? trailingIcon;
+  final bool isFullWidth;
+  final double fontSize;
+  final EdgeInsets padding;
+  @override
+  State<NeoButton> createState() => _NeoButtonState();
+}
+
+class _NeoButtonState extends State<NeoButton> {
+  bool _pressed = false;
+  @override
+  Widget build(BuildContext context) {
+    final child = GestureDetector(
+      onTapDown: widget.onPressed != null ? (_) => setState(() => _pressed = true) : null,
+      onTapUp: widget.onPressed != null ? (_) => setState(() => _pressed = false) : null,
+      onTapCancel: widget.onPressed != null ? () => setState(() => _pressed = false) : null,
+      onTap: widget.onPressed,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 100),
+        transform: Matrix4.translationValues(_pressed ? 2 : 0, _pressed ? 3 : 0, 0),
+        padding: widget.padding,
+        decoration: BoxDecoration(
+          color: widget.onPressed == null ? Colors.grey.shade300 : widget.color,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: ink, width: 2.5),
+          boxShadow: [
+            BoxShadow(
+              color: ink,
+              offset: _pressed ? const Offset(1, 1) : const Offset(3, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: widget.isFullWidth ? MainAxisSize.max : MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (widget.icon != null) ...[
+              Icon(widget.icon, size: widget.fontSize + 3, color: widget.textColor),
+              const SizedBox(width: 8),
+            ],
+            Flexible(
+              child: Text(
+                widget.text,
+                style: TextStyle(
+                  fontFamily: 'SpaceGrotesk',
+                  fontWeight: FontWeight.w900,
+                  fontSize: widget.fontSize,
+                  color: widget.textColor,
+                ),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (widget.trailingIcon != null) ...[
+              const SizedBox(width: 8),
+              Icon(widget.trailingIcon, size: widget.fontSize + 3, color: widget.textColor),
+            ],
+          ],
+        ),
+      ),
+    );
+    return widget.isFullWidth ? SizedBox(width: double.infinity, child: child) : child;
+  }
+}
+
+class NeoBadge extends StatelessWidget {
+  const NeoBadge({
+    super.key,
+    required this.text,
+    this.color = lavender,
+    this.textColor = ink,
+    this.fontSize = 11,
+    this.hasLiveDot = false,
+    this.icon,
+  });
+  final String text;
+  final Color color;
+  final Color textColor;
+  final double fontSize;
+  final bool hasLiveDot;
+  final IconData? icon;
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: ink, width: 1.8),
+          boxShadow: const [BoxShadow(color: ink, offset: Offset(1.5, 1.5))],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (hasLiveDot) ...[
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Color(0xff16a34a),
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 6),
+            ] else if (icon != null) ...[
+              Icon(icon, size: 14, color: textColor),
+              const SizedBox(width: 5),
+            ],
+            Flexible(
+              child: Text(
+                text,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style: TextStyle(
+                  fontFamily: 'SpaceGrotesk',
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.6,
+                  color: textColor,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
+class NeoStatCard extends StatelessWidget {
+  const NeoStatCard({
+    super.key,
+    required this.tag,
+    required this.value,
+    required this.label,
+    required this.bg,
+  });
+  final String tag, value, label;
+  final Color bg;
+  @override
+  Widget build(BuildContext context) => Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: ink, width: 2.5),
+          boxShadow: const [BoxShadow(color: ink, offset: Offset(3, 4))],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                NeoBadge(text: tag, color: Colors.white, hasLiveDot: true),
+                const Icon(Icons.arrow_outward, size: 18, color: ink),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              value,
+              style: const TextStyle(
+                fontFamily: 'SpaceGrotesk',
+                fontSize: 32,
+                fontWeight: FontWeight.w900,
+                color: ink,
+                height: 1.05,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: ink,
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
+class NeoAccordion extends StatefulWidget {
+  const NeoAccordion({
+    super.key,
+    required this.question,
+    required this.answer,
+    this.initialOpen = false,
+  });
+  final String question;
+  final String answer;
+  final bool initialOpen;
+  @override
+  State<NeoAccordion> createState() => _NeoAccordionState();
+}
+
+class _NeoAccordionState extends State<NeoAccordion> {
+  late bool _isOpen = widget.initialOpen;
+  @override
+  Widget build(BuildContext context) => Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: ink, width: 2.2),
+          boxShadow: const [BoxShadow(color: ink, offset: Offset(3, 3))],
+        ),
+        child: Column(
+          children: [
+            InkWell(
+              onTap: () => setState(() => _isOpen = !_isOpen),
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.question,
+                        style: const TextStyle(
+                          fontFamily: 'SpaceGrotesk',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: ink,
+                        ),
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: _isOpen ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: const Icon(Icons.keyboard_arrow_down, size: 24, color: ink),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (_isOpen)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xfffff4d4),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: ink, width: 1.5),
+                  ),
+                  child: Text(
+                    widget.answer,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      height: 1.5,
+                      fontWeight: FontWeight.w500,
+                      color: ink,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+}
+
+class NeoMarqueeStrip extends StatelessWidget {
+  const NeoMarqueeStrip({super.key});
+  @override
+  Widget build(BuildContext context) => Container(
+        margin: const EdgeInsets.symmetric(vertical: 20),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: ink,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: const [BoxShadow(color: yellow, offset: Offset(3, 3))],
+        ),
+        child: const SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              Text('LESS WASTE', style: TextStyle(color: yellow, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+              Padding(padding: EdgeInsets.symmetric(horizontal: 10), child: Text('✳', style: TextStyle(color: pink))),
+              Text('MORE OPPORTUNITY', style: TextStyle(color: teal, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+              Padding(padding: EdgeInsets.symmetric(horizontal: 10), child: Text('✳', style: TextStyle(color: pink))),
+              Text('LOCAL CONNECTIONS', style: TextStyle(color: lavender, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+              Padding(padding: EdgeInsets.symmetric(horizontal: 10), child: Text('✳', style: TextStyle(color: pink))),
+              Text('SHARED POSSIBILITIES', style: TextStyle(color: yellow, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+              Padding(padding: EdgeInsets.symmetric(horizontal: 10), child: Text('✳', style: TextStyle(color: pink))),
+            ],
+          ),
+        ),
+      );
+}
+

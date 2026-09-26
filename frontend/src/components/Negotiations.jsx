@@ -11,10 +11,13 @@ import {
   ResponsiveContainer,
   LineChart,
   Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   Tooltip,
   CartesianGrid,
+  Cell,
 } from "recharts";
 import {
   useData,
@@ -29,6 +32,36 @@ import {
   date,
 } from "./ui";
 
+function ZopaDistributionChart({ zopa }) {
+  if (!zopa) return null;
+  const data = [
+    { name: "Seeker Target", amount: zopa.min, color: "#4ECDC4" },
+    { name: "Current Offer", amount: zopa.current, color: "#FFE66D" },
+    { name: "Provider Ask", amount: zopa.max, color: "#FF6B6B" },
+  ];
+
+  return (
+    <div style={{ width: "100%", height: 140, marginTop: "10px" }}>
+      <ResponsiveContainer>
+        <BarChart data={data} layout="vertical">
+          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E5E0CF" />
+          <XAxis type="number" stroke="#171915" tick={{ fontSize: 10 }} tickFormatter={(v) => `₹${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
+          <YAxis dataKey="name" type="category" stroke="#171915" width={95} tick={{ fontSize: 10, fontWeight: 700 }} />
+          <Tooltip
+            formatter={(val) => [money(val), "Rate"]}
+            contentStyle={{ background: "#fffef8", border: "1px solid #171915", borderRadius: 8, fontWeight: 700 }}
+          />
+          <Bar dataKey="amount" stroke="#171915" strokeWidth={1} radius={[0, 4, 4, 0]}>
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 function OfferConvergenceChart({ offers }) {
   if (!offers || offers.length < 2) return null;
   const data = offers.map((o, i) => ({
@@ -38,13 +71,13 @@ function OfferConvergenceChart({ offers }) {
     conditions: o.conditions,
   }));
   return (
-    <div style={{ margin: "1rem 0 1.25rem", padding: "1rem", background: "#FAF8F5", borderRadius: "16px", border: "2px solid #20201e", boxShadow: "3px 3px 0 #20201e" }}>
+    <div style={{ margin: "1rem 0 1.25rem", padding: "1rem", background: "#FAF8F5", borderRadius: "16px", border: "1px solid #20201e", boxShadow: "3px 3px 0 #20201e" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.6rem" }}>
         <div>
           <span className="eyebrow" style={{ color: "#7B61A8" }}>PRICE CONVERGENCE</span>
           <h4 style={{ margin: "2px 0 0", fontSize: "1rem" }}>Offer Trajectory ({offers.length} Rounds)</h4>
         </div>
-        <span className="badge" style={{ background: "#A8E6CF", border: "2px solid #20201e" }}>
+        <span className="badge" style={{ background: "#A8E6CF", border: "1px solid #20201e" }}>
           {money(offers[0].price)} → {money(offers.at(-1).price)}
         </span>
       </div>
@@ -57,15 +90,15 @@ function OfferConvergenceChart({ offers }) {
             <Tooltip
               formatter={(val) => [money(val), "Offer Price"]}
               labelFormatter={(label) => label}
-              contentStyle={{ background: "#fffef8", border: "2px solid #20201e", borderRadius: 10, fontWeight: 700 }}
+              contentStyle={{ background: "#fffef8", border: "1px solid #20201e", borderRadius: 10, fontWeight: 700 }}
             />
             <Line
               type="monotone"
               dataKey="price"
               stroke="#20201e"
-              strokeWidth={3}
-              dot={{ r: 5, fill: "#FFE66D", stroke: "#20201e", strokeWidth: 2 }}
-              activeDot={{ r: 7, fill: "#4ECDC4" }}
+              strokeWidth={2}
+              dot={{ r: 4, fill: "#FFE66D", stroke: "#20201e", strokeWidth: 1 }}
+              activeDot={{ r: 6, fill: "#4ECDC4" }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -220,16 +253,16 @@ function QuoteDetail({ q, reload }) {
           <Badge>{q.status}</Badge>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", margin: "10px 0 16px" }}>
-          <span className="badge" style={{ background: "#89CFF040", border: "1.5px solid #20201e" }}>
+          <span className="badge" style={{ background: "#89CFF040", border: "1px solid #20201e" }}>
             👤 Provider: <strong>{q.provider?.name}</strong>
           </span>
-          <span className="badge" style={{ background: "#FFE66D40", border: "1.5px solid #20201e" }}>
+          <span className="badge" style={{ background: "#FFE66D40", border: "1px solid #20201e" }}>
             🤝 Seeker: <strong>{q.seeker?.name}</strong>
           </span>
-          <span className="badge" style={{ background: "#C3B1E140", border: "1.5px solid #20201e" }}>
+          <span className="badge" style={{ background: "#C3B1E140", border: "1px solid #20201e" }}>
             📅 {date(q.request?.start)} → {date(q.request?.end)}
           </span>
-          <span className="badge" style={{ background: "#A8E6CF40", border: "1.5px solid #20201e" }}>
+          <span className="badge" style={{ background: "#A8E6CF40", border: "1px solid #20201e" }}>
             📦 {q.request?.items[q.itemIndex]?.quantity || 1} units requested
           </span>
         </div>
@@ -347,24 +380,25 @@ function QuoteDetail({ q, reload }) {
         {advice && (
           <div style={{ marginTop: "1rem" }}>
             {advice.zopa && (
-              <div style={{ background: "#fff", padding: "1.2rem", borderRadius: "16px", border: "2.5px solid #171915", marginBottom: "1rem", boxShadow: "3px 3px 0 #171915" }}>
+              <div style={{ background: "#fff", padding: "1.2rem", borderRadius: "16px", border: "1px solid #171915", marginBottom: "1rem", boxShadow: "3px 3px 0 #171915" }}>
                 <span className="eyebrow" style={{ fontSize: "0.75rem", letterSpacing: "0.08em" }}>BILATERAL BARGAINING ZONE (ZOPA)</span>
                 <div style={{ display: "flex", justifyContent: "space-between", margin: "0.5rem 0", fontSize: "0.9rem" }}>
                   <span>Seeker Target: <strong>{money(advice.zopa.min)}</strong></span>
                   <span>Agreement Alignment: <strong>{advice.zopa.convergence}%</strong></span>
                   <span>Provider Asking: <strong>{money(advice.zopa.max)}</strong></span>
                 </div>
-                <div style={{ width: "100%", height: "12px", background: "#e0e0e0", borderRadius: "6px", overflow: "hidden", border: "1.5px solid #171915" }}>
+                <div style={{ width: "100%", height: "12px", background: "#e0e0e0", borderRadius: "6px", overflow: "hidden", border: "1px solid #171915" }}>
                   <div style={{ width: `${advice.zopa.convergence}%`, height: "100%", background: advice.zopa.convergence > 70 ? "#4caf50" : "#2196f3", borderRadius: "5px" }} />
                 </div>
-                <small style={{ color: "#666", display: "block", marginTop: "0.4rem" }}>
+                <ZopaDistributionChart zopa={advice.zopa} />
+                <small style={{ color: "#666", display: "block", marginTop: "0.6rem" }}>
                   {advice.zopa.status} · Current offer is {money(advice.zopa.current)}
                 </small>
               </div>
             )}
 
             {advice.protection?.flags && (
-              <div style={{ background: "#fff", padding: "1.2rem", borderRadius: "16px", border: "2.5px solid #171915", marginBottom: "1rem", boxShadow: "3px 3px 0 #171915" }}>
+              <div style={{ background: "#fff", padding: "1.2rem", borderRadius: "16px", border: "1px solid #171915", marginBottom: "1rem", boxShadow: "3px 3px 0 #171915" }}>
                 <span className="eyebrow" style={{ fontSize: "0.75rem", letterSpacing: "0.08em" }}>CONTRACT & DISPUTE PROTECTION</span>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.5rem" }}>
                   {advice.protection.flags.map((flag, idx) => (
@@ -381,12 +415,12 @@ function QuoteDetail({ q, reload }) {
             )}
 
             {advice.counterOffers?.length > 0 && (
-              <div style={{ background: "#fff", padding: "1.2rem", borderRadius: "16px", border: "2.5px solid #171915", marginBottom: "1rem", boxShadow: "3px 3px 0 #171915" }}>
+              <div style={{ background: "#fff", padding: "1.2rem", borderRadius: "16px", border: "1px solid #171915", marginBottom: "1rem", boxShadow: "3px 3px 0 #171915" }}>
                 <span className="eyebrow" style={{ fontSize: "0.75rem", letterSpacing: "0.08em" }}>AUTONOMOUS COUNTER-OFFER BLUEPRINTS</span>
                 <p style={{ fontSize: "0.85rem", color: "#666", margin: "0.25rem 0 0.75rem 0" }}>Click any strategy to pre-populate the counter-offer form above:</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
                   {advice.counterOffers.map((co, idx) => (
-                    <div key={idx} style={{ border: "2px solid #171915", borderRadius: "12px", padding: "0.75rem", background: "#fafafa", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem", boxShadow: "2px 2px 0 #171915" }}>
+                    <div key={idx} style={{ border: "1px solid #171915", borderRadius: "12px", padding: "0.75rem", background: "#fafafa", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem", boxShadow: "2px 2px 0 #171915" }}>
                       <div style={{ maxWidth: "70%" }}>
                         <strong style={{ fontSize: "0.95rem" }}>{co.label}</strong>
                         <p style={{ margin: "0.2rem 0 0.2rem 0", fontSize: "0.85rem", color: "#444" }}>{co.rationale}</p>
@@ -421,7 +455,7 @@ function QuoteDetail({ q, reload }) {
               className="badge"
               style={{
                 background: "#A8E6CF",
-                border: "1.5px solid #20201e",
+                border: "1px solid #20201e",
                 fontSize: "0.75rem",
                 display: "inline-flex",
                 alignItems: "center",
@@ -447,7 +481,7 @@ function QuoteDetail({ q, reload }) {
               className="badge"
               style={{
                 background: "#FFE66D40",
-                border: "1.5px solid #20201e",
+                border: "1px solid #20201e",
                 fontSize: "0.75rem",
                 padding: "3px 8px",
               }}

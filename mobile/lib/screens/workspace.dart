@@ -153,11 +153,14 @@ class _WorkspaceState extends State<Workspace> {
                   children: [
                     const Icon(Icons.translate, size: 22, color: ink),
                     const SizedBox(width: 8),
-                    const Text(
-                      'Choose Language / भाषा',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                    const Expanded(
+                      child: Text(
+                        'Choose Language / भाषा',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    const Spacer(),
+                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
@@ -165,9 +168,9 @@ class _WorkspaceState extends State<Workspace> {
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: ink, width: 1.5),
                       ),
-                      child: Text(
+                      child: const Text(
                         '14 Languages',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
                       ),
                     ),
                   ],
@@ -266,35 +269,39 @@ class _WorkspaceState extends State<Workspace> {
       key: _scaffoldKey,
       appBar: AppBar(
         titleSpacing: 4,
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'utlio ✳',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-              decoration: BoxDecoration(
-                color: s.admin
-                    ? Colors.purple.shade700
-                    : s.mode == 'provider'
-                    ? const Color(0xFF0F766E)
-                    : const Color(0xFF1D4ED8),
-                borderRadius: BorderRadius.circular(6),
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'utlio ✳',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
               ),
-              child: Text(
-                s.admin ? 'ADMIN' : s.mode.toUpperCase(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.5,
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: s.admin
+                      ? Colors.purple.shade700
+                      : s.mode == 'provider'
+                      ? const Color(0xFF0F766E)
+                      : const Color(0xFF1D4ED8),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  s.admin ? 'ADMIN' : s.mode.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           if (!s.admin)
@@ -302,25 +309,25 @@ class _WorkspaceState extends State<Workspace> {
               borderRadius: BorderRadius.circular(10),
               onTap: isSwitchingMode ? null : toggleMode,
               child: Container(
-                margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: yellow,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: ink, width: 1.8),
-                  boxShadow: const [BoxShadow(color: ink, offset: Offset(2, 2))],
+                  boxShadow: const [BoxShadow(color: ink, offset: Offset(1.5, 1.5))],
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     isSwitchingMode
                         ? const SizedBox(
-                            width: 14,
-                            height: 14,
+                            width: 12,
+                            height: 12,
                             child: CircularProgressIndicator(strokeWidth: 2, color: ink),
                           )
-                        : const Icon(Icons.swap_horiz_rounded, size: 16, color: ink),
-                    const SizedBox(width: 5),
+                        : const Icon(Icons.swap_horiz_rounded, size: 15, color: ink),
+                    const SizedBox(width: 4),
                     Text(
                       s.mode == 'provider' ? 'Seeker' : 'Provider',
                       style: const TextStyle(
@@ -334,16 +341,20 @@ class _WorkspaceState extends State<Workspace> {
               ),
             ),
           IconButton(
+            visualDensity: VisualDensity.compact,
+            padding: const EdgeInsets.all(6),
             tooltip: 'Language / भाषा',
-            icon: const Icon(Icons.translate, size: 20),
+            icon: const Icon(Icons.translate, size: 19),
             onPressed: () => showLanguagePicker(context),
           ),
           IconButton(
+            visualDensity: VisualDensity.compact,
+            padding: const EdgeInsets.all(6),
             tooltip: 'Alerts',
-            icon: const Icon(Icons.notifications_outlined, size: 20),
+            icon: const Icon(Icons.notifications_outlined, size: 19),
             onPressed: () => go('notifications'),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 4),
         ],
       ),
       drawer: Drawer(

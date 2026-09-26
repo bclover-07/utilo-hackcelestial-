@@ -7,6 +7,7 @@ import {
   ReactNode,
 } from "react";
 import { api } from "@/lib/api";
+import { unloadLocalAi } from "@/lib/local-ai";
 export type User = {
   _id: string;
   name: string;
@@ -56,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
     const expired = () => {
+      unloadLocalAi();
       setUser(null);
       setError("");
       setLoading(false);
@@ -95,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
   const logout = async () => {
     await api("/auth/logout", { method: "POST" });
+    unloadLocalAi();
     setUser(null);
     setError("");
   };

@@ -9,7 +9,7 @@
     "dev": "node scripts/dev.mjs",
     "build": "npm run build -w frontend",
     "lint": "npm run lint -w frontend",
-    "test": "npm test -w backend",
+    "test": "npm test -w backend && npm test -w frontend",
     "seed": "npm run seed -w backend",
     "start": "node scripts/dev.mjs --production"
   },

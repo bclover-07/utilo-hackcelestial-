@@ -33,7 +33,7 @@ api.use("/auth", authRoutes);
 
 
 api.use(auth);
-api.get("/ai/local-config", (_req, res) => res.json(localAiConfig));
+api.get("/ai/local-config", (_req, res) => res.set("Cache-Control", "no-store").json(localAiConfig));
 
 api.get("/auth/me", authController.me);
 api.post("/auth/logout", authController.logout);

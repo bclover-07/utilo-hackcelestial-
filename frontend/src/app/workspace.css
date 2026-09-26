@@ -24,7 +24,7 @@
   --shadow-lg: 6px 6px 0 var(--ink);
   --shadow-xl: 8px 8px 0 var(--ink);
   --shadow-hover: 6px 8px 0 var(--ink);
-  --border-comic: 3px solid var(--ink);
+  --border-comic: 1px solid var(--ink);
 }
 * {
   box-sizing: border-box;
@@ -38,11 +38,11 @@
 }
 ::-webkit-scrollbar-track {
   background: #f7f2e7;
-  border-left: 2px solid var(--ink);
+  border-left: 1px solid var(--ink);
 }
 ::-webkit-scrollbar-thumb {
   background: var(--yellow);
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 6px;
   box-shadow: 1px 1px 0 var(--ink);
 }
@@ -98,7 +98,7 @@ button,
   gap: 8px;
   min-height: 44px;
   padding: 11px 18px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 12px;
   background: var(--teal);
   color: var(--ink);
@@ -148,7 +148,7 @@ textarea {
   min-width: 0;
   min-height: 46px;
   background: #fff;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 12px;
   padding: 10px 14px;
   color: var(--ink);
@@ -223,7 +223,7 @@ ul {
   width: 40px;
   height: 40px;
   background: var(--teal);
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 11px;
   font-size: 25px;
   box-shadow: 3px 3px 0 var(--ink);
@@ -250,7 +250,7 @@ ul {
 }
 .panel {
   background: white;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 20px;
   box-shadow: var(--shadow-md);
   padding: 25px;
@@ -273,7 +273,7 @@ ul {
   background: linear-gradient(90deg, #f0ebe0 25%, #faf5ea 50%, #f0ebe0 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 20px;
 }
 .glass {
@@ -413,19 +413,19 @@ ul {
 }
 .stack {
   display: grid;
-  gap: 22px;
+  gap: 28px;
   align-content: start;
 }
 .actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 .action-wrap {
   display: inline-flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   max-width: 100%;
 }
 .action-wrap small {
@@ -435,25 +435,25 @@ ul {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 24px;
-  margin-bottom: 30px;
+  gap: 28px;
+  margin-bottom: 34px;
 }
 .page-heading p {
-  margin: 8px 0 0;
+  margin: 10px 0 0;
   max-width: 650px;
 }
 .page-heading h1 {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 .page-heading .eyebrow {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 .section-heading {
   display: flex;
   justify-content: space-between;
-  gap: 20px;
+  gap: 22px;
   align-items: center;
-  margin: 20px 0;
+  margin: 24px 0 18px;
 }
 .section-heading h2 {
   margin: 0;
@@ -463,11 +463,11 @@ ul {
   align-items: center;
   width: fit-content;
   max-width: 100%;
-  padding: 4px 10px;
-  border: 1.5px solid var(--ink);
-  border-radius: 7px;
+  padding: 4px 12px;
+  border: 1px solid var(--ink);
+  border-radius: 8px;
   background: #fff9e8;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.6px;
   text-transform: uppercase;
@@ -476,7 +476,7 @@ ul {
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   font-size: 13px;
   font-weight: 650;
 }
@@ -485,21 +485,21 @@ ul {
 }
 .form-stack {
   display: grid;
-  gap: 17px;
-  margin-top: 20px;
+  gap: 22px;
+  margin-top: 24px;
 }
 .form-stack > button {
   justify-self: start;
 }
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
 }
 .check {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   font-size: 13px;
 }
 .hint {
@@ -509,29 +509,31 @@ ul {
 .error {
   color: #9c2020;
   background: #fff0ed;
-  padding: 10px;
-  border-radius: 8px;
+  padding: 12px 16px;
+  border: 1px solid var(--ink);
+  border-radius: 10px;
   white-space: pre-wrap;
 }
 .success {
   color: #176045;
   background: #e8fbef;
-  padding: 10px;
-  border-radius: 8px;
+  padding: 12px 16px;
+  border: 1px solid var(--ink);
+  border-radius: 10px;
 }
 .notice {
   background: #fff4c4;
-  padding: 16px;
-  border-radius: 12px;
+  padding: 20px;
+  border-radius: 14px;
   border: 1px solid var(--ink);
-  margin: 18px 0;
+  margin: 22px 0;
 }
 .state {
-  padding: 55px;
+  padding: 60px 20px;
   text-align: center;
 }
 .empty {
-  padding: 45px;
+  padding: 50px 24px;
   text-align: center;
   box-shadow: none;
   background: #fffdf7;
@@ -551,7 +553,7 @@ ul {
   font-size: 32px;
   width: 65px;
   height: 65px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 18px;
   margin-bottom: 20px;
 }
@@ -589,7 +591,7 @@ ul {
 }
 .segmented {
   display: flex;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 10px;
   overflow: hidden;
   background: #fff;
@@ -629,7 +631,7 @@ ul {
   left: 0;
   bottom: 0;
   background: #fffdf5;
-  border-right: 2px solid var(--ink);
+  border-right: 1px solid var(--ink);
   padding: 26px 17px;
   display: flex;
   flex-direction: column;
@@ -668,7 +670,7 @@ ul {
   display: flex;
   flex-direction: column;
   padding: 8px 12px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 12px;
   margin: 6px 4px 16px;
   background: var(--yellow);
@@ -709,7 +711,7 @@ ul {
   display: flex;
   align-items: center;
   gap: 12px;
-  border: 1.5px solid transparent;
+  border: 1px solid transparent;
   padding: 8px 10px;
   border-radius: 9px;
   text-decoration: none;
@@ -739,7 +741,7 @@ ul {
   padding: 20px 4px 0;
   display: grid;
   gap: 6px;
-  border-top: 1.5px dashed #d7d1c6;
+  border-top: 1px dashed #d7d1c6;
 }
 .sidebar-user-info strong {
   font-size: 12px;
@@ -760,7 +762,7 @@ ul {
 }
 .workspace-top {
   height: 74px;
-  border-bottom: 2px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
   padding: 0 35px;
   display: flex;
   align-items: center;
@@ -783,7 +785,7 @@ ul {
   display: inline-flex;
   align-items: center;
   padding: 3px 9px;
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 20px;
   font-size: 10px;
   font-weight: 800;
@@ -803,7 +805,7 @@ ul {
   width: 36px;
   height: 36px;
   background: var(--pink);
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 50%;
   text-decoration: none;
   font-weight: 800;
@@ -931,7 +933,7 @@ ul {
   position: relative;
   display: grid;
   place-items: center;
-  border-bottom: 2px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
   overflow: hidden;
 }
 .listing-cover > span:not(.badge) {
@@ -986,7 +988,7 @@ ul {
   height: 150px;
   object-fit: cover;
   border-radius: 12px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
 }
 .photo-grid button {
   font-size: 11px;
@@ -1031,7 +1033,7 @@ ul {
 }
 .bundle-items > div {
   padding: 12px;
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 12px;
   background: #fff7da;
   display: flex;
@@ -1046,7 +1048,7 @@ ul {
 }
 .item-editor {
   padding: 18px;
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 14px;
   background: #fffaf0;
   display: grid;
@@ -1200,7 +1202,7 @@ ul {
 }
 .readiness-grid > article {
   padding: 20px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 15px;
 }
 .readiness-grid .ready {
@@ -1308,7 +1310,7 @@ button.landing-mobile-toggle {
   display: inline-block;
   background: var(--yellow);
   padding: 0 12px 10px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 16px;
   transform: rotate(-2deg);
   box-shadow: 5px 5px 0 var(--ink);
@@ -1336,7 +1338,7 @@ button.landing-mobile-toggle {
   background: var(--mint);
   width: 48px;
   height: 48px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 12px;
   font-size: 25px;
 }
@@ -1353,7 +1355,7 @@ button.landing-mobile-toggle {
 .scene-frame {
   height: 100%;
   background: #e5eadb;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 48% 48% 25% 25%;
   overflow: hidden;
   background-image: radial-gradient(#bcc4b4 1px, transparent 1px);
@@ -1371,7 +1373,7 @@ button.landing-mobile-toggle {
 .hero-sticker {
   position: absolute;
   z-index: 2;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 12px;
   box-shadow: 4px 4px 0 var(--ink);
   padding: 16px 22px;
@@ -1401,7 +1403,7 @@ button.landing-mobile-toggle {
   animation: turn 35s linear infinite;
 }
 .ticker {
-  border-block: 2px solid var(--ink);
+  border-block: 1px solid var(--ink);
   background: var(--teal);
   overflow: hidden;
   padding: 16px 0;
@@ -1487,7 +1489,7 @@ button.landing-mobile-toggle {
   place-items: center;
   width: 55px;
   height: 55px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 16px;
   font-size: 29px;
 }
@@ -1496,7 +1498,7 @@ button.landing-mobile-toggle {
   grid-template-columns: 1.1fr 1fr;
   align-items: center;
   gap: 60px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 30px;
   box-shadow: 6px 6px 0 var(--ink);
   padding: 55px;
@@ -1542,7 +1544,7 @@ button.landing-mobile-toggle {
   text-align: center;
   padding: 75px 25px 100px;
   background: var(--yellow);
-  border-block: 2px solid var(--ink);
+  border-block: 1px solid var(--ink);
 }
 .landing-cta > span {
   font-size: 70px;
@@ -1581,7 +1583,7 @@ button.landing-mobile-toggle {
 .forecast-card {
   padding: 24px;
   border-radius: 20px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   box-shadow: 3px 3px 0 var(--ink);
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -1600,7 +1602,7 @@ button.landing-mobile-toggle {
 }
 .heatmap-cell {
   padding: 14px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 14px;
   text-align: center;
   font-size: 12px;
@@ -1644,7 +1646,7 @@ button.landing-mobile-toggle {
   align-items: center;
   gap: 16px;
   padding: 16px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 14px;
   background: #fffbf2;
 }
@@ -1663,7 +1665,7 @@ button.landing-mobile-toggle {
   height: 22px;
   background: var(--ink);
   border-radius: 50%;
-  border: 3px solid white;
+  border: 1px solid white;
   transform: translateX(-50%);
 }
 .sentiment-dot {
@@ -1699,7 +1701,7 @@ button.landing-mobile-toggle {
 }
 .pulse-card {
   padding: 22px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 18px;
   box-shadow: 3px 3px 0 var(--ink);
   display: flex;
@@ -1727,7 +1729,7 @@ button.landing-mobile-toggle {
   align-items: center;
   gap: 12px;
   padding: 16px 20px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 14px;
   box-shadow: 3px 3px 0 var(--ink);
 }
@@ -1735,7 +1737,7 @@ button.landing-mobile-toggle {
   flex: 1;
   height: 14px;
   border-radius: 7px;
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--ink);
   background: #eee;
   overflow: hidden;
 }
@@ -1760,7 +1762,7 @@ button.landing-mobile-toggle {
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 10px;
   font-size: 12px;
   font-weight: 600;
@@ -1775,7 +1777,7 @@ button.landing-mobile-toggle {
   width: 26px;
   height: 26px;
   border-radius: 8px;
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--ink);
   display: grid;
   place-items: center;
   font-size: 14px;
@@ -1784,7 +1786,7 @@ button.landing-mobile-toggle {
 .liquidity-bar {
   display: flex;
   height: 32px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 10px;
   overflow: hidden;
   margin: 6px 0;
@@ -1813,7 +1815,7 @@ button.landing-mobile-toggle {
   align-items: center;
   gap: 8px;
   padding: 12px 16px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 12px;
   font-size: 12px;
   font-weight: 700;
@@ -1831,7 +1833,7 @@ button.landing-mobile-toggle {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 16px;
   overflow: hidden;
   font-size: 13px;
@@ -1841,7 +1843,7 @@ button.landing-mobile-toggle {
   padding: 14px 16px;
   font-size: 12px;
   text-align: left;
-  border-bottom: 2px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
 }
 .comparison-table td {
   padding: 12px 16px;
@@ -1856,7 +1858,7 @@ button.landing-mobile-toggle {
 }
 .chart-container {
   padding: 24px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 20px;
   box-shadow: 3px 3px 0 var(--ink);
   background: white;
@@ -1874,7 +1876,7 @@ button.landing-mobile-toggle {
   gap: 8px;
   padding: 10px 16px;
   min-height: 42px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 12px;
   background: var(--coral);
   font-weight: 700;
@@ -1916,7 +1918,7 @@ button.landing-mobile-toggle {
 .landing-stat {
   text-align: center;
   padding: 28px 20px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 20px;
   box-shadow: var(--shadow-md);
   transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s;
@@ -1959,7 +1961,7 @@ button.landing-mobile-toggle {
   justify-content: center;
   gap: 40px;
   padding: 30px;
-  border-block: 2px solid var(--ink);
+  border-block: 1px solid var(--ink);
   background: var(--peach);
   font-size: 13px;
   font-weight: 700;
@@ -1972,7 +1974,7 @@ button.landing-mobile-toggle {
 .trust-banner .trust-icon {
   width: 36px;
   height: 36px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 10px;
   display: grid;
   place-items: center;
@@ -1988,7 +1990,7 @@ button.landing-mobile-toggle {
 }
 .ai-node {
   padding: 12px 18px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 14px;
   font-size: 12px;
   font-weight: 750;
@@ -2297,7 +2299,7 @@ button.landing-mobile-toggle {
     left: 12px;
     right: 12px;
     background: #fffdf5;
-    border: 2px solid var(--ink);
+    border: 1px solid var(--ink);
     border-radius: 18px;
     box-shadow: 4px 5px 0 var(--ink);
     padding: 18px;
@@ -2313,7 +2315,7 @@ button.landing-mobile-toggle {
     text-decoration: none;
     padding: 10px 12px;
     border-radius: 10px;
-    border: 1.5px solid transparent;
+    border: 1px solid transparent;
     transition: all 0.15s;
   }
   .landing-mobile-drawer a:hover {
@@ -2326,7 +2328,7 @@ button.landing-mobile-toggle {
     gap: 10px;
     margin-top: 6px;
     padding-top: 12px;
-    border-top: 2px dashed #d4d1c8;
+    border-top: 1px dashed #d4d1c8;
   }
   .landing-mobile-actions .button {
     flex: 1;
@@ -2474,7 +2476,7 @@ button.landing-mobile-toggle {
 .comic-bubble {
   position: relative;
   background: white;
-  border: 3px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 18px;
   box-shadow: 4px 4px 0 var(--ink);
   padding: 14px 18px;
@@ -2500,7 +2502,7 @@ button.landing-mobile-toggle {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   padding: 6px 14px;
-  border: 2.5px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 30px;
   box-shadow: 3px 3px 0 var(--ink);
   transform: rotate(-2deg);
@@ -2518,7 +2520,7 @@ button.landing-mobile-toggle {
   font-size: 11px;
   background: var(--yellow);
   color: var(--ink);
-  border: 2.5px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 8px;
   padding: 4px 10px;
   box-shadow: 2px 2px 0 var(--ink);
@@ -2530,7 +2532,7 @@ button.landing-mobile-toggle {
   flex-direction: column;
   gap: 12px;
   background: #fffdf5;
-  border: 3px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 20px;
   box-shadow: 5px 5px 0 var(--ink);
   padding: 16px 20px;
@@ -2562,7 +2564,7 @@ button.landing-mobile-toggle {
   align-items: flex-start;
   text-align: left;
   padding: 10px 14px;
-  border: 2.5px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 12px;
   background: white;
   box-shadow: 3px 3px 0 var(--ink);
@@ -2617,7 +2619,7 @@ button.landing-mobile-toggle {
   flex-direction: column;
   gap: 8px;
   background: #fffdf5;
-  border: 2.5px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 16px;
   box-shadow: 4px 4px 0 var(--ink);
   padding: 10px 14px;
@@ -2639,7 +2641,7 @@ button.landing-mobile-toggle {
   align-items: center;
   gap: 8px;
   padding: 7px 10px;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 10px;
   background: white;
   box-shadow: 2px 2px 0 var(--ink);
@@ -2701,7 +2703,7 @@ button.landing-mobile-toggle {
   color: var(--ink);
   padding: 4px 8px;
   background: #ffe66d;
-  border: 1.5px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 6px;
 }
 
@@ -2724,7 +2726,7 @@ button.landing-mobile-toggle {
   display: inline-block;
   background: var(--yellow);
   padding: 2px 14px;
-  border: 3px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 14px;
   box-shadow: 4px 4px 0 var(--ink);
   transform: rotate(-1.5deg);
@@ -2734,7 +2736,7 @@ button.landing-mobile-toggle {
   display: inline-block;
   background: var(--pink);
   padding: 2px 14px;
-  border: 3px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 14px;
   box-shadow: 4px 4px 0 var(--ink);
   transform: rotate(1.2deg);
@@ -2748,7 +2750,7 @@ button.landing-mobile-toggle {
 }
 .comic-chaos-card {
   padding: 28px;
-  border: 3px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 20px;
   box-shadow: 5px 5px 0 var(--ink);
 }
@@ -2774,7 +2776,7 @@ button.landing-mobile-toggle {
   height: 26px;
   min-width: 26px;
   border-radius: 50%;
-  border: 2px solid var(--ink);
+  border: 1px solid var(--ink);
   background: white;
   font-weight: 900;
   font-size: 13px;
@@ -2789,7 +2791,7 @@ button.landing-mobile-toggle {
   margin-top: 25px;
 }
 .comic-cat-card {
-  border: 3px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 18px;
   box-shadow: 4px 4px 0 var(--ink);
   padding: 22px;
@@ -2809,7 +2811,7 @@ button.landing-mobile-toggle {
   display: grid;
   place-items: center;
   background: white;
-  border: 2.5px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 14px;
   font-size: 24px;
   box-shadow: 2px 2px 0 var(--ink);
@@ -2826,7 +2828,7 @@ button.landing-mobile-toggle {
 .comic-story-card {
   position: relative;
   background: white;
-  border: 3px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 20px;
   box-shadow: 5px 5px 0 var(--ink);
   padding: 26px 22px;
@@ -2838,7 +2840,7 @@ button.landing-mobile-toggle {
   top: -14px;
   left: 20px;
   background: var(--yellow);
-  border: 2.5px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 20px;
   padding: 4px 14px;
   font-family: var(--font-space), Arial, sans-serif;
@@ -2856,7 +2858,7 @@ button.landing-mobile-toggle {
 }
 .agent-card {
   background: white;
-  border: 3px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 18px;
   box-shadow: 4px 4px 0 var(--ink);
   padding: 20px;
@@ -2879,7 +2881,7 @@ button.landing-mobile-toggle {
 
 .simulator-sandbox {
   background: #fffdf5;
-  border: 3px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 24px;
   box-shadow: 6px 6px 0 var(--ink);
   padding: 30px;
@@ -2893,7 +2895,7 @@ button.landing-mobile-toggle {
 }
 .sim-preset-btn {
   padding: 9px 16px;
-  border: 2.5px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 12px;
   background: white;
   font-weight: 750;
@@ -2915,7 +2917,7 @@ button.landing-mobile-toggle {
   margin-top: 18px;
 }
 .sim-item-card {
-  border: 2.5px solid var(--ink);
+  border: 1px solid var(--ink);
   border-radius: 16px;
   padding: 16px;
   box-shadow: 3px 3px 0 var(--ink);
@@ -3066,6 +3068,102 @@ button.landing-mobile-toggle {
   .auth-story .panel {
     padding: 18px;
   }
+}
+
+/* Feature Output Visuals & Chart Containers */
+.feature-chart-panel {
+  margin: 1.25rem 0;
+  padding: 1.25rem;
+  background: #faf8f5;
+  border-radius: 16px;
+  border: 1px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.feature-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+.feature-chart-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+.feature-flow-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 12px 4px;
+  margin: 12px 0;
+}
+.feature-flow-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #fff;
+  border: 1px solid var(--ink);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 750;
+  white-space: nowrap;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.feature-flow-step.active {
+  background: var(--yellow);
+}
+.feature-flow-step.done {
+  background: var(--mint);
+}
+.feature-flow-arrow {
+  color: #777;
+  font-weight: 900;
+  font-size: 1rem;
+}
+.feature-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin: 14px 0;
+}
+.feature-metric-card {
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 2px 2px 0 var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.feature-metric-card span {
+  font-size: 0.75rem;
+  font-weight: 750;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.feature-metric-card strong {
+  font-size: 1.15rem;
+  color: var(--ink);
+  font-family: var(--font-space), Arial, sans-serif;
+}
+.feature-metric-card small {
+  font-size: 0.75rem;
+  color: #555;
+}
+.chart-tooltip-neo {
+  background: #fffef8;
+  border: 1px solid var(--ink);
+  border-radius: 10px;
+  padding: 8px 12px;
+  box-shadow: 2px 2px 0 var(--ink);
+  font-weight: 750;
+  font-size: 0.85rem;
 }
 
 @media (prefers-reduced-motion: reduce) {

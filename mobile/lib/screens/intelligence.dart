@@ -38,18 +38,54 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         : section == 'performance'
         ? '/analytics/provider-performance'
         : '/analytics?mode=${widget.session.mode}';
+    final userName = (widget.session.user?['name']?.toString() ?? 'Friend').split(' ').take(2).join(' ');
+    final pageTitle = section == 'analytics'
+        ? 'See the whole marketplace.'
+        : section == 'market-pulse'
+        ? 'The market, right now.'
+        : section == 'performance'
+        ? 'Your service, in perspective.'
+        : widget.session.admin
+        ? 'Keep the exchange moving.'
+        : 'Hello, $userName.';
+    final pageSubtitle = section == 'analytics'
+        ? 'Observed demand, supply and booking activity. Independent activity counts are not a conversion funnel.'
+        : section == 'market-pulse'
+        ? 'Live records from your workspace. Empty data remains empty.'
+        : section == 'performance'
+        ? 'Your service, in perspective.'
+        : widget.session.admin
+        ? 'A clear view of your marketplace, powered by actual activity.'
+        : widget.session.mode == 'provider'
+        ? 'Turn your spare resources into someone’s next great event.'
+        : 'Your next event starts with the right neighbours.';
+
     return PageBody(
-      title: section == 'analytics'
-          ? 'See the whole marketplace.'
-          : section == 'market-pulse'
-          ? 'The market, right now.'
-          : section == 'performance'
-          ? 'Your service, in perspective.'
-          : 'Less idle. More possible.',
-      subtitle: section == 'analytics'
-          ? 'Observed demand, supply and booking activity. Independent activity counts are not a conversion funnel.'
-          : 'Live records from your workspace. Empty data remains empty.',
+      title: pageTitle,
+      subtitle: pageSubtitle,
       children: [
+        if (section == '' && !widget.session.admin) ...[
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: NeoButton(
+                    text: widget.session.mode == 'provider'
+                        ? '+ List a resource ↗'
+                        : '+ Post a request ↗',
+                    color: yellow,
+                    fontSize: 14,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+                    onPressed: () => widget.onNavigate(
+                      widget.session.mode == 'provider' ? 'listings' : 'requests',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         if (section == 'analytics')
           Panel(
             child: FieldsForm(
@@ -93,76 +129,19 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               ),
               const SizedBox(height: 18),
               if (section == '') ...[
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 8,
-                  children: [
-                    for (final key in [
-                      'listings',
-                      'requests',
-                      'quotes',
-                      'businesses',
-                      'searches',
-                      'totalValue',
-                      'fulfillmentRate',
-                    ])
-                      if (data[key] != null)
-                        SizedBox(
-                          width: 220,
-                          child: Panel(
-                            color: palette[key.length % 5],
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  label(key),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                Text(
-                                  key == 'totalValue'
-                                      ? '₹${data[key]}'
-                                      : key == 'fulfillmentRate'
-                                      ? '${data[key]}%'
-                                      : '${data[key]}',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 30,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                  ],
+                _ActivityPipelineVisual(
+                  data: data,
+                  admin: widget.session.admin,
+                  mode: widget.session.mode,
+                  user: widget.session.user,
                 ),
-                Wrap(
-                  spacing: 12,
-                  children: [
-                    FilledButton(
-                      onPressed: () => widget.onNavigate(
-                        widget.session.admin
-                            ? 'verifications'
-                            : widget.session.mode == 'provider'
-                            ? 'listings'
-                            : 'search',
-                      ),
-                      child: Text(
-                        widget.session.admin
-                            ? 'Review verification queue'
-                            : widget.session.mode == 'provider'
-                            ? 'Manage resources'
-                            : 'Discover resources',
-                      ),
-                    ),
-                    FilledButton(
-                      onPressed: () => widget.onNavigate('agents'),
-                      child: const Text('Open Agent Studio'),
-                    ),
-                  ],
+                const SizedBox(height: 16),
+                _RoleCommandDeck(
+                  admin: widget.session.admin,
+                  mode: widget.session.mode,
+                  onNavigate: widget.onNavigate,
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 Bars(
                   title: 'Monthly agreed booking value (INR)',
                   rows: records(data['trend']),
@@ -383,6 +362,329 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             ],
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _ActivityPipelineVisual extends StatelessWidget {
+  const _ActivityPipelineVisual({
+    required this.data,
+    required this.admin,
+    required this.mode,
+    required this.user,
+  });
+  final Json data;
+  final bool admin;
+  final String mode;
+  final Json? user;
+
+  @override
+  Widget build(BuildContext context) {
+    final seeker = !admin && mode == 'seeker';
+    final stages = [
+      {
+        'step': '01',
+        'badge': admin ? 'Supply Pool' : seeker ? 'Saved Supply' : 'Active Inventory',
+        'val': admin ? '${data['businesses'] ?? 0}' : seeker ? '${(user?['favorites'] as List?)?.length ?? 0}' : '${data['listings'] ?? 0}',
+        'label': admin ? 'Registered businesses' : seeker ? 'Saved items to book' : 'Listed resources',
+        'color': yellow,
+      },
+      {
+        'step': '02',
+        'badge': 'In Negotiation',
+        'val': '${data['quotes'] ?? 0}',
+        'label': 'Active RFQ threads',
+        'color': teal,
+      },
+      {
+        'step': '03',
+        'badge': 'Agreed booking value',
+        'val': '₹${data['totalValue'] ?? 0}',
+        'label': 'Committed exchange value',
+        'color': lavender,
+      },
+      {
+        'step': '04',
+        'badge': 'Request fulfilment',
+        'val': data['fulfillmentRate'] == null ? 'No requests yet' : '${data['fulfillmentRate']}%',
+        'label': 'Fully confirmed requirements',
+        'meter': data['fulfillmentRate'] is num ? (data['fulfillmentRate'] as num).toDouble() : null,
+        'color': mint,
+      },
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final st in stages)
+          Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: card,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: ink, width: 2),
+              boxShadow: neoShadowMd,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 6,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: st['color'] as Color,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: (st['color'] as Color).withValues(alpha: 0.35),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: ink, width: 1.2),
+                            ),
+                            child: Text(
+                              '${st['step']} • ${st['badge']}',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                color: ink,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: Color(0xff10b981),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${st['val']}',
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w900,
+                          fontFamily: 'SpaceGrotesk',
+                          color: ink,
+                        ),
+                      ),
+                      Text(
+                        '${st['label']}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                      if (st['meter'] != null) ...[
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: LinearProgressIndicator(
+                            value: ((st['meter'] as double) / 100).clamp(0.0, 1.0),
+                            backgroundColor: const Color(0xffe5e0cf),
+                            color: st['color'] as Color,
+                            minHeight: 6,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _RoleCommandDeck extends StatelessWidget {
+  const _RoleCommandDeck({
+    required this.admin,
+    required this.mode,
+    required this.onNavigate,
+  });
+  final bool admin;
+  final String mode;
+  final void Function(String) onNavigate;
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Map<String, dynamic>> cards;
+    if (admin) {
+      cards = [
+        {
+          'bg': yellow,
+          'icon': Icons.verified_user_outlined,
+          'pill': 'KYC Queue',
+          'title': 'Business Verifications',
+          'desc': 'Review submitted business identity and compliance proofs.',
+          'action': 'Review Queue ↗',
+          'path': 'verifications',
+        },
+        {
+          'bg': teal,
+          'icon': Icons.smart_toy_outlined,
+          'pill': 'AI Engine',
+          'title': 'AI Ops & Supervisor',
+          'desc': 'Audit Conductor execution, Monte Carlo resilience & critic reflections.',
+          'action': 'Inspect Agents ↗',
+          'path': 'agents',
+        },
+        {
+          'bg': lavender,
+          'icon': Icons.trending_up,
+          'pill': 'Marketplace',
+          'title': 'Liquidity & Policy',
+          'desc': 'Manage regional fee structures, escrow terms & categories.',
+          'action': 'Marketplace Health ↗',
+          'path': 'analytics',
+        },
+      ];
+    } else if (mode == 'provider') {
+      cards = [
+        {
+          'bg': yellow,
+          'icon': Icons.bolt,
+          'pill': 'AUTO-PILOT ACTIVE',
+          'title': 'Smart Pricing Advisor',
+          'desc': 'Dynamic weekend yield (+35%) with strict floor bounds & cannibalization shields.',
+          'action': 'Tune Pricing Strategy ↗',
+          'path': 'smart-pricing',
+        },
+        {
+          'bg': teal,
+          'icon': Icons.calendar_month,
+          'pill': 'CALENDAR SYNC',
+          'title': 'Availability & Calendar',
+          'desc': 'Manage blackout dates, delivery slots & reserve unit quantities with zero overlap.',
+          'action': 'Manage Slots ↗',
+          'path': 'calendar',
+        },
+        {
+          'bg': lavender,
+          'icon': Icons.auto_awesome,
+          'pill': 'SUPERVISOR ON',
+          'title': 'Autonomous Agent Studio',
+          'desc': 'Inspect multi-agent workflows, working memory preferences, and market radar.',
+          'action': 'Agent Operations ↗',
+          'path': 'agents',
+        },
+      ];
+    } else {
+      cards = [
+        {
+          'bg': teal,
+          'icon': Icons.hub_outlined,
+          'pill': 'MONTE CARLO READY',
+          'title': 'Event Conductor AI',
+          'desc': 'Describe your event to assemble a multi-supplier bundle with resilience testing.',
+          'action': 'Launch Conductor ↗',
+          'path': 'planner',
+        },
+        {
+          'bg': yellow,
+          'icon': Icons.search,
+          'pill': 'HOTEL & VENUE HUBS',
+          'title': 'Resource Discovery',
+          'desc': 'Search verified banquets, LED walls, audio rigs, and transport across corridors.',
+          'action': 'Search Resources ↗',
+          'path': 'search',
+        },
+        {
+          'bg': pink,
+          'icon': Icons.forum_outlined,
+          'pill': 'ZOPA CONVERGENCE',
+          'title': 'Active Negotiations',
+          'desc': 'Bilateral surplus optimization, contract protection audit & 1-click counter-offers.',
+          'action': 'Open Negotiation Room ↗',
+          'path': 'negotiations',
+        },
+      ];
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final c in cards)
+          Container(
+            margin: const EdgeInsets.only(bottom: 14),
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: c['bg'] as Color,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: ink, width: 2),
+              boxShadow: neoShadowMd,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: card,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: ink, width: 1.5),
+                        boxShadow: neoShadowSm,
+                      ),
+                      child: Icon(c['icon'] as IconData, size: 22, color: ink),
+                    ),
+                    NeoBadge(
+                      text: c['pill'] as String,
+                      color: card,
+                      fontSize: 10,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  c['title'] as String,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    fontFamily: 'SpaceGrotesk',
+                    color: ink,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  c['desc'] as String,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    height: 1.35,
+                    fontWeight: FontWeight.w600,
+                    color: ink,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                NeoButton(
+                  text: c['action'] as String,
+                  color: card,
+                  fontSize: 13,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  onPressed: () => onNavigate(c['path'] as String),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }

@@ -5,21 +5,9 @@ import { app } from "./app.js";
 import { Category, Setting } from "./models/index.js";
 import { startJobs } from "./jobs/scheduler.js";
 import { initSocketServer } from "./socket.js";
+import { connectDatabase } from "./services/database.js";
 validateConfig();
-try {
-  await mongoose.connect(config.mongo, { serverSelectionTimeoutMS: 2000 });
-} catch {
-  console.log("Local MongoDB not detected. Starting in-memory MongoDB fallback...");
-  try {
-    const { MongoMemoryServer } = await import("mongodb-memory-server");
-    const memServer = await MongoMemoryServer.create({ binary: { version: "7.0.14" } });
-    await mongoose.connect(memServer.getUri());
-    console.log("Connected to in-memory MongoDB successfully.");
-  } catch (err) {
-    console.error("MongoDB connection failed:", err.message);
-    process.exit(1);
-  }
-}
+const disconnectDatabase = await connectDatabase(config);
 await Promise.all(Object.values(mongoose.models).map((m) => m.init()));
 
 for (const [slug, name, color, requiredFields] of [
@@ -63,7 +51,7 @@ for (const [slug, name, color, requiredFields] of [
 ])
   await Category.updateOne(
     { slug },
-    { $set: { slug, name, color, requiredFields } },
+    { $setOnInsert: { slug, name, color, requiredFields } },
     { upsert: true },
   );
 await Setting.updateOne(
@@ -81,7 +69,7 @@ const server = httpServer.listen(config.port, () =>
 );
 async function stop() {
   server.close();
-  await mongoose.disconnect();
+  await disconnectDatabase();
   process.exit(0);
 }
 process.on("SIGINT", stop);

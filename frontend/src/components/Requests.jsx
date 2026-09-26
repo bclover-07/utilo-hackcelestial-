@@ -6,6 +6,19 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import AgentAction from "./AgentAction";
 import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts";
+import {
   useData,
   State,
   Empty,
@@ -17,7 +30,134 @@ import {
   Flow,
   money,
   date,
+  colors,
 } from "./ui";
+
+const PIE_COLORS = ["#4ECDC4", "#FFE66D", "#FF6B6B", "#C3B1E1", "#78E08F", "#60C5F1", "#FFA502"];
+
+function RequestItemDistributionChart({ items, budget }) {
+  if (!items || items.length === 0) return null;
+
+  const data = items.map((item, idx) => ({
+    name: (item.category || `Item ${idx + 1}`).replaceAll("_", " "),
+    units: Number(item.quantity) || 1,
+    capacity: (Number(item.capacity) || 1) * (Number(item.quantity) || 1),
+    fulfilled: item.booking ? Number(item.quantity) || 1 : 0,
+    pending: !item.booking ? Number(item.quantity) || 1 : 0,
+  }));
+
+  const pieData = items.map((item, idx) => ({
+    name: (item.category || `Resource ${idx + 1}`).replaceAll("_", " "),
+    value: Number(item.quantity) || 1,
+  }));
+
+  return (
+    <div className="feature-chart-panel" style={{ background: "#FFFDF8" }}>
+      <div className="feature-chart-header">
+        <div>
+          <span className="eyebrow" style={{ color: "#0F766E", marginBottom: 2 }}>RESOURCE FULFILMENT & CAPACITY</span>
+          <h4 className="feature-chart-title">Item Allocation & Progress Breakdown</h4>
+        </div>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          <span className="badge" style={{ background: "#4ECDC440", border: "1px solid #171915" }}>
+            {items.length} Category Bundles
+          </span>
+          {budget && (
+            <span className="badge" style={{ background: "#FFE66D", border: "1px solid #171915" }}>
+              Budget: {money(budget)}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "16px", alignItems: "center" }}>
+        <div style={{ width: "100%", height: 180 }}>
+          <ResponsiveContainer>
+            <BarChart data={data} barGap={4}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E0CF" />
+              <XAxis dataKey="name" stroke="#171915" tick={{ fontSize: 10, fontWeight: 700 }} />
+              <YAxis stroke="#171915" tick={{ fontSize: 10 }} />
+              <Tooltip
+                contentStyle={{ background: "#fffef8", border: "1px solid #171915", borderRadius: 10, fontWeight: 700 }}
+              />
+              <Legend wrapperStyle={{ fontSize: 11, fontWeight: 700, paddingTop: 4 }} />
+              <Bar dataKey="fulfilled" name="Secured Units" fill="#2ed573" stroke="#171915" strokeWidth={1} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="pending" name="In Negotiation" fill="#ffd13b" stroke="#171915" strokeWidth={1} radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div style={{ width: "100%", height: 180, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <ResponsiveContainer width="100%" height={180}>
+            <PieChart>
+              <Pie
+                data={pieData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={65}
+                innerRadius={32}
+                paddingAngle={3}
+                stroke="#171915"
+                strokeWidth={1}
+              >
+                {pieData.map((_, index) => (
+                  <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip
+                formatter={(val, name) => [`${val} Units`, name]}
+                contentStyle={{ background: "#fffef8", border: "1px solid #171915", borderRadius: 10, fontWeight: 700 }}
+              />
+              <Legend wrapperStyle={{ fontSize: 10, fontWeight: 700 }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RequestLifecycleTimeline({ status }) {
+  const steps = [
+    { key: "broadcast", label: "1. RFQ Broadcasted", desc: "Sent to verified matching providers" },
+    { key: "quotes", label: "2. Offers Inbound", desc: "Providers propose rates & terms" },
+    { key: "negotiation", label: "3. Bilateral Terms", desc: "ZOPA counter-offers & escrow" },
+    { key: "fulfilled", label: "4. All Secured", desc: "Final agreement locked & ready" },
+  ];
+
+  const getStageIndex = (st) => {
+    if (st === "completed" || st === "closed") return 3;
+    if (st === "partial") return 2;
+    if (st === "open") return 1;
+    return 0;
+  };
+
+  const activeIdx = getStageIndex(status);
+
+  return (
+    <div className="feature-flow-container" style={{ margin: "14px 0" }}>
+      {steps.map((step, i) => {
+        const isDone = i < activeIdx;
+        const isActive = i === activeIdx;
+        return (
+          <div key={step.key} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div className={`feature-flow-step ${isDone ? "done" : isActive ? "active" : ""}`}>
+              <span>{isDone ? "✓" : i + 1}</span>
+              <div>
+                <div>{step.label}</div>
+                <small style={{ fontWeight: 500, color: "#444" }}>{step.desc}</small>
+              </div>
+            </div>
+            {i < steps.length - 1 && <span className="feature-flow-arrow">→</span>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function RequestsPage() {
   const resource = useData("/requests");
   return (
@@ -60,6 +200,8 @@ export function RequestsPage() {
                       <div className="request-progress-bar-fill" style={{ width: `${progressRatio}%` }} />
                     </div>
 
+                    <RequestLifecycleTimeline status={r.status} />
+
                     <div className="bundle-items-visual-grid">
                       {r.items.map((item, i) => (
                         <div key={i} className={`bundle-item-card ${item.booking ? "fulfilled" : "pending"}`}>
@@ -75,7 +217,9 @@ export function RequestsPage() {
                       ))}
                     </div>
 
-                    <div className="actions" style={{ marginTop: "1rem" }}>
+                    <RequestItemDistributionChart items={r.items} budget={r.budget} />
+
+                    <div className="actions" style={{ marginTop: "1.25rem" }}>
                       {["open", "partial"].includes(r.status) && (
                         <AgentAction
                           endpoint="/ai/urgency"
@@ -123,6 +267,7 @@ export function RequestsPage() {
     </>
   );
 }
+
 export function RequestEditor() {
   const categories = useData("/categories");
   return (
@@ -131,6 +276,55 @@ export function RequestEditor() {
     </State>
   );
 }
+
+function LiveRequirementEstimator({ items, budget }) {
+  const totalUnits = items.reduce((acc, it) => acc + (Number(it.quantity) || 1), 0);
+  const totalCap = items.reduce((acc, it) => acc + ((Number(it.capacity) || 1) * (Number(it.quantity) || 1)), 0);
+  const chartData = items.filter(it => it.category).map((it, idx) => ({
+    name: it.category.replaceAll("_", " "),
+    units: Number(it.quantity) || 1,
+    capacity: (Number(it.capacity) || 1) * (Number(it.quantity) || 1),
+  }));
+
+  return (
+    <div className="feature-chart-panel" style={{ background: "#FFF9E8" }}>
+      <span className="eyebrow" style={{ color: "#7B61A8" }}>LIVE RFQ ESTIMATOR & COMPOSITION</span>
+      <h3 style={{ margin: "4px 0 10px" }}>Dynamic Requirement Summary</h3>
+      <div className="feature-metrics-grid">
+        <div className="feature-metric-card">
+          <span>Total Bundles</span>
+          <strong>{items.length} resources</strong>
+          <small>{totalUnits} total unit volume</small>
+        </div>
+        <div className="feature-metric-card">
+          <span>Est. Guest Capacity</span>
+          <strong>{totalCap} guests</strong>
+          <small>Aggregated attendee reach</small>
+        </div>
+        <div className="feature-metric-card">
+          <span>Target Budget</span>
+          <strong>{budget ? money(budget) : "Not set"}</strong>
+          <small>{budget && items.length ? `~${money(Math.round(budget / items.length))} per bundle` : "Flexible"}</small>
+        </div>
+      </div>
+
+      {chartData.length > 0 && (
+        <div style={{ width: "100%", height: 140, marginTop: 10 }}>
+          <ResponsiveContainer>
+            <BarChart data={chartData} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E5E0CF" />
+              <XAxis type="number" stroke="#171915" tick={{ fontSize: 10 }} />
+              <YAxis dataKey="name" type="category" stroke="#171915" width={100} tick={{ fontSize: 10, fontWeight: 700 }} />
+              <Tooltip contentStyle={{ background: "#fffef8", border: "1px solid #171915", borderRadius: 8, fontWeight: 700 }} />
+              <Bar dataKey="units" name="Units Needed" fill="#4ECDC4" stroke="#171915" strokeWidth={1} radius={[0, 4, 4, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RequestForm({ categories }) {
   const router = useRouter(),
     { user } = useAuth();
@@ -138,9 +332,12 @@ function RequestForm({ categories }) {
       { category: "", quantity: 1, capacity: 1, specs: "" },
     ]),
     [draft, setDraft] = useState(null),
-    [repeat, setRepeat] = useState(null);
+    [repeat, setRepeat] = useState(null),
+    [budgetVal, setBudgetVal] = useState("");
+
   const update = (i, key, value) =>
     setItems(items.map((v, j) => (i === j ? { ...v, [key]: value } : v)));
+
   return (
     <>
       <Heading
@@ -176,9 +373,9 @@ function RequestForm({ categories }) {
               required
             />
             {items.map((item, i) => (
-              <div className="item-editor" key={i}>
-                <div className="section-heading">
-                  <h3>Resource {i + 1}</h3>
+              <div className="item-editor" key={i} style={{ border: "1px solid #171915", borderRadius: "14px", padding: "16px", background: "#FAF8F5", margin: "14px 0" }}>
+                <div className="section-heading" style={{ margin: "0 0 12px" }}>
+                  <h3 style={{ margin: 0 }}>Resource {i + 1}</h3>
                   {items.length > 1 && (
                     <button
                       type="button"
@@ -246,6 +443,9 @@ function RequestForm({ categories }) {
             >
               + Add a resource
             </button>
+
+            <LiveRequirementEstimator items={items} budget={budgetVal || repeat?.budget} />
+
             <div className="form-grid">
               <Field
                 label="Starts"
@@ -260,6 +460,7 @@ function RequestForm({ categories }) {
                 type="number"
                 min="1"
                 defaultValue={repeat?.budget}
+                onChange={(e) => setBudgetVal(e.target.value)}
                 required
               />
               <Field
@@ -271,7 +472,7 @@ function RequestForm({ categories }) {
               <Field
                 label="Event latitude"
                 name="latitude"
-                defaultValue={repeat?.location?.coordinates?.[1]}
+                defaultValue={repeat?.location?.coordinates?.[1] || 19.076}
                 type="number"
                 min="-90"
                 max="90"
@@ -281,7 +482,7 @@ function RequestForm({ categories }) {
               <Field
                 label="Event longitude"
                 name="longitude"
-                defaultValue={repeat?.location?.coordinates?.[0]}
+                defaultValue={repeat?.location?.coordinates?.[0] || 72.8777}
                 type="number"
                 min="-180"
                 max="180"
@@ -328,7 +529,7 @@ function RequestForm({ categories }) {
                   body: { kind: "parse", text: form.get("text") },
                 });
                 setDraft(result.draft);
-                if (result.draft.items.length) setItems(result.draft.items);
+                if (result.draft.items?.length) setItems(result.draft.items);
                 return "Draft ready. Review every field before broadcasting.";
               }}
             >
@@ -342,14 +543,29 @@ function RequestForm({ categories }) {
                 placeholder="I need a hall for 200 guests, 200 chairs and one projector…"
               />
             </ActionForm>
-            {draft?.missing?.length > 0 && (
-              <div className="notice">
-                <strong>Please confirm</strong>
-                <ul>
-                  {draft.missing.map((m) => (
-                    <li key={m}>{m}</li>
-                  ))}
-                </ul>
+            {draft && (
+              <div style={{ marginTop: "14px", padding: "14px", background: "#FFFDF4", border: "1px solid #171915", borderRadius: "12px" }}>
+                <span className="eyebrow" style={{ color: "#7B61A8" }}>PARSED AI SPECIFICATION</span>
+                <strong style={{ display: "block", fontSize: "1rem" }}>{draft.title || "Parsed Event Requirement"}</strong>
+                {draft.items?.length > 0 && (
+                  <div className="spec-chip-strip" style={{ marginTop: 8 }}>
+                    {draft.items.map((it, idx) => (
+                      <span key={idx} className="spec-chip">
+                        ✓ {it.quantity}x {it.category} (cap {it.capacity})
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {draft.missing?.length > 0 && (
+                  <div className="notice" style={{ margin: "10px 0 0", padding: "10px" }}>
+                    <strong>Please confirm:</strong>
+                    <ul style={{ margin: "4px 0 0", paddingLeft: "16px" }}>
+                      {draft.missing.map((m) => (
+                        <li key={m}>{m}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
           </section>

@@ -73,13 +73,13 @@ export default function MarketIntelligence() {
                       <Tooltip
                         contentStyle={{
                           background: "#fffef8",
-                          border: "2.5px solid #171915",
+                          border: "1px solid #171915",
                           borderRadius: 12,
                           boxShadow: "3px 3px 0 #171915",
                           fontWeight: 800,
                         }}
                       />
-                      <Bar dataKey="avgCoveragePercent" name="Items booked (%)" fill="#639b87" stroke="#171915" strokeWidth={2} radius={[6, 6, 0, 0]} isAnimationActive={false} />
+                      <Bar dataKey="avgCoveragePercent" name="Items booked (%)" fill="#639b87" stroke="#171915" strokeWidth={1} radius={[6, 6, 0, 0]} isAnimationActive={false} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -121,13 +121,13 @@ export default function MarketIntelligence() {
                         formatter={(value) => money(value)}
                         contentStyle={{
                           background: "#fffef8",
-                          border: "2.5px solid #171915",
+                          border: "1px solid #171915",
                           borderRadius: 12,
                           boxShadow: "3px 3px 0 #171915",
                           fontWeight: 800,
                         }}
                       />
-                      <Bar dataKey="revenue" name="Agreed Booking Value" fill="#9b86bb" stroke="#171915" strokeWidth={2} radius={[6, 6, 0, 0]} isAnimationActive={false} />
+                      <Bar dataKey="revenue" name="Agreed Booking Value" fill="#9b86bb" stroke="#171915" strokeWidth={1} radius={[6, 6, 0, 0]} isAnimationActive={false} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

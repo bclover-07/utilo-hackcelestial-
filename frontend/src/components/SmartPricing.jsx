@@ -6,11 +6,14 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip,
   CartesianGrid,
   Legend,
+  Cell,
 } from "recharts";
 import {
   useData,
@@ -23,6 +26,51 @@ import {
   colors,
 } from "./ui";
 
+function DynamicSurgeCurveChart({ autoPilot }) {
+  if (!autoPilot) return null;
+
+  const base = autoPilot.recommendedDynamicPrice / (autoPilot.surgeMultiplier || 1);
+  const floor = autoPilot.floorPrice || base * 0.8;
+  const ceiling = autoPilot.ceilingPrice || base * 1.6;
+
+  const multipliers = [
+    { label: "0.8x Low", mult: 0.8, price: Math.round(base * 0.8) },
+    { label: "1.0x Base", mult: 1.0, price: Math.round(base) },
+    { label: `${autoPilot.surgeMultiplier}x Live`, mult: autoPilot.surgeMultiplier, price: autoPilot.recommendedDynamicPrice },
+    { label: "1.35x Peak", mult: 1.35, price: Math.round(base * 1.35) },
+    { label: "1.6x High", mult: 1.6, price: Math.round(base * 1.6) },
+  ];
+
+  return (
+    <div className="feature-chart-panel" style={{ background: "#F5FAF7", marginTop: "1.25rem" }}>
+      <div className="feature-chart-header">
+        <div>
+          <span className="eyebrow" style={{ color: "#2E7D32", marginBottom: 2 }}>DYNAMIC AUTO-PILOT ELASTICITY</span>
+          <h4 className="feature-chart-title">Demand-Surge Price Curve (Floor {money(floor)} → Ceiling {money(ceiling)})</h4>
+        </div>
+        <span className="badge" style={{ background: "#4CAF50", color: "#fff", border: "1px solid #171915" }}>
+          Current Multiplier: {autoPilot.surgeMultiplier}x
+        </span>
+      </div>
+
+      <div style={{ width: "100%", height: 180 }}>
+        <ResponsiveContainer>
+          <AreaChart data={multipliers}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#D0E5D8" />
+            <XAxis dataKey="label" stroke="#171915" tick={{ fontSize: 11, fontWeight: 700 }} />
+            <YAxis stroke="#171915" tick={{ fontSize: 10 }} tickFormatter={(v) => `₹${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} domain={[floor * 0.9, ceiling * 1.1]} />
+            <Tooltip
+              formatter={(val) => [money(val), "Suggested Dynamic Rate"]}
+              contentStyle={{ background: "#fffef8", border: "1px solid #171915", borderRadius: 8, fontWeight: 700 }}
+            />
+            <Area type="monotone" dataKey="price" stroke="#2E7D32" strokeWidth={2} fill="#A8E6CF" fillOpacity={0.5} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
 function MarketComparisonChart({ comparables, suggestedPrice }) {
   if (!comparables?.length) return null;
   const chartData = comparables.map((c) => ({
@@ -33,14 +81,14 @@ function MarketComparisonChart({ comparables, suggestedPrice }) {
     count: c.count,
   }));
   return (
-    <div style={{ marginTop: "1rem", marginBottom: "1.25rem", padding: "1.2rem", background: "#FAF8F5", borderRadius: "16px", border: "2px solid #20201e", boxShadow: "3px 3px 0 #20201e" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "8px" }}>
+    <div className="feature-chart-panel" style={{ background: "#FAF8F5" }}>
+      <div className="feature-chart-header">
         <div>
-          <span className="eyebrow" style={{ color: "#0F766E" }}>BENCHMARK DISTRIBUTION</span>
-          <h3 style={{ margin: "2px 0 0" }}>Competitive Price Spectrum</h3>
+          <span className="eyebrow" style={{ color: "#0F766E", marginBottom: 2 }}>BENCHMARK DISTRIBUTION</span>
+          <h3 className="feature-chart-title">Competitive Price Spectrum</h3>
         </div>
         {suggestedPrice && (
-          <span className="badge" style={{ background: "#FFE66D", border: "2px solid #20201e" }}>
+          <span className="badge" style={{ background: "#FFE66D", border: "1px solid #171915" }}>
             Suggested: {money(suggestedPrice)}
           </span>
         )}
@@ -49,16 +97,55 @@ function MarketComparisonChart({ comparables, suggestedPrice }) {
         <ResponsiveContainer>
           <BarChart data={chartData} barGap={4}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E0CF" />
-            <XAxis dataKey="name" stroke="#20201e" tick={{ fontSize: 11, fontWeight: 700 }} />
-            <YAxis stroke="#20201e" tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}`} />
+            <XAxis dataKey="name" stroke="#171915" tick={{ fontSize: 11, fontWeight: 700 }} />
+            <YAxis stroke="#171915" tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}`} />
             <Tooltip
               formatter={(val, name) => [money(val), name === "min" ? "Floor Price" : name === "avg" ? "Market Average" : "Ceiling Price"]}
-              contentStyle={{ background: "#fffef8", border: "2px solid #20201e", borderRadius: 10, fontWeight: 700 }}
+              contentStyle={{ background: "#fffef8", border: "1px solid #171915", borderRadius: 10, fontWeight: 700 }}
             />
             <Legend wrapperStyle={{ paddingTop: "8px", fontSize: "12px", fontWeight: 700 }} />
-            <Bar dataKey="min" fill="#A8E6CF" name="Floor Price" radius={[4, 4, 0, 0]} stroke="#20201e" strokeWidth={1.5} />
-            <Bar dataKey="avg" fill="#FFE66D" name="Market Average" radius={[4, 4, 0, 0]} stroke="#20201e" strokeWidth={1.5} />
-            <Bar dataKey="max" fill="#FF85A1" name="Ceiling Price" radius={[4, 4, 0, 0]} stroke="#20201e" strokeWidth={1.5} />
+            <Bar dataKey="min" fill="#A8E6CF" name="Floor Price" radius={[4, 4, 0, 0]} stroke="#171915" strokeWidth={1} />
+            <Bar dataKey="avg" fill="#FFE66D" name="Market Average" radius={[4, 4, 0, 0]} stroke="#171915" strokeWidth={1} />
+            <Bar dataKey="max" fill="#FF85A1" name="Ceiling Price" radius={[4, 4, 0, 0]} stroke="#171915" strokeWidth={1} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+function RecentBookingsVisualChart({ recentBookings }) {
+  if (!recentBookings) return null;
+
+  const chartData = [
+    { name: "Min Booked", amount: recentBookings.minBookedPrice, color: "#A8E6CF" },
+    { name: "Avg Booked", amount: Math.round(recentBookings.avgBookedPrice), color: "#FFE66D" },
+    { name: "Max Booked", amount: recentBookings.maxBookedPrice, color: "#FF85A1" },
+  ];
+
+  return (
+    <div className="feature-chart-panel" style={{ background: "#FAF8F5", marginTop: "1rem" }}>
+      <div className="feature-chart-header">
+        <div>
+          <span className="eyebrow" style={{ color: "#7B61A8", marginBottom: 2 }}>CONFIRMED EXCHANGE BENCHMARKS</span>
+          <h4 className="feature-chart-title">Last 90-Day Realized Transaction Values ({recentBookings.bookingCount} Agreements)</h4>
+        </div>
+      </div>
+      <div style={{ width: "100%", height: 160 }}>
+        <ResponsiveContainer>
+          <BarChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E0CF" />
+            <XAxis dataKey="name" stroke="#171915" tick={{ fontSize: 11, fontWeight: 700 }} />
+            <YAxis stroke="#171915" tick={{ fontSize: 10 }} tickFormatter={(v) => `₹${v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}`} />
+            <Tooltip
+              formatter={(val) => [money(val), "Exchange Total"]}
+              contentStyle={{ background: "#fffef8", border: "1px solid #171915", borderRadius: 8, fontWeight: 700 }}
+            />
+            <Bar dataKey="amount" stroke="#171915" strokeWidth={1} radius={[4, 4, 0, 0]}>
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -175,11 +262,11 @@ export function SmartPricingPage() {
             <AgentDecision decision={result.decision} generation={result.generation} hideSummary />
 
             {result.cannibalization?.detected && (
-              <div className="panel" style={{ marginTop: "1rem", background: "#ffebee", border: "2.5px solid #171915", borderRadius: "16px", padding: "1rem", boxShadow: "3px 3px 0 #171915" }}>
+              <div className="panel" style={{ marginTop: "1rem", background: "#ffebee", border: "1px solid #171915", borderRadius: "16px", padding: "1.2rem", boxShadow: "3px 3px 0 #171915" }}>
                 <span className="eyebrow" style={{ color: "#c62828", fontSize: "0.75rem", letterSpacing: "0.08em" }}>INVENTORY CANNIBALIZATION ALERT</span>
                 <h4 style={{ margin: "0.25rem 0", color: "#b71c1c" }}>Cross-Listing Margin Risk</h4>
                 {result.cannibalization.warnings.map((w, idx) => (
-                  <p key={idx} style={{ margin: "0.25rem 0", fontSize: "0.85rem", color: "#442222" }}>
+                  <p key={idx} style={{ margin: "0.3rem 0", fontSize: "0.85rem", color: "#442222" }}>
                     ⚠️ {w.warning}
                   </p>
                 ))}
@@ -187,7 +274,7 @@ export function SmartPricingPage() {
             )}
 
             {result.autoPilotRecommendation && (
-              <div className="panel" style={{ marginTop: "1rem", background: "#e8f5e9", border: "2.5px solid #171915", borderRadius: "16px", padding: "1rem", boxShadow: "3px 3px 0 #171915" }}>
+              <div className="panel" style={{ marginTop: "1rem", background: "#e8f5e9", border: "1px solid #171915", borderRadius: "16px", padding: "1.2rem", boxShadow: "3px 3px 0 #171915" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
                   <div>
                     <span className="eyebrow" style={{ fontSize: "0.75rem", letterSpacing: "0.08em", color: "#2e7d32" }}>DYNAMIC PRICING AUTO-PILOT</span>
@@ -201,10 +288,19 @@ export function SmartPricingPage() {
                     <span className="badge" style={{ marginTop: "0.3rem", display: "inline-block", background: "#4caf50", color: "#fff" }}>Auto-Pilot Ready</span>
                   </div>
                 </div>
+                <DynamicSurgeCurveChart autoPilot={result.autoPilotRecommendation} />
               </div>
             )}
 
-            <div className="pricing-evidence">{result.evidence?.map(row => <div className="notice" key={row.unit}><strong>{row.samples} comparable {row.unit} rates · {row.support}</strong><p>{row.suggestedRangeAvailable ? "Observed asking-price range supports a reviewable recommendation." : "Too few comparable rates to support a suggested range."}</p></div>)}</div>
+            <div className="pricing-evidence" style={{ margin: "14px 0" }}>
+              {result.evidence?.map(row => (
+                <div className="notice" key={row.unit}>
+                  <strong>{row.samples} comparable {row.unit} rates · {row.support}</strong>
+                  <p>{row.suggestedRangeAvailable ? "Observed asking-price range supports a reviewable recommendation." : "Too few comparable rates to support a suggested range."}</p>
+                </div>
+              ))}
+            </div>
+
             {result.trace && (
               <div className="workflow-trace">
                 {result.trace.map((t, i) => (
@@ -275,7 +371,8 @@ export function SmartPricingPage() {
                 Agreed totals over the last 90 days vary by quantity and
                 duration. They are not per-unit rental rates.
               </p>
-              <div className="stat-grid">
+              <RecentBookingsVisualChart recentBookings={result.recentBookings} />
+              <div className="stat-grid" style={{ marginTop: "1rem" }}>
                 {[
                   [
                     "Min booked",

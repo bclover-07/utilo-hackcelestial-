@@ -143,9 +143,27 @@ class _QuoteScreenState extends State<QuoteScreen> {
                         label: Text('${q['status']} • Version ${q['version']}'),
                       ),
                       DataView(q['request']),
-                      const Text(
-                        'Offer history',
-                        style: TextStyle(fontWeight: FontWeight.w800),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Offer history',
+                            style: TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                          if (offers.length >= 2)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: yellow,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: ink, width: 1.2),
+                              ),
+                              child: Text(
+                                '₹${offers.first['price']} → ₹${offers.last['price']}',
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
+                              ),
+                            ),
+                        ],
                       ),
                       if (offers.isEmpty)
                         const Text('The provider can send the first quote.'),
@@ -333,7 +351,28 @@ class _MessageThreadState extends State<MessageThread> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Conversation', style: Theme.of(context).textTheme.titleLarge),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Conversation', style: Theme.of(context).textTheme.titleLarge),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFA8E6CF),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: ink, width: 1.5),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircleAvatar(radius: 3.5, backgroundColor: Color(0xFF059669)),
+                      SizedBox(width: 5),
+                      Text('Live Sync', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: ink)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
             LocalAiPanel(
               api: widget.session.api,
               task: 'summarize',

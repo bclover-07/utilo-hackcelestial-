@@ -20,28 +20,28 @@ const personas = {
   seeker: {
     icon: Search,
     title: "Seeker",
-    detail: "Find your next great setup.",
+    detail: "Discover and reserve event resources.",
   },
   provider: {
     icon: Package,
     title: "Provider",
-    detail: "Put your spare capacity to work.",
+    detail: "List and monetize inventory & spaces.",
   },
   admin: {
     icon: ShieldCheck,
     title: "Admin",
-    detail: "Keep the exchange in good hands.",
+    detail: "Manage operations & verifications.",
   },
 };
+
 export default function AuthPage({ register = false }) {
   return (
-    <Suspense
-      fallback={<main className="state">Preparing your workspace…</main>}
-    >
+    <Suspense fallback={<main className="state">Preparing your workspace…</main>}>
       <AuthQuery register={register} />
     </Suspense>
   );
 }
+
 function AuthQuery({ register }) {
   const query = useSearchParams();
   const requested = query.get("role");
@@ -56,6 +56,7 @@ function AuthQuery({ register }) {
     />
   );
 }
+
 function AuthForm({ register, initialPersona }) {
   const [persona, setPersona] = useState(initialPersona);
   const [email, setEmail] = useState("");
@@ -66,22 +67,23 @@ function AuthForm({ register, initialPersona }) {
   const auth = useAuth();
   const router = useRouter();
   const role = persona === "admin" ? "admin" : "business";
+
   useEffect(() => {
     if (auth.loading || !auth.user) return;
     const home = auth.user.role === "admin" ? "/admin" : "/dashboard";
     const next = new URLSearchParams(window.location.search).get("next");
     router.replace(
-      next &&
-        (next === home || next.startsWith(`${home}/`)) &&
-        !/[\\\r\n]/.test(next)
+      next && (next === home || next.startsWith(`${home}/`)) && !/[\\\r\n]/.test(next)
         ? next
-        : home,
+        : home
     );
   }, [auth.loading, auth.user, router]);
+
   function selectPersona(next) {
     setPersona(next);
     setError("");
   }
+
   if (auth.loading || auth.user)
     return (
       <main className="state" role="status">
@@ -89,6 +91,7 @@ function AuthForm({ register, initialPersona }) {
         {auth.loading ? "Checking your session…" : "Opening your workspace…"}
       </main>
     );
+
   return (
     <main className="auth-studio">
       <header className="auth-header">
@@ -98,14 +101,14 @@ function AuthForm({ register, initialPersona }) {
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <LanguageSwitcher compact />
           <Link className="back-link" href="/">
-            <ArrowLeft size={16} /> Back to the exchange
+            <ArrowLeft size={16} /> Back to home
           </Link>
         </div>
       </header>
       <div className="auth-layout">
         <section className="auth-editorial">
           <span className="eyebrow">
-            <span className="tiny-spark">✳</span> GOOD THINGS ARE BETTER SHARED
+            <span className="tiny-spark">✳</span> SHARED HOSPITALITY EXCHANGE
           </span>
           <h1>
             Less idle.
@@ -113,116 +116,122 @@ function AuthForm({ register, initialPersona }) {
             More <span className="marker-text">possible.</span>
           </h1>
           <p>
-            The right resources. The right neighbours. A little help from AI.
-            Let’s make your next event happen.
+            Connect directly with verified local hotels, venues, caterers, and equipment providers.
           </p>
           <div className="auth-illustration" aria-hidden="true">
             <div className="orbit-label orbit-one">
-              <Package size={26} />
-              <span>
-                Space to share<strong>Endless possibilities</strong>
-              </span>
+              <Package size={24} />
+              <span>Space & Equipment<strong>Verified Inventory</strong></span>
             </div>
-            <div className="orbit-hub">
-              u<span>✳</span>
-            </div>
+            <div className="orbit-hub">u<span>✳</span></div>
             <div className="orbit-label orbit-two">
-              <Sparkles size={26} />
-              <span>
-                A smarter match<strong>Your next big idea</strong>
-              </span>
+              <Sparkles size={24} />
+              <span>Smart AI Matching<strong>Real-time ZOPA</strong></span>
             </div>
             <span className="orbit-star">✳</span>
           </div>
-          <div className="auth-note">
-            <ShieldCheck size={25} />
-            <div>
-              <strong>One business. Both sides of the exchange.</strong>
-              <p>
-                Find resources as a seeker. Share them as a provider. Switch
-                anytime in your business workspace.
-              </p>
-            </div>
-          </div>
         </section>
+
         <section className="panel auth-card">
           <div className="auth-card-heading">
             <span className="eyebrow">
-              {register
-                ? "YOUR NEXT CHAPTER"
-                : "YOUR PEOPLE. YOUR POSSIBILITIES."}
+              {register ? "CREATE ACCOUNT" : "AUTHENTICATION"}
             </span>
-            <span className="stamp">HELLO ✳</span>
+            <span className="stamp">UTLIO ✳</span>
           </div>
-          <h2>{register ? "Make room for more." : "Welcome back."}</h2>
-          <p>
-            {register
-              ? "Create your account and start something good."
-              : "Choose how you’d like to get things moving."}
-          </p>
+          <h2>{register ? "Get started." : "Welcome back."}</h2>
+
           <fieldset disabled={busy} className="persona-fieldset">
             <legend>Account type</legend>
             <div className="persona-toggle account-type-toggle" aria-label="Account type">
-              <button type="button" aria-pressed={role === "business"} className={role === "business" ? "selected" : ""} onClick={() => selectPersona("seeker")}><Package size={19} /> Business</button>
-              {!register && <button type="button" aria-pressed={role === "admin"} className={role === "admin" ? "selected" : ""} onClick={() => selectPersona("admin")}><ShieldCheck size={19} /> Admin</button>}
+              <button
+                type="button"
+                aria-pressed={role === "business"}
+                className={role === "business" ? "selected" : ""}
+                onClick={() => selectPersona("seeker")}
+              >
+                <Package size={18} /> Business
+              </button>
+              {!register && (
+                <button
+                  type="button"
+                  aria-pressed={role === "admin"}
+                  className={role === "admin" ? "selected" : ""}
+                  onClick={() => selectPersona("admin")}
+                >
+                  <ShieldCheck size={18} /> Admin
+                </button>
+              )}
             </div>
-            {role === "business" && <><p className="business-mode-label">{register ? "Choose your starting mode" : "Open your business workspace in"}</p><div className="persona-toggle business-mode-toggle" aria-label="Business mode">
-              {Object.entries(personas).filter(([key]) => key !== "admin").map(([key, item]) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    type="button"
-                    key={key}
-                    data-persona={key}
-                    aria-pressed={persona === key}
-                    className={persona === key ? "selected" : ""}
-                    onClick={() => selectPersona(key)}
-                  >
-                    <Icon size={19} />
-                    {item.title}
-                  </button>
-                );
-              })}
-            </div></>}
-            <p className="persona-caption">
-              {personas[persona].detail}
-            </p>
-            {role === "business" && <p className="business-approval-note">One business account gives you full access to both modes. Switch between seeking and providing anytime in your workspace. Start monetizing idle capacity or discover verified venue and equipment setups immediately.</p>}
+
+            {role === "business" && (
+              <div className="persona-toggle business-mode-toggle" aria-label="Business mode" style={{ marginTop: "8px" }}>
+                {Object.entries(personas).filter(([key]) => key !== "admin").map(([key, item]) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      type="button"
+                      key={key}
+                      data-persona={key}
+                      aria-pressed={persona === key}
+                      className={persona === key ? "selected" : ""}
+                      onClick={() => selectPersona(key)}
+                    >
+                      <Icon size={17} />
+                      {item.title}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </fieldset>
+
           {!register && (
-            <div style={{ margin: "0.75rem 0 1rem", padding: "0.75rem", background: "#F5F2EB", borderRadius: "12px", border: "1.5px solid #20201e" }}>
+            <div style={{ margin: "0.75rem 0 1rem", padding: "0.75rem", background: "#FAF8F5", borderRadius: "12px", border: "1.5px solid #171915" }}>
               <span className="eyebrow" style={{ fontSize: "0.7rem", letterSpacing: "0.08em", display: "block", marginBottom: "6px" }}>
-                DEMO ACCOUNTS (ONE-CLICK AUTOFILL)
+                ONE-CLICK DEMO AUTOFILL
               </span>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                 <button
                   type="button"
                   className="button"
-                  style={{ fontSize: "0.8rem", padding: "4px 8px", background: "#FFE66D", border: "1.5px solid #20201e", cursor: "pointer" }}
+                  style={{ fontSize: "0.8rem", padding: "5px 10px", background: "#FFE66D", border: "1.5px solid #171915", cursor: "pointer" }}
                   onClick={() => {
-                    setEmail("arjun@utlio.com");
+                    setEmail("shreshta@utlio.com");
                     setPassword("Password123!");
                     selectPersona("provider");
                   }}
                 >
-                  🏢 Arjun Mehta (Provider)
+                  🏢 Shreshta (Provider)
                 </button>
                 <button
                   type="button"
                   className="button"
-                  style={{ fontSize: "0.8rem", padding: "4px 8px", background: "#4ECDC4", border: "1.5px solid #20201e", cursor: "pointer" }}
+                  style={{ fontSize: "0.8rem", padding: "5px 10px", background: "#FFE66D", border: "1.5px solid #171915", cursor: "pointer" }}
                   onClick={() => {
-                    setEmail("priya@utlio.com");
+                    setEmail("shreyas@utlio.com");
+                    setPassword("Password123!");
+                    selectPersona("provider");
+                  }}
+                >
+                  🔊 Shreyas (Provider)
+                </button>
+                <button
+                  type="button"
+                  className="button"
+                  style={{ fontSize: "0.8rem", padding: "5px 10px", background: "#4ECDC4", border: "1.5px solid #171915", cursor: "pointer" }}
+                  onClick={() => {
+                    setEmail("shivam@utlio.com");
                     setPassword("Password123!");
                     selectPersona("seeker");
                   }}
                 >
-                  🎯 Priya Sharma (Seeker)
+                  🎯 Shivam (Seeker)
                 </button>
                 <button
                   type="button"
                   className="button"
-                  style={{ fontSize: "0.8rem", padding: "4px 8px", background: "#C3B1E1", border: "1.5px solid #20201e", cursor: "pointer" }}
+                  style={{ fontSize: "0.8rem", padding: "5px 10px", background: "#C3B1E1", border: "1.5px solid #171915", cursor: "pointer" }}
                   onClick={() => {
                     setEmail("admin@utlio.com");
                     setPassword("Password123!");
@@ -234,15 +243,14 @@ function AuthForm({ register, initialPersona }) {
               </div>
             </div>
           )}
+
           <form
             className="form-stack"
             aria-busy={busy}
             onSubmit={async (event) => {
               event.preventDefault();
               if (busy) return;
-              const data = Object.fromEntries(
-                new FormData(event.currentTarget),
-              );
+              const data = Object.fromEntries(new FormData(event.currentTarget));
               if (register && new TextEncoder().encode(password).length > 72) {
                 setError("Use a password of at most 72 UTF-8 bytes.");
                 return;
@@ -270,11 +278,7 @@ function AuthForm({ register, initialPersona }) {
                     label={role === "admin" ? "Full name" : "Business name"}
                     name="name"
                     autoComplete={role === "admin" ? "name" : "organization"}
-                    placeholder={
-                      role === "admin"
-                        ? "Your full name"
-                        : "Your hotel, venue or business"
-                    }
+                    placeholder={role === "admin" ? "Your full name" : "Your hotel, venue or business"}
                     maxLength={500}
                     required
                   />
@@ -298,11 +302,7 @@ function AuthForm({ register, initialPersona }) {
                     />
                   </div>
                   {role === "business" ? (
-                    <Field
-                      label="Business category"
-                      as="select"
-                      name="category"
-                    >
+                    <Field label="Business category" as="select" name="category">
                       <option value="hotel">Hotel / Resort</option>
                       <option value="venue">Banquet / Venue</option>
                       <option value="caterer">Caterer</option>
@@ -311,11 +311,7 @@ function AuthForm({ register, initialPersona }) {
                       <option value="restaurant">Restaurant</option>
                     </Field>
                   ) : (
-                    <input
-                      type="hidden"
-                      name="category"
-                      value="platform_operations"
-                    />
+                    <input type="hidden" name="category" value="platform_operations" />
                   )}
                 </>
               )}
@@ -325,9 +321,7 @@ function AuthForm({ register, initialPersona }) {
                 type="email"
                 autoComplete="email"
                 value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                }}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@yourbusiness.com"
                 maxLength={254}
                 required
@@ -338,13 +332,9 @@ function AuthForm({ register, initialPersona }) {
                   name="password"
                   type={visible ? "text" : "password"}
                   value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                  }}
+                  onChange={(e) => setPassword(e.target.value)}
                   autoComplete={register ? "new-password" : "current-password"}
-                  placeholder={
-                    register ? "At least 10 characters" : "Your password"
-                  }
+                  placeholder={register ? "At least 10 characters" : "Your password"}
                   minLength={register ? 10 : undefined}
                   maxLength={128}
                   required
@@ -358,40 +348,24 @@ function AuthForm({ register, initialPersona }) {
                   {visible ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              {register && (
-                <small>
-                  Use 10+ characters, up to 72 UTF-8 bytes. Business
-                  verification follows signup.
-                </small>
-              )}
             </fieldset>
-            {error && (
-              <p className="error" role="alert">
-                {error}
-              </p>
-            )}
+            {error && <p className="error" role="alert">{error}</p>}
             <button className="auth-submit" disabled={busy} type="submit">
-              {busy
-                ? "Opening your workspace…"
-                : register
-                  ? "Create my account"
-                  : "Let’s go"}
-              <ArrowUpRight size={20} />
+              {busy ? "Opening workspace…" : register ? "Create account" : "Sign in"}
+              <ArrowUpRight size={18} />
             </button>
           </form>
           <p className="auth-switch">
-            {register
-              ? "Already part of the neighbourhood?"
-              : "New around here?"}{" "}
+            {register ? "Already have an account?" : "Need an account?"}{" "}
             <Link href={`${register ? "/login" : "/register"}?role=${persona}`}>
-              {register ? "Log in" : "Create an account"} ↗
+              {register ? "Sign in" : "Create account"} ↗
             </Link>
           </p>
         </section>
       </div>
       <div className="auth-bottom">
-        <span>MADE FOR HOSPITALITY. BUILT FOR POSSIBILITY.</span>
-        <span>Discover · Connect · Share</span>
+        <span>UTLIO HOSPITALITY EXCHANGE</span>
+        <span>Verified Venues & Equipment</span>
       </div>
     </main>
   );

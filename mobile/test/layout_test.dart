@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:utlio_mobile/core/api.dart';
-import 'package:utlio_mobile/main.dart';
 import 'package:utlio_mobile/ui/theme.dart';
 import 'package:utlio_mobile/ui/widgets.dart';
+import 'package:utlio_mobile/screens/landing.dart';
+import 'package:utlio_mobile/screens/auth.dart';
 
 void main() {
   for (final width in [360.0, 768.0, 1440.0]) {
@@ -17,6 +18,7 @@ void main() {
       final session = Session(
         Api(baseUrl: 'http://localhost:4000/api', persistSession: false),
       );
+      FlutterError.onError = FlutterError.dumpErrorToConsole;
       await tester.pumpWidget(
         MaterialApp(
           theme: utlioTheme(),
@@ -24,7 +26,14 @@ void main() {
         ),
       );
       expect(find.text('Less idle.\nMore possible.'), findsOneWidget);
-      expect(tester.takeException(), isNull);
+      final exc = tester.takeException();
+      if (exc is FlutterError) {
+        for (final d in exc.diagnostics) {
+          // ignore: avoid_print
+          print(d.toStringDeep());
+        }
+      }
+      expect(exc, isNull);
       await tester.pumpWidget(
         MaterialApp(
           theme: utlioTheme(),

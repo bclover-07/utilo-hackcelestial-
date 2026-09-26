@@ -527,13 +527,13 @@ export function ProviderPerformancePage() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
                   <h2 style={{ margin: 0 }}>Performance radar</h2>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                    <span className="badge" style={{ background: "#A8E6CF", border: "1.5px solid #20201e" }}>
+                    <span className="badge" style={{ background: "#A8E6CF", border: "1px solid #20201e" }}>
                       ⚡ Response Speed
                     </span>
-                    <span className="badge" style={{ background: "#FFE66D", border: "1.5px solid #20201e" }}>
+                    <span className="badge" style={{ background: "#FFE66D", border: "1px solid #20201e" }}>
                       🎯 Acceptance
                     </span>
-                    <span className="badge" style={{ background: "#FFB347", border: "1.5px solid #20201e" }}>
+                    <span className="badge" style={{ background: "#FFB347", border: "1px solid #20201e" }}>
                       ★ Reputation
                     </span>
                   </div>

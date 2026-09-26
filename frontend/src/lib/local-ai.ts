@@ -1,48 +1,63 @@
-import type { WebWorkerMLCEngine } from "@mlc-ai/web-llm";
 import { api } from "./api";
-type Config = { webModel: string; webSmallModel: string; maxInputCharacters: number; maxOutputTokens: number; tasks: Record<string, string> };
-let engine: WebWorkerMLCEngine | undefined;
-let worker: Worker | undefined;
-let activeModel = "";
-let busy = false;
-export function unloadLocalAi() {
-  worker?.terminate(); worker = undefined; engine = undefined; activeModel = "";
+import { LocalAiRuntime, selectLocalModel, validateLocalConfig } from "./local-ai-runtime";
+import type { LocalConfig } from "./local-ai-runtime";
+
+type Adapter = { features: { has: (feature: string) => boolean }; limits: { maxStorageBufferBindingSize: number } };
+type GpuNavigator = Navigator & { gpu?: { requestAdapter: () => Promise<Adapter | null> } };
+
+export async function getLocalAiConfig(signal: AbortSignal) {
+  return validateLocalConfig(await api<LocalConfig>("/ai/local-config", { signal }));
 }
-export async function runLocalAi(task: "polish" | "summarize", input: string, compact: boolean, progress: (text: string) => void, signal: AbortSignal) {
-  if (busy) throw new Error("Another local AI task is running. Please wait.");
-  if (!("gpu" in navigator)) throw new Error("WebGPU is unavailable. Use a supported browser and device. Your draft has not been sent to an AI server.");
-  if (!input.trim()) throw new Error("Add some text first.");
-  busy = true;
-  let rejectCancelled: (error: Error) => void = () => {};
-  const cancelled = new Promise<never>((_resolve, reject) => { rejectCancelled = reject; });
-  const cancel = () => { unloadLocalAi(); rejectCancelled(new Error("Cancelled.")); };
-  signal.addEventListener("abort", cancel, { once: true });
-  const deadline = setTimeout(() => { unloadLocalAi(); rejectCancelled(new Error("Local AI timed out. Try the smaller model or a shorter excerpt.")); }, 10 * 60 * 1000);
-  try {
-    return await Promise.race([cancelled, (async () => {
-    const config = await api<Config>("/ai/local-config", { signal });
-    if (signal.aborted) throw new Error("Cancelled.");
-    if (input.length > config.maxInputCharacters) throw new Error(`Select an excerpt of at most ${config.maxInputCharacters} characters. No text was silently removed.`);
-    const model = compact ? config.webSmallModel : config.webModel;
-    if (!engine || activeModel !== model) {
-      unloadLocalAi();
-      progress("Downloading and loading model. First use can take several minutes…");
-      const { CreateWebWorkerMLCEngine } = await import("@mlc-ai/web-llm");
-      if (signal.aborted) throw new Error("Cancelled.");
-      worker = new Worker(new URL("./local-ai.worker.ts", import.meta.url), { type: "module" });
-      engine = await CreateWebWorkerMLCEngine(worker, model, { initProgressCallback: report => progress(report.text) });
-      activeModel = model;
-    }
-    if (signal.aborted) throw new Error("Cancelled.");
-    progress("Writing on this device…");
-    const reply = await engine.chat.completions.create({
-      messages: [{ role: "system", content: config.tasks[task] }, { role: "user", content: JSON.stringify({ sourceText: input }) }],
-      temperature: 0.2, max_tokens: config.maxOutputTokens,
-    });
-    if (signal.aborted) throw new Error("Cancelled.");
-    const text = reply.choices[0]?.message.content?.trim();
-    if (!text) throw new Error("The local model returned no text. Try a shorter excerpt.");
-    return text;
-    })()]);
-  } finally { clearTimeout(deadline); signal.removeEventListener("abort", cancel); busy = false; }
+
+async function deviceModel(config: LocalConfig, compact: boolean, signal: AbortSignal) {
+  if (typeof navigator === "undefined" || !globalThis.isSecureContext) {
+    throw new Error("Local AI requires HTTPS or localhost. Open the app on a secure connection.");
+  }
+  const gpu = (navigator as GpuNavigator).gpu;
+  if (!gpu) throw new Error("WebGPU is unavailable. Use a WebGPU-capable browser with hardware acceleration enabled.");
+  const adapter = await gpu.requestAdapter();
+  signal.throwIfAborted();
+  if (!adapter) throw new Error("No WebGPU adapter is available. Check browser hardware acceleration and your GPU drivers.");
+  const webllm = await import("@mlc-ai/web-llm");
+  signal.throwIfAborted();
+  const modelId = selectLocalModel(config, compact, adapter.features.has("shader-f16"));
+  const record = webllm.prebuiltAppConfig.model_list.find(model => model.model_id === modelId);
+  if (!record) throw new Error("The configured model is not supported by the installed WebLLM version.");
+  if ((record.buffer_size_required_bytes || 0) > adapter.limits.maxStorageBufferBindingSize ||
+      record.required_features?.some(feature => !adapter.features.has(feature))) {
+    throw new Error("This GPU cannot run the selected model. Try the smaller model.");
+  }
+  return { webllm, modelId, record };
 }
+
+export async function inspectLocalAi(compact: boolean, signal: AbortSignal) {
+  const config = await getLocalAiConfig(signal);
+  const { webllm, modelId, record } = await deviceModel(config, compact, signal);
+  // A cache probe must never claim weights are installed merely because npm is installed.
+  const cached = await webllm.hasModelInCache(modelId).catch(() => null);
+  signal.throwIfAborted();
+  return { config, modelId, cached, memoryMB: record.vram_required_MB };
+}
+
+export const localAi = new LocalAiRuntime({
+  getConfig: getLocalAiConfig,
+  prepare: async (config, compact, signal) => {
+    const { webllm, modelId } = await deviceModel(config, compact, signal);
+    return {
+      modelId,
+      create: onFatal => {
+        const worker = new Worker(new URL("./local-ai.worker.ts", import.meta.url), { type: "module" });
+        worker.onerror = event => {
+          event.preventDefault();
+          onFatal(new Error("The local AI worker failed. Reload the model and try again."));
+        };
+        worker.onmessageerror = () => onFatal(new Error("The browser could not read a local AI worker response. Reload the model."));
+        const engine = new webllm.WebWorkerMLCEngine(worker);
+        return { engine, terminate: () => { worker.onerror = null; worker.onmessageerror = null; worker.terminate(); } };
+      },
+    };
+  },
+});
+
+export const unloadLocalAi = localAi.unload;
+export const runLocalAi = localAi.run.bind(localAi);
