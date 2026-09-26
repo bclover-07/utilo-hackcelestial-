@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Sparkles, GitBranch, ShieldCheck, RotateCcw, ArrowUpRight, Plus, X, Check, AlertTriangle, Layers, Network } from "lucide-react";
+import { Sparkles, GitBranch, ShieldCheck, RotateCcw, ArrowUpRight, Plus, X, Check, AlertTriangle, Network } from "lucide-react";
 import { api, streamPlan } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { Heading, Field, Badge, money, date, useData, ActionForm } from "./ui";
@@ -55,10 +55,6 @@ export function PlannerPage() {
   }
   return <>
     <Heading eyebrow="UTLIO CONDUCTOR · PLAN / TEST / ADAPT" title="Make every moving part work." description="Turn an event brief into a checked resource package. Explore the trade-offs. Be ready when plans change." />
-    <section className="conductor-hero panel">
-      <div><Badge>YOUR EVENT, CONNECTED</Badge><h2>Big ideas.<br /><span>Workable plans.</span></h2><p>AI interprets your brief. The allocation engine checks quantities, shared inventory and costs. You stay in control.</p><div className="conductor-pills"><span><Sparkles size={16} /> Understand</span><span><Layers size={16} /> Assemble</span><span><GitBranch size={16} /> Stress-test</span></div></div>
-      <div className="conductor-orbit" aria-hidden="true"><div className="orbit-center"><Network size={38} /><strong>CONDUCTOR</strong></div><span className="orbit-node node-one">Resources</span><span className="orbit-node node-two">Your budget</span><span className="orbit-node node-three">Availability</span><span className="orbit-node node-four">Plan B</span></div>
-    </section>
     <div role="status" aria-live="polite">{busy && <div className="notice conductor-busy"><span className="live-dot" /> {busy}</div>}{notice && <div className="notice">{notice}</div>}</div>
     {error && <div className="notice error-panel" role="alert">{error}</div>}
     <div className="conductor-workbench">

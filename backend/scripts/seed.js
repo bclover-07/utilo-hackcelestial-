@@ -18,6 +18,7 @@ import {
   Insight,
   Notification,
   EventPlan,
+  WorkProcess,
 } from "../src/models/index.js";
 import { AgentRun } from "../src/models/AgentRun.js";
 import { Memory } from "../src/models/Memory.js";
@@ -910,6 +911,67 @@ async function seed() {
     { $set: { favorites: [ballroom._id, ledWall._id, pagodaTent._id] } }
   );
   console.log(`✔ 3 saved favorites for Priya.`);
+
+  // ─── 19. WORK PROCESS HISTORY ─────────────────────────────────────
+  await WorkProcess.create([
+    {
+      user: seeker._id,
+      action: "DIRECT_OFFER_DISPATCHED",
+      title: "Dispatched Rapido offer for JBL Concert Sound",
+      detail: "Offered ₹19,500 (1 unit) to Arjun Mehta Events for Auto Expo.",
+      category: "negotiation",
+      status: "in_progress",
+      metadata: { listingId: jblSound._id, price: 19500 },
+      createdAt: ago(2),
+    },
+    {
+      user: seeker._id,
+      action: "OFFER_ACCEPTED_BOOKED",
+      title: "Accepted offer & reserved Gold Chiavari Chairs",
+      detail: "Confirmed booking for ₹18,000 (200 units) for Sangeet Night.",
+      category: "booking",
+      status: "completed",
+      metadata: { price: 18000, quantity: 200 },
+      createdAt: ago(12),
+    },
+    {
+      user: seeker._id,
+      action: "REQUEST_POSTED",
+      title: "Posted Requirement: Tech Leaders Summit 2026",
+      detail: "Requested 1 Banquet Hall in BKC with budget ₹75,000.",
+      category: "rfq",
+      status: "completed",
+      createdAt: ago(36),
+    },
+    {
+      user: provider._id,
+      action: "LISTING_PUBLISHED",
+      title: "Published listing: The Grand Imperial Ballroom",
+      detail: "Active in Bandra Kurla Complex at ₹65,000 / day.",
+      category: "listing",
+      status: "completed",
+      createdAt: ago(72),
+    },
+    {
+      user: provider._id,
+      action: "OFFER_ACCEPTED_BOOKED",
+      title: "Booking confirmed: Grand Imperial Ballroom",
+      detail: "Reserved by Priya Sharma for Global Executive Roundtable (₹55,000).",
+      category: "booking",
+      status: "completed",
+      createdAt: ago(14 * 24),
+    },
+    {
+      user: provider._id,
+      action: "COUNTER_OFFER_DISPATCHED",
+      title: "Sent counter-proposal for Tech Leaders Summit",
+      detail: "Quoted ₹62,000 with audiovisual bundle discount.",
+      category: "negotiation",
+      status: "completed",
+      createdAt: ago(10),
+    },
+  ]);
+  console.log(`✔ 6 user work process history records.`);
 
   // ─── DONE ─────────────────────────────────────────────────────────
   console.log(`

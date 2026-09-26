@@ -5510,6 +5510,87 @@ body {
   font-weight: 750;
 }
 
+/* Marketplace Split Layout (Direct Listings + Right Post Options) */
+.discovery-marketplace-container {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: start;
+  margin-top: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .discovery-marketplace-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.discovery-main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.discovery-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: sticky;
+  top: 90px;
+}
+
+.discovery-post-card {
+  background: var(--paper-card, #fffef8);
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 4px 4px 0 var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.discovery-post-card h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.discovery-post-card p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #555;
+  line-height: 1.4;
+}
+
+.work-process-panel {
+  background: #FAF8F5;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.work-process-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.work-process-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #fff;
+  border: 1.5px solid var(--ink);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.work-process-icon {
+  font-size: 1.2rem;
+  padding-top: 2px;
+}
+
 
 
 

@@ -11,6 +11,7 @@ import { listingSchema, range, validRange } from "./validation.js";
 import { assert } from "../middlewares/errors.js";
 import { peakReserved, search } from "./matchingService.js";
 import { notify } from "./notificationService.js";
+import { logWorkProcess } from "./workProcessService.js";
 export async function ownListing(user, id, session) {
   const l = await Listing.findOne({ _id: id, owner: user._id }).session(
     session || null,
@@ -46,6 +47,14 @@ async function validateListing(user, raw) {
 export async function createListing(user, raw) {
   const data = await validateListing(user, raw);
   const l = await Listing.create({ ...data, owner: user._id });
+  await logWorkProcess({
+    user,
+    action: "LISTING_PUBLISHED",
+    title: `Published listing: ${l.title}`,
+    detail: `Listed in ${l.city} at ₹${l.price} / ${l.unit || "unit"}.`,
+    category: "listing",
+    metadata: { listingId: l._id, category: l.category, price: l.price, city: l.city },
+  });
   
   for (const saved of await SavedSearch.find({
     "filters.category": l.category,

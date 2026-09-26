@@ -15,6 +15,7 @@ import { assert } from "../middlewares/errors.js";
 import { peakReserved } from "./matchingService.js";
 import { notify } from "./notificationService.js";
 import { broadcastMessage } from "../socket.js";
+import { logWorkProcess } from "./workProcessService.js";
 export const participantQuery = (user) => ({
   $or: [{ provider: user._id }, { seeker: user._id }],
 });
@@ -68,6 +69,14 @@ export async function offer(user, id, raw) {
       "/dashboard/negotiations",
       session,
     );
+    await logWorkProcess({
+      user,
+      action: "COUNTER_OFFER_DISPATCHED",
+      title: `Dispatched counter-offer of ₹${data.price}`,
+      detail: data.conditions || "Counter-offer submitted in negotiation.",
+      category: "negotiation",
+      metadata: { quoteId: q._id, price: data.price, version: q.version },
+    });
     return q;
   });
 }
@@ -214,6 +223,14 @@ export async function accept(user, id, raw) {
         "/dashboard/bookings",
         session,
       );
+    await logWorkProcess({
+      user,
+      action: "OFFER_ACCEPTED_BOOKED",
+      title: `Accepted offer & reserved ${l.title}`,
+      detail: `Confirmed reservation for ₹${last.price} from ${r.start.toISOString().slice(0, 10)}.`,
+      category: "booking",
+      metadata: { bookingId: booking._id, quoteId: q._id, price: last.price },
+    });
     return booking;
   });
 }
@@ -230,6 +247,14 @@ export async function decline(user, id, raw) {
     { new: true },
   );
   assert(q, 409, "Negotiation changed. Refresh first.");
+  await logWorkProcess({
+    user,
+    action: "NEGOTIATION_DECLINED",
+    title: "Declined negotiation offer",
+    detail: `Closed negotiation round at version ${version}.`,
+    category: "negotiation",
+    metadata: { quoteId: q._id, version },
+  });
   return q;
 }
 export async function message(user, id, raw) {
@@ -370,6 +395,15 @@ export async function directOffer(user, raw) {
       "/dashboard/negotiations",
       session,
     );
+
+    await logWorkProcess({
+      user,
+      action: "DIRECT_OFFER_DISPATCHED",
+      title: `Dispatched Rapido offer for ${listing.title}`,
+      detail: `Proposed ₹${data.price} for ${data.quantity} units to ${listing.ownerName || "provider"}.`,
+      category: "negotiation",
+      metadata: { quoteId: quote._id, listingId: listing._id, price: data.price, quantity: data.quantity },
+    });
 
     return {
       quoteId: quote._id,

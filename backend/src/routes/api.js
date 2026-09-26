@@ -14,6 +14,7 @@ import { aiRoutes } from "./aiRoutes.js";
 import { uploadRoutes } from "./uploadRoutes.js";
 import { notificationRoutes } from "./notificationRoutes.js";
 import { adminRoutes } from "./adminRoutes.js";
+import { workProcessRoutes } from "./workProcessRoutes.js";
 import { localAiConfig } from "../services/localAiConfig.js";
 
 export const api = Router();
@@ -43,6 +44,7 @@ api.patch("/profile", authController.profile);
 api.use(uploadRoutes);
 api.use(notificationRoutes);
 api.use(analyticsRoutes);
+api.use(workProcessRoutes);
 
 
 api.use("/admin", adminRoutes);

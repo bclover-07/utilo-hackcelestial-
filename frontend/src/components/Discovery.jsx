@@ -5,21 +5,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  RadarChart,
-  Radar,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Legend,
-} from "recharts";
-import {
   useData,
   State,
   Empty,
@@ -31,6 +16,7 @@ import {
   money,
 } from "./ui";
 import { ListingCard } from "./Inventory";
+import WorkProcessWidget from "./WorkProcessWidget";
 
 export function RapidoNegotiateModal({ listing, onClose }) {
   const router = useRouter();
@@ -124,7 +110,7 @@ export function RapidoNegotiateModal({ listing, onClose }) {
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {/* Units & Base Price Overview */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div style={{ background: "#FAF8F5", padding: "10px 14px", border: "1.5px solid #171915", borderRadius: 12, boxShadow: "2px 2px 0 #171915" }}>
+              <div style={{ background: "#FAF8F5", padding: "10px 14px", border: "2px solid #20201e", borderRadius: 12 }}>
                 <span className="eyebrow" style={{ color: "#7B61A8" }}>QUANTITY NEEDED</span>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4 }}>
                   <button type="button" className="rapido-stepper-btn" onClick={() => handleQuantityChange(-1)} disabled={quantity <= 1}>−</button>
@@ -134,7 +120,7 @@ export function RapidoNegotiateModal({ listing, onClose }) {
                 <small style={{ color: "#666", display: "block", marginTop: 4 }}>Pool: {listing.quantity} available</small>
               </div>
 
-              <div style={{ background: "#FAF8F5", padding: "10px 14px", border: "1.5px solid #171915", borderRadius: 12, boxShadow: "2px 2px 0 #171915" }}>
+              <div style={{ background: "#FAF8F5", padding: "10px 14px", border: "2px solid #20201e", borderRadius: 12 }}>
                 <span className="eyebrow" style={{ color: "#7B61A8" }}>LISTED BASE RATE</span>
                 <div style={{ marginTop: 4 }}>
                   <strong style={{ fontSize: "1.3rem", display: "block" }}>{money(baseRate)}</strong>
@@ -218,7 +204,7 @@ export function RapidoNegotiateModal({ listing, onClose }) {
                 Special Conditions / Notes to Provider (Optional)
               </label>
               <textarea
-                style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: "1.5px solid #171915", fontSize: "0.9rem", minHeight: 60, background: "#fff", boxShadow: "2px 2px 0 #171915" }}
+                style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: "2px solid #20201e", fontSize: "0.9rem", minHeight: 60, background: "#fff" }}
                 placeholder="e.g. Need 8 AM load-in setup, own transportation arranged, etc."
                 value={conditions}
                 onChange={(e) => setConditions(e.target.value)}
@@ -232,7 +218,7 @@ export function RapidoNegotiateModal({ listing, onClose }) {
               <button
                 type="submit"
                 className="button"
-                style={{ flex: 1, background: "#FFE66D", border: "1.5px solid #171915", fontWeight: 800, fontSize: "1rem", padding: "12px", cursor: "pointer", boxShadow: "2px 2px 0 #171915" }}
+                style={{ flex: 1, background: "#FFE66D", border: "2px solid #20201e", fontWeight: 800, fontSize: "1rem", padding: "12px", cursor: "pointer" }}
                 disabled={loading || offerPrice <= 0}
               >
                 {loading ? "Dispatching Offer…" : `🚀 Send Offer of ${money(offerPrice)} & Open Chat`}
@@ -253,174 +239,12 @@ export function RapidoNegotiateModal({ listing, onClose }) {
   );
 }
 
-function SearchResultVisualInsights({ items, total }) {
-  if (!items || items.length === 0) return null;
-
-  const prices = items.map((it) => it.price || 0);
-  const minP = Math.min(...prices);
-  const maxP = Math.max(...prices);
-  const avgP = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
-
-  const chartData = items.slice(0, 8).map((it) => ({
-    name: it.title?.length > 14 ? `${it.title.slice(0, 14)}…` : it.title,
-    price: it.price,
-    capacity: it.capacity || 1,
-    quantity: it.quantity || 1,
-  }));
-
-  return (
-    <div className="feature-chart-panel" style={{ background: "#FFFDF8" }}>
-      <div className="feature-chart-header">
-        <div>
-          <span className="eyebrow" style={{ color: "#0F766E", marginBottom: 2 }}>MATCH INTELLIGENCE SPECTRUM</span>
-          <h3 className="feature-chart-title">Matched Resource Price & Capacity Distribution</h3>
-        </div>
-        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-          <span className="badge" style={{ background: "#4ECDC440", border: "1.5px solid #171915" }}>
-            Avg: {money(avgP)}
-          </span>
-          <span className="badge" style={{ background: "#FFE66D", border: "1.5px solid #171915" }}>
-            Range: {money(minP)} – {money(maxP)}
-          </span>
-        </div>
-      </div>
-
-      <div style={{ width: "100%", height: 190 }}>
-        <ResponsiveContainer>
-          <BarChart data={chartData} barGap={6}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E0CF" />
-            <XAxis dataKey="name" stroke="#171915" tick={{ fontSize: 11, fontWeight: 700 }} />
-            <YAxis stroke="#171915" tick={{ fontSize: 10 }} tickFormatter={(v) => `₹${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
-            <Tooltip
-              formatter={(val, name) => [name === "price" ? money(val) : val, name === "price" ? "Rental Rate" : name === "capacity" ? "Max Capacity" : "Available Stock"]}
-              contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, boxShadow: "2px 2px 0 #171915", fontWeight: 700 }}
-            />
-            <Legend wrapperStyle={{ fontSize: 11, fontWeight: 700, paddingTop: 4 }} />
-            <Bar dataKey="price" name="Rental Rate" fill="#4ECDC4" stroke="#171915" strokeWidth={1.5} radius={[4, 4, 0, 0]} />
-            <Bar dataKey="capacity" name="Capacity (guests)" fill="#FFE66D" stroke="#171915" strokeWidth={1.5} radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  );
-}
-
-function MultiItemComparisonRadar({ items }) {
-  if (!items || items.length === 0) return null;
-
-  const sample = items.slice(0, 4);
-  const maxPrice = Math.max(...sample.map((it) => it.price || 1), 1);
-  const maxCap = Math.max(...sample.map((it) => it.capacity || 1), 1);
-  const maxQty = Math.max(...sample.map((it) => it.quantity || 1), 1);
-
-  const radarData = [
-    {
-      subject: "Affordability",
-      ...Object.fromEntries(
-        sample.map((it, idx) => [
-          `item_${idx}`,
-          Math.round((1 - (it.price || 0) / (maxPrice * 1.2)) * 100),
-        ])
-      ),
-    },
-    {
-      subject: "Capacity",
-      ...Object.fromEntries(
-        sample.map((it, idx) => [
-          `item_${idx}`,
-          Math.round(((it.capacity || 1) / maxCap) * 100),
-        ])
-      ),
-    },
-    {
-      subject: "Fleet Stock",
-      ...Object.fromEntries(
-        sample.map((it, idx) => [
-          `item_${idx}`,
-          Math.round(((it.quantity || 1) / maxQty) * 100),
-        ])
-      ),
-    },
-    {
-      subject: "Flexibility",
-      ...Object.fromEntries(
-        sample.map((it, idx) => [
-          `item_${idx}`,
-          it.cancellationHours <= 24 ? 90 : it.cancellationHours <= 48 ? 70 : 40,
-        ])
-      ),
-    },
-    {
-      subject: "Logistics",
-      ...Object.fromEntries(
-        sample.map((it, idx) => [
-          `item_${idx}`,
-          it.delivery ? 85 : 50,
-        ])
-      ),
-    },
-  ];
-
-  const RADAR_STROKES = ["#4ECDC4", "#FF6B6B", "#C3B1E1", "#FFA502"];
-
-  return (
-    <div className="feature-chart-panel" style={{ background: "#FAF8F5", marginBottom: "2rem" }}>
-      <div className="feature-chart-header">
-        <div>
-          <span className="eyebrow" style={{ color: "#7B61A8", marginBottom: 2 }}>SHORTLIST MULTI-DIMENSIONAL RADAR</span>
-          <h3 className="feature-chart-title">Comparative Resource Benchmarking</h3>
-        </div>
-        <span className="badge" style={{ background: "#C3B1E140", border: "1.5px solid #171915" }}>
-          Comparing {sample.length} shortlisted items
-        </span>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px", alignItems: "center" }}>
-        <div style={{ width: "100%", height: 260 }}>
-          <ResponsiveContainer>
-            <RadarChart data={radarData}>
-              <PolarGrid stroke="#D4D1C8" />
-              <PolarAngleAxis dataKey="subject" tick={{ fill: "#171915", fontSize: 11, fontWeight: 700 }} />
-              <PolarRadiusAxis domain={[0, 100]} stroke="#B5B0A2" tick={{ fontSize: 9 }} />
-              <Tooltip contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, boxShadow: "2px 2px 0 #171915", fontWeight: 700 }} />
-              {sample.map((it, idx) => (
-                <Radar
-                  key={it._id}
-                  name={it.title}
-                  dataKey={`item_${idx}`}
-                  stroke={RADAR_STROKES[idx % RADAR_STROKES.length]}
-                  fill={RADAR_STROKES[idx % RADAR_STROKES.length]}
-                  fillOpacity={0.25}
-                  strokeWidth={2}
-                />
-              ))}
-              <Legend wrapperStyle={{ fontSize: 11, fontWeight: 700 }} />
-            </RadarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="feature-metrics-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
-          {sample.map((it, idx) => (
-            <div key={it._id} className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                <span style={{ width: 10, height: 10, borderRadius: "50%", background: RADAR_STROKES[idx % RADAR_STROKES.length], border: "1px solid #171915", display: "inline-block" }} />
-                <span>{it.title}</span>
-              </div>
-              <strong>{money(it.price)} <small>/{it.unit}</small></strong>
-              <small>👥 {it.capacity} guests · 📦 {it.quantity} units</small>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function SearchPage() {
   const categories = useData("/categories"),
     [result, setResult] = useState(null),
-    [filters, setFilters] = useState(null),
+    [filters, setFilters] = useState({}),
     [selectedCategory, setSelectedCategory] = useState(""),
+    [searchKeyword, setSearchKeyword] = useState(""),
     [rapidoListing, setRapidoListing] = useState(null);
   const [paging, setPaging] = useState(false), [pageError, setPageError] = useState("");
 
@@ -442,6 +266,19 @@ export function SearchPage() {
     setSelectedCategory(slug);
     setPageError("");
     const newFilters = { ...filters, category: slug || undefined, page: 1 };
+    setFilters(newFilters);
+    try {
+      const res = await api("/search", { method: "POST", body: newFilters });
+      setResult(res);
+    } catch (err) {
+      setPageError(err.message);
+    }
+  }
+
+  async function handleKeywordSearch(keyword) {
+    setSearchKeyword(keyword);
+    setPageError("");
+    const newFilters = { ...filters, query: keyword.trim() || undefined, page: 1 };
     setFilters(newFilters);
     try {
       const res = await api("/search", { method: "POST", body: newFilters });
@@ -502,199 +339,176 @@ export function SearchPage() {
         ))}
       </div>
 
-      <section className="panel">
-        <State resource={categories}>
-          {(data) => (
-            <ActionForm
-              label="Find my resources →"
-              onSubmit={async (form) => {
-                setPageError("");
-                const body = Object.fromEntries(
-                  [...form].filter(([, v]) => v !== ""),
-                );
-                if (
-                  body.latitude !== undefined ||
-                  body.longitude !== undefined
-                ) {
-                  if (
-                    body.latitude === undefined ||
-                    body.longitude === undefined
-                  )
-                    throw new Error("Enter both latitude and longitude.");
-                  body.coordinates = [
-                    Number(body.longitude),
-                    Number(body.latitude),
-                  ];
-                }
-                if (body.start) body.start = new Date(body.start).toISOString();
-                if (body.end) body.end = new Date(body.end).toISOString();
-                body.delivery = body.delivery === "on";
-                setResult(null);
-                const response = await api("/search", { method: "POST", body });
-                setFilters(body);
-                setSelectedCategory(body.category || "");
-                setResult(response);
-                return `${response.total} resources matched your filters.`;
-              }}
-            >
-              <div className="search-grid">
-                <Field
-                  label="What are you looking for?"
-                  name="query"
-                  placeholder="Resource name"
-                />
-                <Field as="select" label="Category" name="category" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
-                  <option value="">All categories</option>
-                  {data.map((c) => (
-                    <option key={c._id} value={c.slug}>
-                      {c.name}
-                    </option>
-                  ))}
-                </Field>
-                <Field label="City" name="city" />
-                <Field
-                  label="Budget (INR)"
-                  name="budget"
-                  type="number"
-                  min="1"
-                />
-                <Field label="Start" name="start" type="datetime-local" />
-                <Field label="End" name="end" type="datetime-local" />
-                <Field
-                  label="Quantity"
-                  name="quantity"
-                  type="number"
-                  min="1"
-                  defaultValue="1"
-                />
-                <Field
-                  label="Capacity per unit"
-                  name="capacity"
-                  type="number"
-                  min="1"
-                  defaultValue="1"
-                />
-              </div>
-              <details>
-                <summary>Distance & delivery filters</summary>
-                <div className="form-grid">
-                  <Field
-                    label="Latitude"
-                    name="latitude"
-                    type="number"
-                    step="any"
-                    min="-90"
-                    max="90"
-                  />
-                  <Field
-                    label="Longitude"
-                    name="longitude"
-                    type="number"
-                    step="any"
-                    min="-180"
-                    max="180"
-                  />
-                  <Field
-                    label="Search radius (km)"
-                    name="radiusKm"
-                    type="number"
-                    min="1"
-                    max="300"
-                    defaultValue="25"
-                  />
-                </div>
-                <label className="check">
-                  <input type="checkbox" name="delivery" /> Provider delivery
-                  required
-                </label>
-              </details>
-            </ActionForm>
-          )}
-        </State>
-      </section>
-
-      {result && (
-        <>
-          <div className="section-heading">
-            <h2>
-              {result.total} {result.total === 1 ? "resource" : "resources"} available <small>· ranked by fit & availability</small>
-            </h2>
-            <Action
-              className="quiet"
-              run={async () => {
-                await api("/saved-searches", {
-                  method: "POST",
-                  body: {
-                    name: `${filters?.category || "Resources"} in ${filters?.city || "all cities"}`,
-                    filters: filters || {},
-                  },
-                });
-              }}
-            >
-              Save search & alerts
-            </Action>
-          </div>
-
-          <SearchResultVisualInsights items={result.items} total={result.total} />
-
-          {result.items.length ? (
-            <div className="card-grid">
-              {result.items.map((l, i) => (
-                <ListingCard key={l._id} listing={l} index={i}>
-                  {l.isOwnListing ? (
-                    <Link
-                      className="button quiet"
-                      href="/dashboard/listings"
-                    >
-                      Manage in Listings ↗
-                    </Link>
-                  ) : (
-                    <button
-                      type="button"
-                      className="button"
-                      style={{ background: "#FFE66D", border: "1.5px solid #171915", fontWeight: 800, cursor: "pointer", boxShadow: "2px 2px 0 #171915" }}
-                      onClick={() => setRapidoListing(l)}
-                    >
-                      🤝 Counter Offer / Negotiate ₹
-                    </button>
-                  )}
-                  <Link
-                    className="button quiet"
-                    href={`/dashboard/resources/${l._id}`}
-                  >
-                    View details ↗
-                  </Link>
-                  <Action
-                    className="quiet"
-                    run={() => api(`/favorites/${l._id}`, { method: "POST" })}
-                  >
-                    Save / unsave ♡
-                  </Action>
-                </ListingCard>
-              ))}
-            </div>
-          ) : (
-            <Empty
-              title="No fit yet."
-              text="Try a wider radius or post a request so providers can respond."
-              href="/dashboard/requests/create"
-              label="Post your requirement"
+      <div className="discovery-marketplace-container">
+        {/* LEFT / MAIN COLUMN: DIRECT LISTINGS */}
+        <div className="discovery-main-content">
+          {/* Quick Search & Sort Bar */}
+          <div style={{ display: "flex", gap: "12px", alignItems: "center", background: "#FAF8F5", padding: "12px 16px", borderRadius: "14px", border: "2px solid #20201e", boxShadow: "3px 3px 0 #20201e" }}>
+            <span style={{ fontSize: "1.2rem" }}>🔍</span>
+            <input
+              type="text"
+              placeholder="Search resource name, model or keyword..."
+              value={searchKeyword}
+              onChange={(e) => handleKeywordSearch(e.target.value)}
+              style={{ flex: 1, border: "none", background: "transparent", fontSize: "0.95rem", fontWeight: 600, outline: "none" }}
             />
-          )}
-          {result.total > 24 && (
-            <nav className="search-pagination" aria-label="Resource results pages">
-              <button className="quiet" disabled={paging || result.page <= 1} onClick={() => changePage(result.page - 1)}>← Previous</button>
-              <span role="status">{paging ? "Loading results…" : `Page ${result.page} of ${Math.ceil(result.total / 24)}`}</span>
-              <button className="quiet" disabled={paging || result.page >= Math.ceil(result.total / 24)} onClick={() => changePage(result.page + 1)}>Next →</button>
-            </nav>
-          )}
-          {pageError && <p className="error" role="alert">{pageError}</p>}
-          <div className="discovery-status-strip">
-            <span className="live-dot" />
-            <span>Marketplace Liquidity Active · {result.total} vetted options available across Mumbai</span>
+            {searchKeyword && (
+              <button
+                type="button"
+                className="quiet"
+                style={{ cursor: "pointer", border: "none", background: "none", fontWeight: 700 }}
+                onClick={() => handleKeywordSearch("")}
+              >
+                ✕
+              </button>
+            )}
+            <span style={{ fontSize: "0.85rem", color: "#666", fontWeight: 700 }}>
+              {result ? `${result.total} available` : "Loading..."}
+            </span>
           </div>
-        </>
-      )}
+
+          {result ? (
+            <>
+              {result.items.length ? (
+                <div className="card-grid">
+                  {result.items.map((l, i) => (
+                    <ListingCard key={l._id} listing={l} index={i}>
+                      {l.isOwnListing ? (
+                        <Link
+                          className="button quiet"
+                          href="/dashboard/listings"
+                        >
+                          Manage in Listings ↗
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          className="button"
+                          style={{ background: "#FFE66D", border: "2px solid #20201e", fontWeight: 800, cursor: "pointer" }}
+                          onClick={() => setRapidoListing(l)}
+                        >
+                          🤝 Counter Offer / Negotiate ₹
+                        </button>
+                      )}
+                      <Link
+                        className="button quiet"
+                        href={`/dashboard/resources/${l._id}`}
+                      >
+                        View details ↗
+                      </Link>
+                      <Action
+                        className="quiet"
+                        run={() => api(`/favorites/${l._id}`, { method: "POST" })}
+                      >
+                        Save / unsave ♡
+                      </Action>
+                    </ListingCard>
+                  ))}
+                </div>
+              ) : (
+                <Empty
+                  title="No listings matched."
+                  text="Try clearing your filters or post a requirement on the right."
+                  href="/dashboard/requests/create"
+                  label="Post your requirement"
+                />
+              )}
+
+              {result.total > 24 && (
+                <nav className="search-pagination" aria-label="Resource results pages">
+                  <button className="quiet" disabled={paging || result.page <= 1} onClick={() => changePage(result.page - 1)}>← Previous</button>
+                  <span role="status">{paging ? "Loading results…" : `Page ${result.page} of ${Math.ceil(result.total / 24)}`}</span>
+                  <button className="quiet" disabled={paging || result.page >= Math.ceil(result.total / 24)} onClick={() => changePage(result.page + 1)}>Next →</button>
+                </nav>
+              )}
+              {pageError && <p className="error" role="alert">{pageError}</p>}
+              <div className="discovery-status-strip">
+                <span className="live-dot" />
+                <span>Marketplace Liquidity Active · {result.total} vetted options available across Mumbai</span>
+              </div>
+            </>
+          ) : (
+            <p>Loading marketplace catalog…</p>
+          )}
+        </div>
+
+        {/* RIGHT COLUMN: POST OPTIONS & WORK PROCESSES */}
+        <aside className="discovery-sidebar">
+          {/* Post Option 1: Provider Listing */}
+          <div className="discovery-post-card" style={{ background: "#FFF9DB" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span className="eyebrow" style={{ color: "#B8860B" }}>PROVIDER REVENUE</span>
+              <span className="badge" style={{ background: "#FFE66D", border: "1.5px solid #20201e", fontSize: "0.75rem", fontWeight: 700 }}>Earn Rental ₹</span>
+            </div>
+            <h3>🏢 List Your Resources</h3>
+            <p>Have venue space, audio equipment, chairs, or setups idle between dates? Monetize them in minutes.</p>
+            <Link
+              href="/dashboard/listings/create"
+              className="button"
+              style={{ background: "#20201e", color: "#fff", textAlign: "center", textDecoration: "none", fontWeight: 800, padding: "10px 14px", borderRadius: "10px" }}
+            >
+              + Post a Resource Listing ↗
+            </Link>
+          </div>
+
+          {/* Post Option 2: Seeker Custom RFQ */}
+          <div className="discovery-post-card" style={{ background: "#E8F5E9" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span className="eyebrow" style={{ color: "#2E7D32" }}>SEEKER RFQ</span>
+              <span className="badge" style={{ background: "#A8E6CF", border: "1.5px solid #20201e", fontSize: "0.75rem", fontWeight: 700 }}>Custom Deal</span>
+            </div>
+            <h3>📢 Post a Requirement</h3>
+            <p>Need a custom multi-category package or specific dates? Broadcast an RFQ to verified suppliers.</p>
+            <Link
+              href="/dashboard/requests/create"
+              className="button"
+              style={{ background: "#4ECDC4", color: "#171915", textAlign: "center", textDecoration: "none", fontWeight: 800, padding: "10px 14px", borderRadius: "10px", border: "2px solid #20201e" }}
+            >
+              Post Custom RFQ ↗
+            </Link>
+          </div>
+
+          {/* Quick Filters Accordion */}
+          <details className="panel" style={{ background: "#fff", padding: "12px 14px", border: "2px solid #20201e", borderRadius: "14px", boxShadow: "3px 3px 0 #20201e" }}>
+            <summary style={{ cursor: "pointer", fontWeight: 700, fontSize: "0.9rem" }}>
+              ⚡ Advanced Filter & Budget
+            </summary>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>
+              <label style={{ fontSize: "0.8rem", fontWeight: 700 }}>
+                Filter City
+                <input
+                  type="text"
+                  placeholder="e.g. Mumbai"
+                  defaultValue={filters?.city || ""}
+                  onBlur={(e) => {
+                    const newFilters = { ...filters, city: e.target.value.trim() || undefined, page: 1 };
+                    setFilters(newFilters);
+                    api("/search", { method: "POST", body: newFilters }).then(setResult);
+                  }}
+                  style={{ width: "100%", padding: "6px 8px", border: "1.5px solid #20201e", borderRadius: "8px", marginTop: "4px" }}
+                />
+              </label>
+              <label style={{ fontSize: "0.8rem", fontWeight: 700 }}>
+                Max Budget (INR)
+                <input
+                  type="number"
+                  placeholder="e.g. 50000"
+                  defaultValue={filters?.budget || ""}
+                  onBlur={(e) => {
+                    const newFilters = { ...filters, budget: e.target.value ? Number(e.target.value) : undefined, page: 1 };
+                    setFilters(newFilters);
+                    api("/search", { method: "POST", body: newFilters }).then(setResult);
+                  }}
+                  style={{ width: "100%", padding: "6px 8px", border: "1.5px solid #20201e", borderRadius: "8px", marginTop: "4px" }}
+                />
+              </label>
+            </div>
+          </details>
+
+          {/* User's Work Process History from DB */}
+          <WorkProcessWidget title="Your Work Processes" maxItems={4} />
+        </aside>
+      </div>
 
       {/* Rapido Interactive Bidding Modal */}
       {rapidoListing && (
@@ -821,7 +635,7 @@ export function ResourceDetail({ id }) {
                   <button
                     type="button"
                     className="button"
-                    style={{ background: "#171915", color: "#fff", border: "1.5px solid #171915", fontWeight: 800, padding: "12px", cursor: "pointer", boxShadow: "2px 2px 0 #171915" }}
+                    style={{ background: "#20201e", color: "#fff", border: "2px solid #20201e", fontWeight: 800, padding: "12px", cursor: "pointer" }}
                     onClick={() => setRapidoListing(l)}
                   >
                     ⚡ Propose Counter-Offer (Rapido)
@@ -866,7 +680,6 @@ export function ResourceDetail({ id }) {
     </State>
   );
 }
-
 export function ComparePage() {
   const [rerun, setRerun] = useState(null);
   const favorites = useData("/favorites"),
@@ -880,60 +693,57 @@ export function ComparePage() {
       <State resource={favorites}>
         {(data) =>
           data.length ? (
-            <>
-              <MultiItemComparisonRadar items={data} />
-              <div className="compare-grid">
-                {data.map((l) => (
-                  <section className="panel compare-card-neo" key={l._id}>
-                    <div className="compare-card-top">
-                      <Badge>{l.category?.replaceAll("_", " ")}</Badge>
-                      <span className="spec-chip">📍 {l.city}</span>
-                    </div>
-                    <h2 style={{ margin: "0.5rem 0" }}>{l.title}</h2>
+            <div className="compare-grid">
+              {data.map((l) => (
+                <section className="panel compare-card-neo" key={l._id}>
+                  <div className="compare-card-top">
+                    <Badge>{l.category?.replaceAll("_", " ")}</Badge>
+                    <span className="spec-chip">📍 {l.city}</span>
+                  </div>
+                  <h2 style={{ margin: "0.5rem 0" }}>{l.title}</h2>
 
-                    <div className="compare-metrics-grid">
-                      <div className="compare-metric-card">
-                        <span>Rate</span>
-                        <strong>{money(l.price)} <small>/{l.unit}</small></strong>
-                      </div>
-                      <div className="compare-metric-card">
-                        <span>Capacity</span>
-                        <strong>{l.capacity} guests</strong>
-                      </div>
-                      <div className="compare-metric-card">
-                        <span>Available</span>
-                        <strong>{l.quantity} units</strong>
-                      </div>
-                      <div className="compare-metric-card">
-                        <span>Deposit</span>
-                        <strong>{money(l.deposit)}</strong>
-                      </div>
+                  <div className="compare-metrics-grid">
+                    <div className="compare-metric-card">
+                      <span>Rate</span>
+                      <strong>{money(l.price)} <small>/{l.unit}</small></strong>
                     </div>
+                    <div className="compare-metric-card">
+                      <span>Capacity</span>
+                      <strong>{l.capacity} guests</strong>
+                    </div>
+                    <div className="compare-metric-card">
+                      <span>Available</span>
+                      <strong>{l.quantity} units</strong>
+                    </div>
+                    <div className="compare-metric-card">
+                      <span>Deposit</span>
+                      <strong>{money(l.deposit)}</strong>
+                    </div>
+                  </div>
 
-                    <div className="compare-chips-strip">
-                      <span className="spec-chip">🚚 {l.delivery ? `Delivery ${money(l.deliveryFee)}` : "Pickup"}</span>
-                      <span className="spec-chip">⏱ Min {l.minHours}h</span>
-                      <span className="spec-chip">🛡 {l.cancellationHours}h cancel</span>
-                    </div>
+                  <div className="compare-chips-strip">
+                    <span className="spec-chip">🚚 {l.delivery ? `Delivery ${money(l.deliveryFee)}` : "Pickup"}</span>
+                    <span className="spec-chip">⏱ Min {l.minHours}h</span>
+                    <span className="spec-chip">🛡 {l.cancellationHours}h cancel</span>
+                  </div>
 
-                    <div className="compare-actions-row">
-                      <Link className="button" href={`/dashboard/resources/${l._id}`}>
-                        Full details →
-                      </Link>
-                      <Action
-                        className="quiet"
-                        run={async () => {
-                          await api(`/favorites/${l._id}`, { method: "POST" });
-                          await favorites.reload();
-                        }}
-                      >
-                        Remove
-                      </Action>
-                    </div>
-                  </section>
-                ))}
-              </div>
-            </>
+                  <div className="compare-actions-row">
+                    <Link className="button" href={`/dashboard/resources/${l._id}`}>
+                      Full details →
+                    </Link>
+                    <Action
+                      className="quiet"
+                      run={async () => {
+                        await api(`/favorites/${l._id}`, { method: "POST" });
+                        await favorites.reload();
+                      }}
+                    >
+                      Remove
+                    </Action>
+                  </div>
+                </section>
+              ))}
+            </div>
           ) : (
             <Empty
               title="Keep your favourites close."
