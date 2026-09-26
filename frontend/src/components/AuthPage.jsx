@@ -200,48 +200,36 @@ function AuthForm({ register, initialPersona }) {
                   className="button"
                   style={{ fontSize: "0.8rem", padding: "4px 8px", background: "#FFE66D", border: "1.5px solid #20201e", cursor: "pointer" }}
                   onClick={() => {
-                    setEmail("shreshta@utlio.com");
+                    setEmail("arjun@utlio.com");
                     setPassword("Password123!");
                     selectPersona("provider");
                   }}
                 >
-                  🏢 Shreshta (Provider)
-                </button>
-                <button
-                  type="button"
-                  className="button"
-                  style={{ fontSize: "0.8rem", padding: "4px 8px", background: "#FFE66D", border: "1.5px solid #20201e", cursor: "pointer" }}
-                  onClick={() => {
-                    setEmail("shreyas@utlio.com");
-                    setPassword("Password123!");
-                    selectPersona("provider");
-                  }}
-                >
-                  🔊 Shreyas (Provider)
+                  🏢 Arjun Mehta (Provider)
                 </button>
                 <button
                   type="button"
                   className="button"
                   style={{ fontSize: "0.8rem", padding: "4px 8px", background: "#4ECDC4", border: "1.5px solid #20201e", cursor: "pointer" }}
                   onClick={() => {
-                    setEmail("shivam@utlio.com");
+                    setEmail("priya@utlio.com");
                     setPassword("Password123!");
                     selectPersona("seeker");
                   }}
                 >
-                  💼 Shivam (Seeker)
+                  🎯 Priya Sharma (Seeker)
                 </button>
                 <button
                   type="button"
                   className="button"
-                  style={{ fontSize: "0.8rem", padding: "4px 8px", background: "#4ECDC4", border: "1.5px solid #20201e", cursor: "pointer" }}
+                  style={{ fontSize: "0.8rem", padding: "4px 8px", background: "#C3B1E1", border: "1.5px solid #20201e", cursor: "pointer" }}
                   onClick={() => {
-                    setEmail("vaishnavi@utlio.com");
+                    setEmail("admin@utlio.com");
                     setPassword("Password123!");
-                    selectPersona("seeker");
+                    selectPersona("admin");
                   }}
                 >
-                  🎉 Vaishnavi (Seeker)
+                  🛡️ Admin
                 </button>
               </div>
             </div>
