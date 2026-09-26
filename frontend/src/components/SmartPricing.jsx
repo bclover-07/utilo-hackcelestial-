@@ -165,8 +165,8 @@ export function SmartPricingPage() {
         title="Price with confidence."
         description="AI analyzes comparable listings, recent booking prices, and demand signals to recommend competitive pricing."
       />
-      <div className="split-layout">
-        <section className="panel" style={{ background: "#FFE66D" }}>
+      <div style={{ margin: "24px 0", width: "100%" }}>
+        <section className="panel" style={{ background: "#FFE66D", width: "100%" }}>
           <Badge>GEMINI PRICING AGENT</Badge>
           <h2>Get pricing advice</h2>
           <State resource={categories}>
@@ -187,71 +187,48 @@ export function SmartPricingPage() {
                   return "Pricing analysis complete.";
                 }}
               >
-                <Field
-                  as="select"
-                  label="Category"
-                  name="category"
-                  required
-                  value={category}
-                  onChange={(event) => {
-                    setCategory(event.target.value);
-                    setResult(null);
-                  }}
-                >
-                  <option value="">Choose category</option>
-                  {cats.map((c) => (
-                    <option key={c._id} value={c.slug}>
-                      {c.name}
-                    </option>
-                  ))}
-                </Field>
-                <State resource={listings}>
-                  {(ownedListings) => (
-                    <Field
-                      key={category}
-                      as="select"
-                      label="Your listing (optional)"
-                      name="listingId"
-                    >
-                      <option value="">Category analysis</option>
-                      {ownedListings
-                        .filter((item) => item.category === category)
-                        .map((item) => (
-                          <option key={item._id} value={item._id}>
-                            {item.title}
-                          </option>
-                        ))}
-                    </Field>
-                  )}
-                </State>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
+                  <Field
+                    as="select"
+                    label="Category"
+                    name="category"
+                    required
+                    value={category}
+                    onChange={(event) => {
+                      setCategory(event.target.value);
+                      setResult(null);
+                    }}
+                  >
+                    <option value="">Choose category</option>
+                    {cats.map((c) => (
+                      <option key={c._id} value={c.slug}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </Field>
+                  <State resource={listings}>
+                    {(ownedListings) => (
+                      <Field
+                        key={category}
+                        as="select"
+                        label="Your listing (optional)"
+                        name="listingId"
+                      >
+                        <option value="">Category analysis</option>
+                        {ownedListings
+                          .filter((item) => item.category === category)
+                          .map((item) => (
+                            <option key={item._id} value={item._id}>
+                              {item.title}
+                            </option>
+                          ))}
+                      </Field>
+                    )}
+                  </State>
+                </div>
               </ActionForm>
             )}
           </State>
-        </section>
-        <section className="panel" style={{ background: "#A8E6CF" }}>
-          <h3>How AI pricing works</h3>
-          <div className="ai-flow-visual">
-            <div className="ai-node" style={{ background: "#89CFF0" }}>
-              📋 Comparables
-            </div>
-            <span className="ai-arrow">→</span>
-            <div className="ai-node" style={{ background: "#FFB347" }}>
-              💰 Booking History
-            </div>
-            <span className="ai-arrow">→</span>
-            <div className="ai-node" style={{ background: "#FF85A1" }}>
-              📊 Demand Signals
-            </div>
-            <span className="ai-arrow">→</span>
-            <div className="ai-node" style={{ background: "#C3B1E1" }}>
-              🧠 Gemini AI
-            </div>
-          </div>
-          <p>
-            Compares your listing against all active listings in the same
-            category, factors in recent booking prices, and weighs current
-            demand intensity.
-          </p>
         </section>
       </div>
       {result && (

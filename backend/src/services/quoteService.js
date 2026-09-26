@@ -222,6 +222,7 @@ export async function accept(user, id, raw) {
         `${l.title} is reserved. Payment is arranged directly between businesses.`,
         "/dashboard/bookings",
         session,
+        { kind: "booking", relatedBooking: booking._id, relatedListing: l._id }
       );
     await logWorkProcess({
       user,
@@ -247,6 +248,16 @@ export async function decline(user, id, raw) {
     { new: true },
   );
   assert(q, 409, "Negotiation changed. Refresh first.");
+  const otherParty = String(q.provider) === String(user._id) ? q.seeker : q.provider;
+  if (otherParty) {
+    await notify(
+      otherParty,
+      "Negotiation offer declined",
+      `${user.name || "Partner"} declined the current negotiation offer.`,
+      `/dashboard/negotiations?selected=${q._id}`,
+      { kind: "negotiation", relatedQuote: q._id }
+    );
+  }
   await logWorkProcess({
     user,
     action: "NEGOTIATION_DECLINED",
@@ -267,12 +278,17 @@ export async function message(user, id, raw) {
   try {
     broadcastMessage(id, populated, [q.provider, q.seeker]);
   } catch {}
-  await notify(
-    String(q.provider) === String(user._id) ? q.seeker : q.provider,
-    "New message",
-    "Your booking partner sent a message.",
-    "/dashboard/negotiations",
-  );
+  const recipient = String(q.provider) === String(user._id) ? q.seeker : q.provider;
+  if (recipient) {
+    const preview = text.length > 80 ? `${text.slice(0, 80)}…` : text;
+    await notify(
+      recipient,
+      `New message from ${user.name || "Partner"}`,
+      preview,
+      `/dashboard/negotiations?selected=${id}`,
+      { kind: "message", relatedQuote: id }
+    );
+  }
   return populated;
 }
 
