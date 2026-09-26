@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { getSocket } from "@/lib/socket";
@@ -145,7 +145,10 @@ function QuoteDetail({ q, reload }) {
     [selectedOfferPrice, setSelectedOfferPrice] = useState(null),
     [selectedOfferConditions, setSelectedOfferConditions] = useState(null),
     [socketMessages, setSocketMessages] = useState([]),
-    [socketActive, setSocketActive] = useState(false);
+    [socketActive, setSocketActive] = useState(false),
+    [sendingMessage, setSendingMessage] = useState(false);
+
+  const messagesEndRef = useRef(null);
 
   // Counterparty info
   const isProvider = String(q.provider?._id) === String(user._id);
@@ -253,6 +256,10 @@ function QuoteDetail({ q, reload }) {
       (sm) => !(messages.data || []).some((m) => String(m._id) === String(sm._id))
     ),
   ];
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [realtimeMessages.length]);
 
   // Socket.io real-time room joining, messaging & video call events
   useEffect(() => {
@@ -493,17 +500,29 @@ function QuoteDetail({ q, reload }) {
               Socket.io Live
             </span>
           ) : (
-            <span
+            <button
+              type="button"
+              onClick={() => {
+                const s = getSocket();
+                if (s) {
+                  try {
+                    s.disconnect();
+                  } catch {}
+                  s.connect();
+                }
+              }}
               className="badge"
               style={{
                 background: "#FFE66D40",
                 border: "1.5px solid #20201e",
                 fontSize: "0.75rem",
                 padding: "3px 8px",
+                cursor: "pointer",
               }}
+              title="Click to reconnect socket"
             >
-              Connecting...
-            </span>
+              Connecting... (Tap to retry)
+            </button>
           )}
         </div>
         {realtimeMessages.length ? (
@@ -701,6 +720,7 @@ function QuoteDetail({ q, reload }) {
                 </div>
               );
             })}
+            <div ref={messagesEndRef} style={{ height: "1px" }} />
           </div>
         ) : messages.loading ? (
           <p>Loading messages...</p>
@@ -713,8 +733,9 @@ function QuoteDetail({ q, reload }) {
             e.preventDefault();
             const form = new FormData(e.currentTarget);
             const text = form.get("text");
-            if (!text || !String(text).trim()) return;
+            if (!text || !String(text).trim() || sendingMessage) return;
             const textarea = e.currentTarget.querySelector('textarea[name="text"]');
+            setSendingMessage(true);
             try {
               const result = await api(`/quotes/${q._id}/messages`, {
                 method: "POST",
@@ -729,6 +750,8 @@ function QuoteDetail({ q, reload }) {
               }
             } catch (err) {
               console.error("Message send error:", err);
+            } finally {
+              setSendingMessage(false);
             }
           }}
         >
@@ -739,7 +762,14 @@ function QuoteDetail({ q, reload }) {
             rows={2}
             required
             maxLength={4000}
-            placeholder="Type your message to the counter-party here..."
+            placeholder="Type your message to the counter-party here (Press Enter to send)..."
+            disabled={sendingMessage}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                e.currentTarget.form?.requestSubmit();
+              }
+            }}
           />
 
           <div
@@ -753,21 +783,22 @@ function QuoteDetail({ q, reload }) {
           >
             <button
               type="submit"
+              disabled={sendingMessage}
               className="button"
               style={{
-                background: "#FAF8F5",
+                background: sendingMessage ? "#e5e7eb" : "#FAF8F5",
                 color: "#20201e",
                 border: "2px solid #20201e",
                 borderRadius: "12px",
                 padding: "9px 18px",
                 fontWeight: 800,
                 fontSize: "0.88rem",
-                cursor: "pointer",
+                cursor: sendingMessage ? "not-allowed" : "pointer",
                 boxShadow: "2.5px 2.5px 0 #20201e",
                 transition: "all 0.15s ease",
               }}
             >
-              Send message
+              {sendingMessage ? "Sending..." : "Send message"}
             </button>
 
             <button

@@ -2,6 +2,7 @@ import { io } from "socket.io-client";
 
 let socket = null;
 let currentToken = null;
+let isFetchingToken = false;
 
 export function getStoredSocketToken() {
   if (typeof window === "undefined") return null;
@@ -22,8 +23,15 @@ export function setSocketAuthToken(token) {
     socket.auth = { token };
     if (socket.io && socket.io.opts) {
       socket.io.opts.query = { token: token || "" };
+      socket.io.opts.extraHeaders = {
+        ...(socket.io.opts.extraHeaders || {}),
+        Authorization: token ? `Bearer ${token}` : "",
+      };
     }
-    if (!socket.connected && token) {
+    if (token) {
+      try {
+        socket.disconnect();
+      } catch {}
       socket.connect();
     }
   }
@@ -32,14 +40,48 @@ export function setSocketAuthToken(token) {
 export function disconnectSocket() {
   setSocketAuthToken(null);
   if (socket) {
-    socket.disconnect();
+    try {
+      socket.disconnect();
+    } catch {}
   }
+}
+
+async function requestFreshSocketToken() {
+  if (isFetchingToken || typeof window === "undefined") return null;
+  isFetchingToken = true;
+  try {
+    const res = await fetch("/api/auth/socket-token", {
+      credentials: "include",
+      headers: { "X-Utlio-Request": "1" },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.token) {
+        setSocketAuthToken(data.token);
+        return data.token;
+      }
+    }
+  } catch (err) {
+    console.warn("[Socket.io] Token retrieval notice:", err.message);
+  } finally {
+    isFetchingToken = false;
+  }
+  return null;
 }
 
 export function getSocket() {
   if (typeof window === "undefined") return null;
 
   const token = getStoredSocketToken();
+
+  // If no token stored yet, trigger an immediate fetch
+  if (!token && !isFetchingToken) {
+    requestFreshSocketToken().then((freshToken) => {
+      if (freshToken && socket && !socket.connected) {
+        setSocketAuthToken(freshToken);
+      }
+    });
+  }
 
   if (!socket) {
     const origin =
@@ -58,9 +100,13 @@ export function getSocket() {
       query: {
         token: token || "",
       },
+      extraHeaders: {
+        Authorization: token ? `Bearer ${token}` : "",
+      },
       transports: ["websocket", "polling"],
-      reconnectionAttempts: 25,
+      reconnectionAttempts: 30,
       reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
       timeout: 10000,
     });
 
@@ -69,32 +115,37 @@ export function getSocket() {
     });
 
     socket.on("connect_error", async (err) => {
+      const msg = err.message?.toLowerCase() || "";
       console.warn("[Socket.io] Connection notice:", err.message);
       if (
-        err.message?.toLowerCase().includes("auth") ||
-        err.message?.toLowerCase().includes("token")
+        msg.includes("auth") ||
+        msg.includes("token") ||
+        msg.includes("session") ||
+        msg.includes("expired") ||
+        msg.includes("jwt") ||
+        msg.includes("unauthorized") ||
+        msg.includes("invalid")
       ) {
-        try {
-          const res = await fetch("/api/auth/socket-token", { credentials: "include" });
-          if (res.ok) {
-            const data = await res.json();
-            if (data?.token) {
-              setSocketAuthToken(data.token);
-              socket.connect();
-            }
+        const freshToken = await requestFreshSocketToken();
+        if (freshToken && socket) {
+          socket.auth = { token: freshToken };
+          if (socket.io && socket.io.opts) {
+            socket.io.opts.query = { token: freshToken };
+            socket.io.opts.extraHeaders = {
+              ...(socket.io.opts.extraHeaders || {}),
+              Authorization: `Bearer ${freshToken}`,
+            };
           }
-        } catch {}
+          try {
+            socket.disconnect();
+          } catch {}
+          socket.connect();
+        }
       }
     });
   } else {
     if (token && (!socket.auth?.token || socket.auth.token !== token)) {
-      socket.auth = { token };
-      if (socket.io && socket.io.opts) {
-        socket.io.opts.query = { token };
-      }
-      if (!socket.connected) {
-        socket.connect();
-      }
+      setSocketAuthToken(token);
     }
   }
 

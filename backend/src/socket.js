@@ -13,12 +13,14 @@ export function getIO() {
 
 export function broadcastMessage(quoteId, message, userIds = []) {
   if (ioInstance) {
-    ioInstance.to(`quote_${quoteId}`).emit("new_message", message);
+    const targetRooms = new Set();
+    if (quoteId) targetRooms.add(`quote_${quoteId}`);
     if (Array.isArray(userIds)) {
       userIds.forEach((uid) => {
-        if (uid) ioInstance.to(`user_${String(uid)}`).emit("new_message", message);
+        if (uid) targetRooms.add(`user_${String(uid)}`);
       });
     }
+    ioInstance.to(Array.from(targetRooms)).emit("new_message", message);
   }
 }
 
@@ -51,9 +53,12 @@ export function initSocketServer(httpServer) {
     try {
       const cookieHeader = socket.handshake.headers.cookie || "";
       const cookieMatch = cookieHeader.match(/utlio_session=([^;]+)/);
+      const authHeader = socket.handshake.headers.authorization || "";
+      const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
       const token =
         socket.handshake.auth?.token ||
         socket.handshake.query?.token ||
+        bearerToken ||
         (cookieMatch ? cookieMatch[1] : null);
 
       if (!token) {
@@ -359,8 +364,7 @@ export function initSocketServer(httpServer) {
       };
       if (targetUserId) {
         io.to(`user_${targetUserId}`).emit("webrtc_signal", payload);
-      }
-      if (roomId) {
+      } else if (roomId) {
         socket.to(`call_${roomId}`).emit("webrtc_signal", payload);
       }
     });
@@ -374,8 +378,7 @@ export function initSocketServer(httpServer) {
       };
       if (targetUserId) {
         io.to(`user_${targetUserId}`).emit("webrtc_ready", payload);
-      }
-      if (roomId) {
+      } else if (roomId) {
         socket.to(`call_${roomId}`).emit("webrtc_ready", payload);
       }
     });
