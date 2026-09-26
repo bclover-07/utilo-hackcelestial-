@@ -188,7 +188,6 @@ export function initSocketServer(httpServer) {
         // Broadcast to quote room so chat updates with interactive card
         io.to(`quote_${quoteId}`).emit("new_message", populated);
 
-        // Send instant incoming call event to recipient user room and quote room
         const incomingPayload = {
           quoteId: String(quoteId),
           roomId,
@@ -198,11 +197,12 @@ export function initSocketServer(httpServer) {
             _id: String(socket.user._id),
             name: socket.user.name,
           },
+          recipientId: String(recipient._id),
           createdAt: new Date().toISOString(),
         };
 
+        // Only send incoming call alert directly to target recipient's personal socket room
         io.to(`user_${recipient._id}`).emit("video_call_incoming", incomingPayload);
-        io.to(`quote_${quoteId}`).emit("video_call_incoming", incomingPayload);
 
         // Create persistent notification record (emits 'notification' socket event)
         await notify(
@@ -316,6 +316,15 @@ export function initSocketServer(httpServer) {
         quoteId,
         senderId: String(socket.user._id),
         signal,
+      });
+    });
+
+    // 4b. WebRTC Peer Ready Handshake
+    socket.on("webrtc_ready", ({ quoteId, targetUserId }) => {
+      if (!targetUserId) return;
+      io.to(`user_${targetUserId}`).emit("webrtc_ready", {
+        quoteId,
+        senderId: String(socket.user._id),
       });
     });
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 import {
   useData,
   State,
@@ -240,6 +241,7 @@ export function RapidoNegotiateModal({ listing, onClose }) {
 }
 
 export function SearchPage() {
+  const { user } = useAuth();
   const categories = useData("/categories"),
     [result, setResult] = useState(null),
     [filters, setFilters] = useState({}),
@@ -368,65 +370,63 @@ export function SearchPage() {
           </div>
 
           {result ? (
-            <>
-              {result.items.length ? (
-                <div className="card-grid">
-                  {result.items.map((l, i) => (
-                    <ListingCard key={l._id} listing={l} index={i}>
-                      {l.isOwnListing ? (
-                        <Link
-                          className="button quiet"
-                          href="/dashboard/listings"
-                        >
-                          Manage in Listings ↗
-                        </Link>
-                      ) : (
-                        <button
-                          type="button"
-                          className="button"
-                          style={{ background: "#FFE66D", border: "2px solid #20201e", fontWeight: 800, cursor: "pointer" }}
-                          onClick={() => setRapidoListing(l)}
-                        >
-                          🤝 Counter Offer / Negotiate ₹
-                        </button>
-                      )}
-                      <Link
-                        className="button quiet"
-                        href={`/dashboard/resources/${l._id}`}
-                      >
-                        View details ↗
-                      </Link>
-                      <Action
-                        className="quiet"
-                        run={() => api(`/favorites/${l._id}`, { method: "POST" })}
-                      >
-                        Save / unsave ♡
-                      </Action>
-                    </ListingCard>
-                  ))}
-                </div>
-              ) : (
-                <Empty
-                  title="No listings matched."
-                  text="Try clearing your filters or post a requirement on the right."
-                  href="/dashboard/requests/create"
-                  label="Post your requirement"
-                />
-              )}
+            (() => {
+              const visibleItems = (result.items || []).filter(
+                (l) => !l.isOwnListing && (user ? String(l.owner?._id || l.owner) !== String(user._id) : true)
+              );
+              return (
+                <>
+                  {visibleItems.length ? (
+                    <div className="card-grid">
+                      {visibleItems.map((l, i) => (
+                        <ListingCard key={l._id} listing={l} index={i}>
+                          <button
+                            type="button"
+                            className="button"
+                            style={{ background: "#FFE66D", border: "2px solid #20201e", fontWeight: 800, cursor: "pointer" }}
+                            onClick={() => setRapidoListing(l)}
+                          >
+                            🤝 Counter Offer / Negotiate ₹
+                          </button>
+                          <Link
+                            className="button quiet"
+                            href={`/dashboard/resources/${l._id}`}
+                          >
+                            View details ↗
+                          </Link>
+                          <Action
+                            className="quiet"
+                            run={() => api(`/favorites/${l._id}`, { method: "POST" })}
+                          >
+                            Save / unsave ♡
+                          </Action>
+                        </ListingCard>
+                      ))}
+                    </div>
+                  ) : (
+                    <Empty
+                      title="No listings matched."
+                      text="Try clearing your filters or post a requirement on the right."
+                      href="/dashboard/requests/create"
+                      label="Post your requirement"
+                    />
+                  )}
 
-              {result.total > 24 && (
-                <nav className="search-pagination" aria-label="Resource results pages">
-                  <button className="quiet" disabled={paging || result.page <= 1} onClick={() => changePage(result.page - 1)}>← Previous</button>
-                  <span role="status">{paging ? "Loading results…" : `Page ${result.page} of ${Math.ceil(result.total / 24)}`}</span>
-                  <button className="quiet" disabled={paging || result.page >= Math.ceil(result.total / 24)} onClick={() => changePage(result.page + 1)}>Next →</button>
-                </nav>
-              )}
-              {pageError && <p className="error" role="alert">{pageError}</p>}
-              <div className="discovery-status-strip">
-                <span className="live-dot" />
-                <span>Marketplace Liquidity Active · {result.total} vetted options available across Mumbai</span>
-              </div>
-            </>
+                  {result.total > 24 && (
+                    <nav className="search-pagination" aria-label="Resource results pages">
+                      <button className="quiet" disabled={paging || result.page <= 1} onClick={() => changePage(result.page - 1)}>← Previous</button>
+                      <span role="status">{paging ? "Loading results…" : `Page ${result.page} of ${Math.ceil(result.total / 24)}`}</span>
+                      <button className="quiet" disabled={paging || result.page >= Math.ceil(result.total / 24)} onClick={() => changePage(result.page + 1)}>Next →</button>
+                    </nav>
+                  )}
+                  {pageError && <p className="error" role="alert">{pageError}</p>}
+                  <div className="discovery-status-strip">
+                    <span className="live-dot" />
+                    <span>Marketplace Liquidity Active · {visibleItems.length} available from external partners</span>
+                  </div>
+                </>
+              );
+            })()
           ) : (
             <p>Loading marketplace catalog…</p>
           )}
@@ -522,11 +522,17 @@ export function SearchPage() {
 }
 
 export function ResourceDetail({ id }) {
+  const { user } = useAuth();
   const resource = useData(`/listings/${id}`);
   const [rapidoListing, setRapidoListing] = useState(null);
   return (
     <State resource={resource}>
-      {(l) => (
+      {(l) => {
+        const isSelf = Boolean(
+          l.isOwnListing ||
+          (user && String(l.owner?._id || l.owner) === String(user._id))
+        );
+        return (
         <>
           <Heading title={l.title} description={`${l.city} · ${l.address}`}>
             <Link className="button" href="/dashboard/requests/create">
@@ -627,10 +633,25 @@ export function ResourceDetail({ id }) {
               )}
 
               <div style={{ marginTop: "1.25rem", display: "flex", flexDirection: "column", gap: 10 }}>
-                {l.isOwnListing ? (
-                  <Link className="button quiet" href="/dashboard/listings">
-                    Manage this Resource in Listings ↗
-                  </Link>
+                {isSelf ? (
+                  <>
+                    <div
+                      style={{
+                        background: "#FFE66D",
+                        border: "2px solid #20201e",
+                        padding: "12px",
+                        borderRadius: "10px",
+                        fontWeight: 700,
+                        textAlign: "center",
+                        fontSize: "0.88rem",
+                      }}
+                    >
+                      ℹ️ You are the owner of this listing. You cannot propose a counter-offer to yourself.
+                    </div>
+                    <Link className="button quiet" href="/dashboard/listings">
+                      Manage this Resource in Provider Listings ↗
+                    </Link>
+                  </>
                 ) : (
                   <button
                     type="button"
@@ -676,7 +697,8 @@ export function ResourceDetail({ id }) {
             </ActionForm>
           </details>
         </>
-      )}
+      );
+    }}
     </State>
   );
 }
