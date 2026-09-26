@@ -62,16 +62,16 @@ class _PanelState extends State<Panel> {
         duration: const Duration(milliseconds: 110),
         curve: Curves.easeInOut,
         child: Container(
-          margin: const EdgeInsets.only(bottom: 16, right: 3),
-          padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 400 ? 14 : 20),
+          margin: const EdgeInsets.only(bottom: 14, right: 2),
+          padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 400 ? 12 : 18),
           decoration: BoxDecoration(
             color: widget.color,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: ink, width: 2.5),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ink, width: 1.5),
             boxShadow: [
               BoxShadow(
                 color: ink,
-                offset: _pressed ? const Offset(2, 2) : const Offset(4, 5),
+                offset: _pressed ? const Offset(1, 1) : const Offset(2.5, 3),
               ),
             ],
           ),

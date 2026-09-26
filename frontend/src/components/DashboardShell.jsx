@@ -187,6 +187,10 @@ export default function DashboardShell({ children, admin = false }) {
     }
 
     function handleIncoming(data) {
+      if (!data || !data.caller) return;
+      if (auth.user && String(data.caller._id) === String(auth.user._id)) {
+        return; // Caller never sees incoming alert for their own call
+      }
       setIncomingCall(data);
     }
 

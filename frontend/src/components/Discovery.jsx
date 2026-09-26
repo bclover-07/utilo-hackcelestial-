@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 import {
   useData,
   State,
@@ -240,6 +241,7 @@ export function RapidoNegotiateModal({ listing, onClose }) {
 }
 
 export function SearchPage() {
+  const { user } = useAuth();
   const categories = useData("/categories"),
     [result, setResult] = useState(null),
     [filters, setFilters] = useState({}),
@@ -298,11 +300,15 @@ export function SearchPage() {
 
   const categoryIcons = {
     banquet_hall: "🏛️",
+    banquet_space: "🏛️",
+    parking_capacity: "🅿️",
+    vehicles: "🚐",
+    kitchen: "👨‍🍳",
+    furniture: "🛋️",
+    av_equipment: "🔊",
     chairs: "🪑",
     tables: "🍽️",
-    av_equipment: "🔊",
     linens: "✨",
-    kitchen: "👨‍🍳",
   };
 
   return (
@@ -343,7 +349,7 @@ export function SearchPage() {
         {/* LEFT / MAIN COLUMN: DIRECT LISTINGS */}
         <div className="discovery-main-content">
           {/* Quick Search & Sort Bar */}
-          <div style={{ display: "flex", gap: "12px", alignItems: "center", background: "#FAF8F5", padding: "12px 16px", borderRadius: "14px", border: "2px solid #20201e", boxShadow: "3px 3px 0 #20201e" }}>
+          <div style={{ display: "flex", gap: "12px", alignItems: "center", background: "#FAF8F5", padding: "10px 16px", borderRadius: "14px", border: "1.5px solid #20201e", boxShadow: "2px 2px 0 #20201e" }}>
             <span style={{ fontSize: "1.2rem" }}>🔍</span>
             <input
               type="text"
@@ -368,113 +374,112 @@ export function SearchPage() {
           </div>
 
           {result ? (
-            <>
-              {result.items.length ? (
-                <div className="card-grid">
-                  {result.items.map((l, i) => (
-                    <ListingCard key={l._id} listing={l} index={i}>
-                      {l.isOwnListing ? (
-                        <Link
-                          className="button quiet"
-                          href="/dashboard/listings"
-                        >
-                          Manage in Listings ↗
-                        </Link>
-                      ) : (
-                        <button
-                          type="button"
-                          className="button"
-                          style={{ background: "#FFE66D", border: "2px solid #20201e", fontWeight: 800, cursor: "pointer" }}
-                          onClick={() => setRapidoListing(l)}
-                        >
-                          🤝 Counter Offer / Negotiate ₹
-                        </button>
-                      )}
-                      <Link
-                        className="button quiet"
-                        href={`/dashboard/resources/${l._id}`}
-                      >
-                        View details ↗
-                      </Link>
-                      <Action
-                        className="quiet"
-                        run={() => api(`/favorites/${l._id}`, { method: "POST" })}
-                      >
-                        Save / unsave ♡
-                      </Action>
-                    </ListingCard>
-                  ))}
-                </div>
-              ) : (
-                <Empty
-                  title="No listings matched."
-                  text="Try clearing your filters or post a requirement on the right."
-                  href="/dashboard/requests/create"
-                  label="Post your requirement"
-                />
-              )}
+            (() => {
+              const visibleItems = (result.items || []).filter(
+                (l) => !l.isOwnListing && (user ? String(l.owner?._id || l.owner) !== String(user._id) : true)
+              );
+              return (
+                <>
+                  {visibleItems.length ? (
+                    <div className="card-grid">
+                      {visibleItems.map((l, i) => (
+                        <ListingCard key={l._id} listing={l} index={i}>
+                          <button
+                            type="button"
+                            className="button"
+                            style={{ background: "#FFE66D", border: "1.5px solid #20201e", fontWeight: 800, cursor: "pointer", boxShadow: "1.5px 1.5px 0 #20201e", transition: "all 0.15s ease" }}
+                            onClick={() => setRapidoListing(l)}
+                          >
+                            🤝 Counter Offer / Negotiate ₹
+                          </button>
+                          <Link
+                            className="button quiet"
+                            href={`/dashboard/resources/${l._id}`}
+                          >
+                            View details ↗
+                          </Link>
+                          <Action
+                            className="quiet"
+                            run={() => api(`/favorites/${l._id}`, { method: "POST" })}
+                          >
+                            Save / unsave ♡
+                          </Action>
+                        </ListingCard>
+                      ))}
+                    </div>
+                  ) : (
+                    <Empty
+                      title="No listings matched."
+                      text="Try clearing your filters or post a requirement on the right."
+                      href="/dashboard/requests/create"
+                      label="Post your requirement"
+                    />
+                  )}
 
-              {result.total > 24 && (
-                <nav className="search-pagination" aria-label="Resource results pages">
-                  <button className="quiet" disabled={paging || result.page <= 1} onClick={() => changePage(result.page - 1)}>← Previous</button>
-                  <span role="status">{paging ? "Loading results…" : `Page ${result.page} of ${Math.ceil(result.total / 24)}`}</span>
-                  <button className="quiet" disabled={paging || result.page >= Math.ceil(result.total / 24)} onClick={() => changePage(result.page + 1)}>Next →</button>
-                </nav>
-              )}
-              {pageError && <p className="error" role="alert">{pageError}</p>}
-              <div className="discovery-status-strip">
-                <span className="live-dot" />
-                <span>Marketplace Liquidity Active · {result.total} vetted options available across Mumbai</span>
-              </div>
-            </>
+                  {result.total > 24 && (
+                    <nav className="search-pagination" aria-label="Resource results pages">
+                      <button className="quiet" disabled={paging || result.page <= 1} onClick={() => changePage(result.page - 1)}>← Previous</button>
+                      <span role="status">{paging ? "Loading results…" : `Page ${result.page} of ${Math.ceil(result.total / 24)}`}</span>
+                      <button className="quiet" disabled={paging || result.page >= Math.ceil(result.total / 24)} onClick={() => changePage(result.page + 1)}>Next →</button>
+                    </nav>
+                  )}
+                  {pageError && <p className="error" role="alert">{pageError}</p>}
+                  <div className="discovery-status-strip">
+                    <span className="live-dot" />
+                    <span>Marketplace Liquidity Active · {visibleItems.length} available from external partners</span>
+                  </div>
+                </>
+              );
+            })()
           ) : (
             <p>Loading marketplace catalog…</p>
           )}
         </div>
 
         {/* RIGHT COLUMN: POST OPTIONS & WORK PROCESSES */}
+        {/* RIGHT COLUMN: POST OPTIONS & WORK PROCESSES */}
         <aside className="discovery-sidebar">
           {/* Post Option 1: Provider Listing */}
           <div className="discovery-post-card" style={{ background: "#FFF9DB" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span className="eyebrow" style={{ color: "#B8860B" }}>PROVIDER REVENUE</span>
-              <span className="badge" style={{ background: "#FFE66D", border: "1.5px solid #20201e", fontSize: "0.75rem", fontWeight: 700 }}>Earn Rental ₹</span>
+              <span className="eyebrow" style={{ color: "#B8860B", margin: 0, fontSize: "0.68rem" }}>PROVIDER REVENUE</span>
+              <span className="badge" style={{ background: "#FFE66D", border: "1px solid #20201e", fontSize: "0.72rem", fontWeight: 700, padding: "2px 7px" }}>Earn ₹</span>
             </div>
-            <h3>🏢 List Your Resources</h3>
-            <p>Have venue space, audio equipment, chairs, or setups idle between dates? Monetize them in minutes.</p>
+            <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 800 }}>🏢 List Your Resources</h4>
+            <p style={{ margin: 0, fontSize: "0.8rem", color: "#555", lineHeight: 1.35 }}>Monetize idle venues, audio systems & gear.</p>
             <Link
               href="/dashboard/listings/create"
               className="button"
-              style={{ background: "#20201e", color: "#fff", textAlign: "center", textDecoration: "none", fontWeight: 800, padding: "10px 14px", borderRadius: "10px" }}
+              style={{ background: "#20201e", color: "#fff", textAlign: "center", textDecoration: "none", fontWeight: 800, padding: "8px 12px", borderRadius: "10px", fontSize: "0.82rem", minHeight: "36px" }}
             >
-              + Post a Resource Listing ↗
+              + Post a Listing ↗
             </Link>
           </div>
 
           {/* Post Option 2: Seeker Custom RFQ */}
           <div className="discovery-post-card" style={{ background: "#E8F5E9" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span className="eyebrow" style={{ color: "#2E7D32" }}>SEEKER RFQ</span>
-              <span className="badge" style={{ background: "#A8E6CF", border: "1.5px solid #20201e", fontSize: "0.75rem", fontWeight: 700 }}>Custom Deal</span>
+              <span className="eyebrow" style={{ color: "#2E7D32", margin: 0, fontSize: "0.68rem" }}>SEEKER RFQ</span>
+              <span className="badge" style={{ background: "#A8E6CF", border: "1px solid #20201e", fontSize: "0.72rem", fontWeight: 700, padding: "2px 7px" }}>Custom Deal</span>
             </div>
-            <h3>📢 Post a Requirement</h3>
-            <p>Need a custom multi-category package or specific dates? Broadcast an RFQ to verified suppliers.</p>
+            <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 800 }}>📢 Post a Requirement</h4>
+            <p style={{ margin: 0, fontSize: "0.8rem", color: "#555", lineHeight: 1.35 }}>Broadcast custom RFQs to verified suppliers.</p>
             <Link
               href="/dashboard/requests/create"
               className="button"
-              style={{ background: "#4ECDC4", color: "#171915", textAlign: "center", textDecoration: "none", fontWeight: 800, padding: "10px 14px", borderRadius: "10px", border: "2px solid #20201e" }}
+              style={{ background: "#4ECDC4", color: "#171915", textAlign: "center", textDecoration: "none", fontWeight: 800, padding: "8px 12px", borderRadius: "10px", border: "1.5px solid #20201e", fontSize: "0.82rem", minHeight: "36px" }}
             >
               Post Custom RFQ ↗
             </Link>
           </div>
 
           {/* Quick Filters Accordion */}
-          <details className="panel" style={{ background: "#fff", padding: "12px 14px", border: "2px solid #20201e", borderRadius: "14px", boxShadow: "3px 3px 0 #20201e" }}>
-            <summary style={{ cursor: "pointer", fontWeight: 700, fontSize: "0.9rem" }}>
+          <details className="panel" style={{ background: "#fff", padding: "10px 12px", border: "1.5px solid #20201e", borderRadius: "12px", boxShadow: "2px 2px 0 #20201e" }}>
+            <summary style={{ cursor: "pointer", fontWeight: 700, fontSize: "0.84rem", padding: "2px 0" }}>
               ⚡ Advanced Filter & Budget
             </summary>
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>
-              <label style={{ fontSize: "0.8rem", fontWeight: 700 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px" }}>
+              <label style={{ fontSize: "0.76rem", fontWeight: 700 }}>
                 Filter City
                 <input
                   type="text"
@@ -485,10 +490,10 @@ export function SearchPage() {
                     setFilters(newFilters);
                     api("/search", { method: "POST", body: newFilters }).then(setResult);
                   }}
-                  style={{ width: "100%", padding: "6px 8px", border: "1.5px solid #20201e", borderRadius: "8px", marginTop: "4px" }}
+                  style={{ width: "100%", padding: "6px 8px", border: "1.5px solid #20201e", borderRadius: "8px", marginTop: "3px", minHeight: "34px", fontSize: "0.82rem" }}
                 />
               </label>
-              <label style={{ fontSize: "0.8rem", fontWeight: 700 }}>
+              <label style={{ fontSize: "0.76rem", fontWeight: 700 }}>
                 Max Budget (INR)
                 <input
                   type="number"
@@ -499,14 +504,14 @@ export function SearchPage() {
                     setFilters(newFilters);
                     api("/search", { method: "POST", body: newFilters }).then(setResult);
                   }}
-                  style={{ width: "100%", padding: "6px 8px", border: "1.5px solid #20201e", borderRadius: "8px", marginTop: "4px" }}
+                  style={{ width: "100%", padding: "6px 8px", border: "1.5px solid #20201e", borderRadius: "8px", marginTop: "3px", minHeight: "34px", fontSize: "0.82rem" }}
                 />
               </label>
             </div>
           </details>
 
           {/* User's Work Process History from DB */}
-          <WorkProcessWidget title="Your Work Processes" maxItems={4} />
+          <WorkProcessWidget title="Your Work Processes" maxItems={3} />
         </aside>
       </div>
 
@@ -522,11 +527,17 @@ export function SearchPage() {
 }
 
 export function ResourceDetail({ id }) {
+  const { user } = useAuth();
   const resource = useData(`/listings/${id}`);
   const [rapidoListing, setRapidoListing] = useState(null);
   return (
     <State resource={resource}>
-      {(l) => (
+      {(l) => {
+        const isSelf = Boolean(
+          l.isOwnListing ||
+          (user && String(l.owner?._id || l.owner) === String(user._id))
+        );
+        return (
         <>
           <Heading title={l.title} description={`${l.city} · ${l.address}`}>
             <Link className="button" href="/dashboard/requests/create">
@@ -627,10 +638,25 @@ export function ResourceDetail({ id }) {
               )}
 
               <div style={{ marginTop: "1.25rem", display: "flex", flexDirection: "column", gap: 10 }}>
-                {l.isOwnListing ? (
-                  <Link className="button quiet" href="/dashboard/listings">
-                    Manage this Resource in Listings ↗
-                  </Link>
+                {isSelf ? (
+                  <>
+                    <div
+                      style={{
+                        background: "#FFE66D",
+                        border: "2px solid #20201e",
+                        padding: "12px",
+                        borderRadius: "10px",
+                        fontWeight: 700,
+                        textAlign: "center",
+                        fontSize: "0.88rem",
+                      }}
+                    >
+                      ℹ️ You are the owner of this listing. You cannot propose a counter-offer to yourself.
+                    </div>
+                    <Link className="button quiet" href="/dashboard/listings">
+                      Manage this Resource in Provider Listings ↗
+                    </Link>
+                  </>
                 ) : (
                   <button
                     type="button"
@@ -676,7 +702,8 @@ export function ResourceDetail({ id }) {
             </ActionForm>
           </details>
         </>
-      )}
+      );
+    }}
     </State>
   );
 }

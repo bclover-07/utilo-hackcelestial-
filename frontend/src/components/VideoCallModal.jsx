@@ -6,7 +6,7 @@ import { playConnectTone, playEndTone } from "@/lib/callSound";
 import {
   Mic,
   MicOff,
-  Video,
+  Video as VideoIcon,
   VideoOff,
   PhoneOff,
   Monitor,
@@ -15,6 +15,8 @@ import {
   ShieldCheck,
   User,
   AlertCircle,
+  PhoneCall,
+  Clock,
 } from "lucide-react";
 
 const RTC_CONFIG = {
@@ -38,14 +40,15 @@ export function VideoCallModal({
   onClose,
   quoteId,
   roomId,
-  partnerName,
+  partnerName = "Provider",
   partnerId,
   partnerRole = "Provider",
   listingTitle = "Live Negotiation",
   isInitiator = false,
   messageId = "",
 }) {
-  const [callState, setCallState] = useState("initializing"); // initializing, connecting, connected, ended, error
+  // State: 'initializing' | 'calling' | 'connecting' | 'connected' | 'declined' | 'ended' | 'timeout' | 'error'
+  const [callState, setCallState] = useState(isInitiator ? "calling" : "initializing");
   const [errorMessage, setErrorMessage] = useState("");
   const [audioMuted, setAudioMuted] = useState(false);
   const [videoOff, setVideoOff] = useState(false);
@@ -59,19 +62,25 @@ export function VideoCallModal({
   const localStreamRef = useRef(null);
   const screenStreamRef = useRef(null);
   const timerRef = useRef(null);
+  const callTimeoutRef = useRef(null);
   const durationRef = useRef(0);
   const pendingCandidatesRef = useRef([]);
+  const hasOfferedRef = useRef(false);
 
   // Sync ref with duration
   useEffect(() => {
     durationRef.current = duration;
   }, [duration]);
 
-  // Clean teardown helper
+  // Teardown helper
   const cleanUpMedia = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
+    }
+    if (callTimeoutRef.current) {
+      clearTimeout(callTimeoutRef.current);
+      callTimeoutRef.current = null;
     }
 
     if (screenStreamRef.current) {
@@ -132,6 +141,41 @@ export function VideoCallModal({
 
     let isMounted = true;
     pendingCandidatesRef.current = [];
+    hasOfferedRef.current = false;
+    setDuration(0);
+    setAudioMuted(false);
+    setVideoOff(false);
+    setIsScreenSharing(false);
+
+    if (isInitiator) {
+      setCallState("calling");
+    } else {
+      setCallState("connecting");
+    }
+
+    async function sendOffer(pcInstance, socketInstance) {
+      if (hasOfferedRef.current || !pcInstance || !socketInstance) return;
+      try {
+        hasOfferedRef.current = true;
+        setCallState("connecting");
+        const offer = await pcInstance.createOffer({
+          offerToReceiveAudio: true,
+          offerToReceiveVideo: true,
+        });
+        await pcInstance.setLocalDescription(offer);
+
+        socketInstance.emit("webrtc_signal", {
+          quoteId,
+          targetUserId: partnerId,
+          signal: {
+            type: "offer",
+            sdp: offer,
+          },
+        });
+      } catch (err) {
+        console.error("Error creating WebRTC offer:", err);
+      }
+    }
 
     async function startCall() {
       const socket = getSocket();
@@ -160,12 +204,20 @@ export function VideoCallModal({
             },
           });
         } catch (mediaErr) {
-          console.warn("Could not get both video and audio, trying fallback:", mediaErr);
-          // Fallback to audio only or default video
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: true,
-          });
+          console.warn("Could not get ideal video/audio, trying fallback:", mediaErr);
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: true,
+              audio: true,
+            });
+          } catch (audioOnlyErr) {
+            console.warn("Could not get video, trying audio only:", audioOnlyErr);
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: false,
+              audio: true,
+            });
+            setVideoOff(true);
+          }
         }
 
         if (!isMounted) {
@@ -195,7 +247,11 @@ export function VideoCallModal({
             setCallState("connected");
             playConnectTone();
 
-            // Start timer
+            if (callTimeoutRef.current) {
+              clearTimeout(callTimeoutRef.current);
+              callTimeoutRef.current = null;
+            }
+
             if (!timerRef.current) {
               timerRef.current = setInterval(() => {
                 setDuration((prev) => prev + 1);
@@ -222,6 +278,10 @@ export function VideoCallModal({
           if (!isMounted) return;
           if (pc.connectionState === "connected") {
             setCallState("connected");
+            if (callTimeoutRef.current) {
+              clearTimeout(callTimeoutRef.current);
+              callTimeoutRef.current = null;
+            }
             if (!timerRef.current) {
               timerRef.current = setInterval(() => {
                 setDuration((prev) => prev + 1);
@@ -231,11 +291,11 @@ export function VideoCallModal({
             pc.connectionState === "disconnected" ||
             pc.connectionState === "failed"
           ) {
-            setCallState("connecting");
+            if (callState === "connected") {
+              setCallState("connecting");
+            }
           }
         };
-
-        setCallState("connecting");
 
         // 3. Signaling listener
         function handleSignal({ senderId, signal }) {
@@ -263,6 +323,7 @@ export function VideoCallModal({
                     sdp: currentPc.localDescription,
                   },
                 });
+                setCallState("connecting");
               })
               .catch((err) => {
                 console.error("Error handling WebRTC offer:", err);
@@ -294,6 +355,17 @@ export function VideoCallModal({
 
         socket.on("webrtc_signal", handleSignal);
 
+        // When recipient enters or accepts call
+        function handlePeerReady(data) {
+          if (!isMounted) return;
+          if (isInitiator && !hasOfferedRef.current) {
+            sendOffer(pcRef.current, socket);
+          }
+        }
+        socket.on("webrtc_ready", handlePeerReady);
+        socket.on("video_call_accepted", handlePeerReady);
+
+        // Remote user ends call
         function handleCallEnded(data) {
           if (String(data.quoteId) === String(quoteId)) {
             handleEndCall(false);
@@ -301,21 +373,38 @@ export function VideoCallModal({
         }
         socket.on("video_call_ended", handleCallEnded);
 
-        // 4. Initiator sends initial SDP Offer
-        if (isInitiator) {
-          const offer = await pc.createOffer({
-            offerToReceiveAudio: true,
-            offerToReceiveVideo: true,
-          });
-          await pc.setLocalDescription(offer);
+        // Remote user declines call
+        function handleCallDeclined(data) {
+          if (String(data.quoteId) === String(quoteId)) {
+            playEndTone();
+            if (isMounted) {
+              setCallState("declined");
+              if (callTimeoutRef.current) clearTimeout(callTimeoutRef.current);
+            }
+            setTimeout(() => {
+              if (isMounted) handleEndCall(false);
+            }, 2500);
+          }
+        }
+        socket.on("video_call_declined", handleCallDeclined);
 
-          socket.emit("webrtc_signal", {
+        // 4. Initiator vs Recipient setup
+        if (isInitiator) {
+          // Set 40-second timeout if partner doesn't pick up
+          callTimeoutRef.current = setTimeout(() => {
+            if (isMounted && (callState === "calling" || callState === "initializing")) {
+              playEndTone();
+              setCallState("timeout");
+              setTimeout(() => {
+                if (isMounted) handleEndCall(false);
+              }, 3000);
+            }
+          }, 40000);
+        } else {
+          // Recipient: emit ready to notify caller we're in the room and ready for offer
+          socket.emit("webrtc_ready", {
             quoteId,
             targetUserId: partnerId,
-            signal: {
-              type: "offer",
-              sdp: offer,
-            },
           });
         }
       } catch (err) {
@@ -324,7 +413,7 @@ export function VideoCallModal({
           setCallState("error");
           setErrorMessage(
             err.name === "NotAllowedError" || err.name === "PermissionDeniedError"
-              ? "Camera & microphone access was denied. Please allow permissions in your browser bar."
+              ? "Camera & microphone permissions were denied. Please allow camera and microphone access in your browser address bar."
               : `Unable to access media devices: ${err.message}`
           );
         }
@@ -338,7 +427,10 @@ export function VideoCallModal({
       const s = getSocket();
       if (s) {
         s.off("webrtc_signal");
+        s.off("webrtc_ready");
+        s.off("video_call_accepted");
         s.off("video_call_ended");
+        s.off("video_call_declined");
       }
       cleanUpMedia();
     };
@@ -369,7 +461,6 @@ export function VideoCallModal({
     if (!pcRef.current) return;
 
     if (isScreenSharing) {
-      // Revert back to local camera track
       if (screenStreamRef.current) {
         screenStreamRef.current.getTracks().forEach((t) => t.stop());
         screenStreamRef.current = null;
@@ -492,20 +583,20 @@ export function VideoCallModal({
         position: "fixed",
         inset: 0,
         backgroundColor: "rgba(15, 17, 21, 0.88)",
-        backdropFilter: "blur(6px)",
+        backdropFilter: "blur(8px)",
         zIndex: 99999,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "16px",
+        padding: "12px",
       }}
     >
       <div
         style={{
           width: "100%",
-          maxWidth: "960px",
+          maxWidth: "980px",
           height: "90vh",
-          maxHeight: "680px",
+          maxHeight: "700px",
           backgroundColor: "#171915",
           borderRadius: "20px",
           border: "3px solid #20201e",
@@ -599,7 +690,7 @@ export function VideoCallModal({
               </span>
             )}
 
-            {callState === "connecting" && (
+            {callState === "calling" && (
               <span
                 style={{
                   background: "#FFE66D25",
@@ -620,6 +711,33 @@ export function VideoCallModal({
                     height: "8px",
                     borderRadius: "50%",
                     background: "#FFE66D",
+                  }}
+                />
+                Calling {partnerName}...
+              </span>
+            )}
+
+            {callState === "connecting" && (
+              <span
+                style={{
+                  background: "#4ECDC425",
+                  border: "1px solid #4ECDC4",
+                  color: "#4ECDC4",
+                  padding: "4px 10px",
+                  borderRadius: "20px",
+                  fontSize: "0.78rem",
+                  fontWeight: 700,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <span
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    background: "#4ECDC4",
                   }}
                 />
                 Connecting P2P...
@@ -683,8 +801,56 @@ export function VideoCallModal({
             }}
           />
 
-          {/* Fallback when remote video is not yet connected */}
-          {callState !== "connected" && callState !== "error" && (
+          {/* Caller State: Awaiting Answer */}
+          {callState === "calling" && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#fff",
+                gap: "16px",
+                padding: "24px",
+                textAlign: "center",
+                zIndex: 5,
+              }}
+            >
+              <div
+                style={{
+                  width: "96px",
+                  height: "96px",
+                  borderRadius: "50%",
+                  background: "#FFE66D",
+                  color: "#20201e",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "2.6rem",
+                  fontWeight: 900,
+                  border: "3px solid #20201e",
+                  boxShadow: "0 0 35px rgba(255, 230, 109, 0.4)",
+                  animation: "bounce 2s infinite",
+                }}
+              >
+                {partnerName ? partnerName.charAt(0).toUpperCase() : <PhoneCall size={44} />}
+              </div>
+              <div>
+                <h3 style={{ margin: "0 0 6px", fontSize: "1.3rem", fontWeight: 800 }}>
+                  Calling {partnerName}...
+                </h3>
+                <p style={{ margin: 0, color: "#cbd5e1", fontSize: "0.88rem" }}>
+                  A video call request notification was sent to {partnerName}.
+                </p>
+                <small style={{ color: "#9ca3af", fontSize: "0.8rem", display: "block", marginTop: "6px" }}>
+                  Waiting for them to accept the incoming call...
+                </small>
+              </div>
+            </div>
+          )}
+
+          {/* Connecting State */}
+          {callState === "connecting" && (
             <div
               style={{
                 display: "flex",
@@ -695,6 +861,7 @@ export function VideoCallModal({
                 gap: "14px",
                 padding: "20px",
                 textAlign: "center",
+                zIndex: 5,
               }}
             >
               <div
@@ -702,7 +869,7 @@ export function VideoCallModal({
                   width: "88px",
                   height: "88px",
                   borderRadius: "50%",
-                  background: "#FFE66D",
+                  background: "#4ECDC4",
                   color: "#20201e",
                   display: "flex",
                   alignItems: "center",
@@ -710,8 +877,7 @@ export function VideoCallModal({
                   fontSize: "2.4rem",
                   fontWeight: 900,
                   border: "3px solid #20201e",
-                  boxShadow: "0 0 25px rgba(255, 230, 109, 0.35)",
-                  animation: "pulse 1.8s infinite ease-in-out",
+                  boxShadow: "0 0 25px rgba(78, 205, 196, 0.4)",
                 }}
               >
                 {partnerName ? partnerName.charAt(0).toUpperCase() : <User size={40} />}
@@ -721,9 +887,110 @@ export function VideoCallModal({
                   Connecting with {partnerName}...
                 </h3>
                 <p style={{ margin: 0, color: "#9ca3af", fontSize: "0.85rem" }}>
-                  Establishing direct encrypted WebRTC peer stream
+                  Establishing encrypted peer-to-peer WebRTC stream
                 </p>
               </div>
+            </div>
+          )}
+
+          {/* Declined State */}
+          {callState === "declined" && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#fff",
+                gap: "14px",
+                padding: "24px",
+                textAlign: "center",
+                maxWidth: "440px",
+                zIndex: 5,
+              }}
+            >
+              <div
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  borderRadius: "50%",
+                  background: "#FF85A1",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: "3px solid #20201e",
+                }}
+              >
+                <PhoneOff size={38} color="#20201e" />
+              </div>
+              <h3 style={{ margin: 0, color: "#FF85A1", fontSize: "1.25rem", fontWeight: 800 }}>
+                Call Declined
+              </h3>
+              <p style={{ margin: 0, color: "#cbd5e1", fontSize: "0.9rem", lineHeight: 1.4 }}>
+                {partnerName} is unable to join the video call at this moment. You can continue negotiating via chat messages.
+              </p>
+            </div>
+          )}
+
+          {/* Timeout State */}
+          {callState === "timeout" && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#fff",
+                gap: "14px",
+                padding: "24px",
+                textAlign: "center",
+                maxWidth: "440px",
+                zIndex: 5,
+              }}
+            >
+              <div
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  borderRadius: "50%",
+                  background: "#FFE66D",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: "3px solid #20201e",
+                }}
+              >
+                <Clock size={38} color="#20201e" />
+              </div>
+              <h3 style={{ margin: 0, color: "#FFE66D", fontSize: "1.25rem", fontWeight: 800 }}>
+                No Response
+              </h3>
+              <p style={{ margin: 0, color: "#cbd5e1", fontSize: "0.9rem", lineHeight: 1.4 }}>
+                {partnerName} did not answer the video call. Please try again later or leave a message.
+              </p>
+            </div>
+          )}
+
+          {/* Ended State */}
+          {callState === "ended" && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#fff",
+                gap: "12px",
+                padding: "24px",
+                textAlign: "center",
+                zIndex: 5,
+              }}
+            >
+              <PhoneOff size={44} color="#9ca3af" />
+              <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: 800 }}>Call Ended</h3>
+              <p style={{ margin: 0, color: "#9ca3af", fontSize: "0.85rem" }}>
+                Total duration: {formatDuration(duration)}
+              </p>
             </div>
           )}
 
@@ -740,6 +1007,7 @@ export function VideoCallModal({
                 padding: "24px",
                 textAlign: "center",
                 maxWidth: "460px",
+                zIndex: 5,
               }}
             >
               <AlertCircle size={46} color="#FF85A1" />
@@ -864,7 +1132,6 @@ export function VideoCallModal({
               fontSize: "0.85rem",
               cursor: "pointer",
               boxShadow: "2px 2px 0 #20201e",
-              transition: "transform 0.1s ease",
             }}
             title={audioMuted ? "Unmute Microphone" : "Mute Microphone"}
           >
@@ -892,7 +1159,7 @@ export function VideoCallModal({
             }}
             title={videoOff ? "Turn Camera On" : "Turn Camera Off"}
           >
-            {videoOff ? <VideoOff size={18} /> : <Video size={18} />}
+            {videoOff ? <VideoOff size={18} /> : <VideoIcon size={18} />}
             <span>{videoOff ? "Start Video" : "Stop Video"}</span>
           </button>
 
@@ -920,7 +1187,7 @@ export function VideoCallModal({
             <span>{isScreenSharing ? "Stop Sharing" : "Share Screen"}</span>
           </button>
 
-          {/* End Call Button */}
+          {/* End Call / Cancel Button */}
           <button
             type="button"
             onClick={() => handleEndCall(true)}
@@ -938,10 +1205,10 @@ export function VideoCallModal({
               cursor: "pointer",
               boxShadow: "3px 3px 0 #20201e",
             }}
-            title="Hang Up"
+            title={callState === "calling" ? "Cancel Call" : "Hang Up"}
           >
             <PhoneOff size={18} />
-            <span>End Call</span>
+            <span>{callState === "calling" ? "Cancel Call" : "End Call"}</span>
           </button>
         </div>
       </div>

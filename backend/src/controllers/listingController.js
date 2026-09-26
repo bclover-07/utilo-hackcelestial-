@@ -41,7 +41,10 @@ export const listingController = {
       404,
       "Listing not found.",
     );
-    return l;
+    return {
+      ...l,
+      isOwnListing: req.user ? String(l.owner?._id || l.owner) === String(req.user._id) : false,
+    };
   }),
 
   createListing: send((req) => listings.createListing(req.user, req.body)),

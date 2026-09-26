@@ -23,9 +23,9 @@
   --border-width: 1.5px;
   --shadow-sm: 1.5px 1.5px 0 var(--ink);
   --shadow-md: 2px 2px 0 var(--ink);
-  --shadow-lg: 3px 4px 0 var(--ink);
-  --shadow-xl: 4px 5px 0 var(--ink);
-  --shadow-hover: 3px 4px 0 var(--ink);
+  --shadow-lg: 2.5px 3px 0 var(--ink);
+  --shadow-xl: 3px 4px 0 var(--ink);
+  --shadow-hover: 2.5px 3px 0 var(--ink);
 }
 * {
   box-sizing: border-box;

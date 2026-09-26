@@ -85,6 +85,13 @@ export function rank(listing, filters, rating, user = null) {
 export async function search(raw, user, { log = false, session, all = false } = {}) {
   const f = searchSchema.parse(raw);
   const query = { status: "active", moderationHold: { $ne: true } };
+  if (user && user._id) {
+    try {
+      query.owner = { $ne: new mongoose.Types.ObjectId(String(user._id)) };
+    } catch {
+      query.owner = { $ne: user._id };
+    }
+  }
   if (f.category) query.category = f.category;
   if (f.city)
     query.city = {
@@ -132,7 +139,10 @@ export async function search(raw, user, { log = false, session, all = false } = 
     },
     { $project: { embedding: 0, ownerProfile: 0 } },
   ]).session(session || null);
-  const ids = candidates.map((l) => l._id);
+  const pool = (user && user._id)
+    ? candidates.filter((l) => String(l.owner) !== String(user._id))
+    : candidates;
+  const ids = pool.map((l) => l._id);
   const blocks = f.start
     ? await Availability.find({
         listing: { $in: ids },
@@ -143,10 +153,10 @@ export async function search(raw, user, { log = false, session, all = false } = 
         .lean()
     : [];
   const ratings = await Rating.aggregate([
-    { $match: { to: { $in: candidates.map((l) => l.owner) } } },
+    { $match: { to: { $in: pool.map((l) => l.owner) } } },
     { $group: { _id: "$to", average: { $avg: "$score" }, count: { $sum: 1 } } },
   ]).session(session || null);
-  const results = candidates
+  const results = pool
     .filter(
       (l) =>
         !f.start ||

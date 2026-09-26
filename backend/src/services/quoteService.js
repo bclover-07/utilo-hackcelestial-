@@ -455,10 +455,10 @@ export async function requestVideoCall(user, id) {
         _id: String(user._id),
         name: user.name,
       },
+      recipientId: String(recipient._id),
       createdAt: new Date().toISOString(),
     };
     io.to(`user_${recipient._id}`).emit("video_call_incoming", incomingPayload);
-    io.to(`quote_${id}`).emit("video_call_incoming", incomingPayload);
   }
 
   await notify(
