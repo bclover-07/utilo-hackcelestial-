@@ -197,21 +197,27 @@ function QuoteDetail({ q, reload }) {
   const handleAcceptVideoCall = async (msg) => {
     const roomId = msg.videoCall?.roomId || `call_${q._id}`;
     const messageId = msg._id;
+    const isCaller =
+      String(msg.videoCall?.caller?._id || msg.videoCall?.caller || msg.sender?._id) ===
+      String(user._id);
+
     try {
-      await api(`/quotes/${q._id}/video-call/respond`, {
-        method: "POST",
-        body: { action: "accept", roomId, messageId },
-      });
+      if (!isCaller && msg.videoCall?.status === "requested") {
+        await api(`/quotes/${q._id}/video-call/respond`, {
+          method: "POST",
+          body: { action: "accept", roomId, messageId },
+        });
+      }
       window.dispatchEvent(
         new CustomEvent("utlio:open-video-call", {
           detail: {
             quoteId: String(q._id),
             roomId,
-            partnerId: String(msg.sender?._id || partnerId),
-            partnerName: msg.sender?.name || partnerName,
+            partnerId: String(partnerId),
+            partnerName,
             partnerRole,
             listingTitle: q.listing?.title || "Asset Negotiation",
-            isInitiator: false,
+            isInitiator: isCaller,
             messageId,
           },
         })
@@ -275,7 +281,8 @@ function QuoteDetail({ q, reload }) {
     }, 0);
 
     function handleNewMessage(msg) {
-      if (String(msg.quote) === String(q._id)) {
+      const msgQuoteId = String(msg.quote?._id || msg.quote);
+      if (msgQuoteId === String(q._id)) {
         setSocketMessages((prev) => {
           if (prev.some((m) => String(m._id) === String(msg._id))) return prev;
           return [...prev, msg];

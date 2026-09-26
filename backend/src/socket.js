@@ -11,9 +11,14 @@ export function getIO() {
   return ioInstance;
 }
 
-export function broadcastMessage(quoteId, message) {
+export function broadcastMessage(quoteId, message, userIds = []) {
   if (ioInstance) {
     ioInstance.to(`quote_${quoteId}`).emit("new_message", message);
+    if (Array.isArray(userIds)) {
+      userIds.forEach((uid) => {
+        if (uid) ioInstance.to(`user_${String(uid)}`).emit("new_message", message);
+      });
+    }
   }
 }
 
@@ -47,7 +52,9 @@ export function initSocketServer(httpServer) {
       const cookieHeader = socket.handshake.headers.cookie || "";
       const cookieMatch = cookieHeader.match(/utlio_session=([^;]+)/);
       const token =
-        socket.handshake.auth?.token || (cookieMatch ? cookieMatch[1] : null);
+        socket.handshake.auth?.token ||
+        socket.handshake.query?.token ||
+        (cookieMatch ? cookieMatch[1] : null);
 
       if (!token) {
         return next(new Error("Authentication token required for Socket.io"));
@@ -191,8 +198,10 @@ export function initSocketServer(httpServer) {
           .populate("videoCall.caller videoCall.recipient", "name")
           .lean();
 
-        // Broadcast to quote room so chat updates with interactive card
+        // Broadcast to quote room and participant user rooms so chat updates with interactive card
         io.to(`quote_${quoteId}`).emit("new_message", populated);
+        io.to(`user_${q.provider._id}`).emit("new_message", populated);
+        io.to(`user_${q.seeker._id}`).emit("new_message", populated);
 
         const incomingPayload = {
           quoteId: String(quoteId),
@@ -315,23 +324,60 @@ export function initSocketServer(httpServer) {
       }
     });
 
+    // 3b. Video Call Room Signaling Join/Leave
+    socket.on("join_call_room", ({ quoteId, roomId }) => {
+      if (roomId) {
+        socket.join(`call_${roomId}`);
+        socket.to(`call_${roomId}`).emit("peer_joined", {
+          quoteId,
+          roomId,
+          userId: String(socket.user._id),
+          name: socket.user.name,
+        });
+      }
+    });
+
+    socket.on("leave_call_room", ({ quoteId, roomId }) => {
+      if (roomId) {
+        socket.leave(`call_${roomId}`);
+        socket.to(`call_${roomId}`).emit("peer_left", {
+          quoteId,
+          roomId,
+          userId: String(socket.user._id),
+        });
+      }
+    });
+
     // 4. Relay WebRTC Signaling (Offer, Answer, ICE Candidate)
-    socket.on("webrtc_signal", ({ quoteId, targetUserId, signal }) => {
-      if (!targetUserId || !signal) return;
-      io.to(`user_${targetUserId}`).emit("webrtc_signal", {
+    socket.on("webrtc_signal", ({ quoteId, roomId, targetUserId, signal }) => {
+      if (!signal) return;
+      const payload = {
         quoteId,
+        roomId,
         senderId: String(socket.user._id),
         signal,
-      });
+      };
+      if (targetUserId) {
+        io.to(`user_${targetUserId}`).emit("webrtc_signal", payload);
+      }
+      if (roomId) {
+        socket.to(`call_${roomId}`).emit("webrtc_signal", payload);
+      }
     });
 
     // 4b. WebRTC Peer Ready Handshake
-    socket.on("webrtc_ready", ({ quoteId, targetUserId }) => {
-      if (!targetUserId) return;
-      io.to(`user_${targetUserId}`).emit("webrtc_ready", {
+    socket.on("webrtc_ready", ({ quoteId, roomId, targetUserId }) => {
+      const payload = {
         quoteId,
+        roomId,
         senderId: String(socket.user._id),
-      });
+      };
+      if (targetUserId) {
+        io.to(`user_${targetUserId}`).emit("webrtc_ready", payload);
+      }
+      if (roomId) {
+        socket.to(`call_${roomId}`).emit("webrtc_ready", payload);
+      }
     });
 
     // 5. End Video Call

@@ -26,6 +26,7 @@ export function session(res, user) {
     maxAge: 8 * 3600000,
     path: "/",
   });
+  return token;
 }
 export async function register(body) {
   const data = registerSchema.parse(body);

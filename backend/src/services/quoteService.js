@@ -265,7 +265,7 @@ export async function message(user, id, raw) {
     .populate("sender", "name")
     .lean();
   try {
-    broadcastMessage(id, populated);
+    broadcastMessage(id, populated, [q.provider, q.seeker]);
   } catch {}
   await notify(
     String(q.provider) === String(user._id) ? q.seeker : q.provider,
@@ -385,7 +385,7 @@ export async function directOffer(user, raw) {
         .populate("sender", "name")
         .session(session)
         .lean();
-      broadcastMessage(quote._id, populatedMsg);
+      broadcastMessage(quote._id, populatedMsg, [quote.provider, quote.seeker]);
     } catch {}
 
     await notify(
@@ -446,6 +446,8 @@ export async function requestVideoCall(user, id) {
   const io = getIO();
   if (io) {
     io.to(`quote_${id}`).emit("new_message", populated);
+    io.to(`user_${q.provider._id}`).emit("new_message", populated);
+    io.to(`user_${q.seeker._id}`).emit("new_message", populated);
     const incomingPayload = {
       quoteId: String(id),
       roomId,

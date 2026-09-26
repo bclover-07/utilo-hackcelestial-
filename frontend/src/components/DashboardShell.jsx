@@ -242,7 +242,7 @@ export default function DashboardShell({ children, admin = false }) {
       roomId: callData.roomId,
       partnerId: callData.caller?._id,
       partnerName: callData.caller?.name,
-      partnerRole: "Seeker",
+      partnerRole: callData.callerRole || (auth.dashboardRole === "provider" ? "Seeker" : "Provider"),
       listingTitle: callData.listingTitle,
       isInitiator: false,
       messageId: callData.messageId,

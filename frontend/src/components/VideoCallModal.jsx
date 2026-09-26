@@ -58,6 +58,8 @@ export function VideoCallModal({
 
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
+  const remoteStreamRef = useRef(null);
+  const remotePeerIdRef = useRef(partnerId);
   const pcRef = useRef(null);
   const localStreamRef = useRef(null);
   const screenStreamRef = useRef(null);
@@ -67,10 +69,28 @@ export function VideoCallModal({
   const pendingCandidatesRef = useRef([]);
   const hasOfferedRef = useRef(false);
 
-  // Sync ref with duration
+  // Sync ref with duration and partnerId
   useEffect(() => {
     durationRef.current = duration;
   }, [duration]);
+
+  useEffect(() => {
+    if (partnerId) {
+      remotePeerIdRef.current = partnerId;
+    }
+  }, [partnerId]);
+
+  // Ensure remote video element plays when connected
+  useEffect(() => {
+    if (callState === "connected" && remoteVideoRef.current && remoteStreamRef.current) {
+      if (remoteVideoRef.current.srcObject !== remoteStreamRef.current) {
+        remoteVideoRef.current.srcObject = remoteStreamRef.current;
+      }
+      remoteVideoRef.current.play().catch((err) => {
+        console.warn("Video auto-play catch:", err);
+      });
+    }
+  }, [callState]);
 
   // Teardown helper
   const cleanUpMedia = useCallback(() => {
@@ -101,6 +121,11 @@ export function VideoCallModal({
       pcRef.current = null;
     }
 
+    if (remoteStreamRef.current) {
+      remoteStreamRef.current.getTracks().forEach((t) => t.stop());
+      remoteStreamRef.current = null;
+    }
+
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = null;
     }
@@ -115,9 +140,12 @@ export function VideoCallModal({
       const currentDuration = durationRef.current;
       setCallState("ended");
 
-      if (notifyRemote) {
-        const socket = getSocket();
-        if (socket && socket.connected) {
+      const socket = getSocket();
+      if (socket && socket.connected) {
+        if (roomId) {
+          socket.emit("leave_call_room", { quoteId, roomId });
+        }
+        if (notifyRemote) {
           socket.emit("video_call_end", {
             quoteId,
             roomId,
@@ -140,6 +168,7 @@ export function VideoCallModal({
     if (!isOpen) return;
 
     let isMounted = true;
+    let readyInterval = null;
     pendingCandidatesRef.current = [];
     hasOfferedRef.current = false;
     setDuration(0);
@@ -166,14 +195,20 @@ export function VideoCallModal({
 
         socketInstance.emit("webrtc_signal", {
           quoteId,
-          targetUserId: partnerId,
+          roomId,
+          targetUserId: remotePeerIdRef.current || partnerId,
           signal: {
             type: "offer",
-            sdp: offer,
+            sdp: offer.sdp,
+            sessionDescription: {
+              type: offer.type,
+              sdp: offer.sdp,
+            },
           },
         });
       } catch (err) {
         console.error("Error creating WebRTC offer:", err);
+        hasOfferedRef.current = false;
       }
     }
 
@@ -185,6 +220,11 @@ export function VideoCallModal({
           setErrorMessage("Real-time network connection is unavailable.");
         }
         return;
+      }
+
+      // Join the call room
+      if (roomId) {
+        socket.emit("join_call_room", { quoteId, roomId });
       }
 
       try {
@@ -239,38 +279,57 @@ export function VideoCallModal({
           pc.addTrack(track, stream);
         });
 
-        // Remote track arrival
+        // Remote track arrival (audio + video)
         pc.ontrack = (event) => {
           if (!isMounted) return;
-          if (remoteVideoRef.current && event.streams[0]) {
-            remoteVideoRef.current.srcObject = event.streams[0];
-            setCallState("connected");
-            playConnectTone();
-
-            if (callTimeoutRef.current) {
-              clearTimeout(callTimeoutRef.current);
-              callTimeoutRef.current = null;
+          let incomingStream = event.streams && event.streams[0];
+          if (!incomingStream) {
+            if (!remoteStreamRef.current) {
+              remoteStreamRef.current = new MediaStream();
             }
+            remoteStreamRef.current.addTrack(event.track);
+            incomingStream = remoteStreamRef.current;
+          } else {
+            remoteStreamRef.current = incomingStream;
+          }
 
-            if (!timerRef.current) {
-              timerRef.current = setInterval(() => {
-                setDuration((prev) => prev + 1);
-              }, 1000);
-            }
+          if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = incomingStream;
+            remoteVideoRef.current.play().catch((playErr) => {
+              console.warn("Autoplay notice for remote stream:", playErr);
+            });
+          }
+
+          setCallState("connected");
+          playConnectTone();
+
+          if (callTimeoutRef.current) {
+            clearTimeout(callTimeoutRef.current);
+            callTimeoutRef.current = null;
+          }
+
+          if (!timerRef.current) {
+            timerRef.current = setInterval(() => {
+              setDuration((prev) => prev + 1);
+            }, 1000);
           }
         };
 
         // ICE candidate generation
         pc.onicecandidate = (event) => {
-          if (event.candidate && socket.connected) {
-            socket.emit("webrtc_signal", {
-              quoteId,
-              targetUserId: partnerId,
-              signal: {
-                type: "candidate",
-                candidate: event.candidate,
-              },
-            });
+          if (event.candidate && event.candidate.candidate) {
+            const currentSocket = getSocket();
+            if (currentSocket && currentSocket.connected) {
+              currentSocket.emit("webrtc_signal", {
+                quoteId,
+                roomId,
+                targetUserId: remotePeerIdRef.current || partnerId,
+                signal: {
+                  type: "candidate",
+                  candidate: event.candidate.toJSON ? event.candidate.toJSON() : event.candidate,
+                },
+              });
+            }
           }
         };
 
@@ -278,6 +337,9 @@ export function VideoCallModal({
           if (!isMounted) return;
           if (pc.connectionState === "connected") {
             setCallState("connected");
+            if (remoteVideoRef.current && remoteStreamRef.current) {
+              remoteVideoRef.current.play().catch(() => {});
+            }
             if (callTimeoutRef.current) {
               clearTimeout(callTimeoutRef.current);
               callTimeoutRef.current = null;
@@ -299,55 +361,87 @@ export function VideoCallModal({
 
         // 3. Signaling listener
         function handleSignal({ senderId, signal }) {
-          if (!isMounted || !pcRef.current) return;
+          if (!isMounted || !pcRef.current || !signal) return;
           const currentPc = pcRef.current;
+          if (senderId) {
+            remotePeerIdRef.current = senderId;
+          }
 
           if (signal.type === "offer") {
+            const sdpObj =
+              signal.sessionDescription ||
+              (typeof signal.sdp === "string"
+                ? { type: "offer", sdp: signal.sdp }
+                : signal.sdp);
+
             currentPc
-              .setRemoteDescription(new RTCSessionDescription(signal.sdp))
+              .setRemoteDescription(new RTCSessionDescription(sdpObj))
               .then(() => {
                 // Drain any pending candidates
                 while (pendingCandidatesRef.current.length > 0) {
                   const c = pendingCandidatesRef.current.shift();
-                  currentPc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {});
+                  if (c) {
+                    currentPc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {});
+                  }
                 }
                 return currentPc.createAnswer();
               })
               .then((answer) => currentPc.setLocalDescription(answer))
               .then(() => {
-                socket.emit("webrtc_signal", {
-                  quoteId,
-                  targetUserId: senderId,
-                  signal: {
-                    type: "answer",
-                    sdp: currentPc.localDescription,
-                  },
-                });
+                const s = getSocket();
+                if (s && s.connected) {
+                  s.emit("webrtc_signal", {
+                    quoteId,
+                    roomId,
+                    targetUserId: senderId || remotePeerIdRef.current || partnerId,
+                    signal: {
+                      type: "answer",
+                      sdp: currentPc.localDescription.sdp,
+                      sessionDescription: {
+                        type: currentPc.localDescription.type,
+                        sdp: currentPc.localDescription.sdp,
+                      },
+                    },
+                  });
+                }
                 setCallState("connecting");
               })
               .catch((err) => {
                 console.error("Error handling WebRTC offer:", err);
               });
           } else if (signal.type === "answer") {
+            const sdpObj =
+              signal.sessionDescription ||
+              (typeof signal.sdp === "string"
+                ? { type: "answer", sdp: signal.sdp }
+                : signal.sdp);
+
             currentPc
-              .setRemoteDescription(new RTCSessionDescription(signal.sdp))
+              .setRemoteDescription(new RTCSessionDescription(sdpObj))
               .then(() => {
                 while (pendingCandidatesRef.current.length > 0) {
                   const c = pendingCandidatesRef.current.shift();
-                  currentPc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {});
+                  if (c) {
+                    currentPc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {});
+                  }
                 }
               })
               .catch((err) => {
                 console.error("Error setting remote description from answer:", err);
               });
           } else if (signal.type === "candidate") {
-            if (signal.candidate) {
+            const cand = signal.candidate;
+            if (cand && (cand.candidate || typeof cand === "string")) {
               if (currentPc.remoteDescription && currentPc.remoteDescription.type) {
-                currentPc
-                  .addIceCandidate(new RTCIceCandidate(signal.candidate))
-                  .catch((err) => console.warn("Error adding ICE candidate:", err));
+                try {
+                  currentPc
+                    .addIceCandidate(new RTCIceCandidate(cand))
+                    .catch((err) => console.warn("Error adding ICE candidate:", err));
+                } catch (e) {
+                  console.warn("Exception adding candidate:", e);
+                }
               } else {
-                pendingCandidatesRef.current.push(signal.candidate);
+                pendingCandidatesRef.current.push(cand);
               }
             }
           }
@@ -355,13 +449,17 @@ export function VideoCallModal({
 
         socket.on("webrtc_signal", handleSignal);
 
-        // When recipient enters or accepts call
+        // When counterparty enters or accepts call
         function handlePeerReady(data) {
           if (!isMounted) return;
-          if (isInitiator && !hasOfferedRef.current) {
+          if (data?.senderId || data?.userId) {
+            remotePeerIdRef.current = data.senderId || data.userId;
+          }
+          if (isInitiator && !hasOfferedRef.current && pcRef.current) {
             sendOffer(pcRef.current, socket);
           }
         }
+        socket.on("peer_joined", handlePeerReady);
         socket.on("webrtc_ready", handlePeerReady);
         socket.on("video_call_accepted", handlePeerReady);
 
@@ -390,7 +488,6 @@ export function VideoCallModal({
 
         // 4. Initiator vs Recipient setup
         if (isInitiator) {
-          // Set 40-second timeout if partner doesn't pick up
           callTimeoutRef.current = setTimeout(() => {
             if (isMounted && (callState === "calling" || callState === "initializing")) {
               playEndTone();
@@ -399,13 +496,35 @@ export function VideoCallModal({
                 if (isMounted) handleEndCall(false);
               }, 3000);
             }
-          }, 40000);
+          }, 45000);
         } else {
-          // Recipient: emit ready to notify caller we're in the room and ready for offer
+          // Recipient: emit ready immediately and on interval until connected
           socket.emit("webrtc_ready", {
             quoteId,
-            targetUserId: partnerId,
+            roomId,
+            targetUserId: remotePeerIdRef.current || partnerId,
           });
+
+          let attempts = 0;
+          readyInterval = setInterval(() => {
+            if (!isMounted || hasOfferedRef.current) {
+              clearInterval(readyInterval);
+              return;
+            }
+            attempts++;
+            if (attempts > 8) {
+              clearInterval(readyInterval);
+              return;
+            }
+            const s = getSocket();
+            if (s && s.connected) {
+              s.emit("webrtc_ready", {
+                quoteId,
+                roomId,
+                targetUserId: remotePeerIdRef.current || partnerId,
+              });
+            }
+          }, 2000);
         }
       } catch (err) {
         console.error("WebRTC initialization error:", err);
@@ -424,17 +543,20 @@ export function VideoCallModal({
 
     return () => {
       isMounted = false;
+      if (readyInterval) clearInterval(readyInterval);
       const s = getSocket();
       if (s) {
+        if (roomId) s.emit("leave_call_room", { quoteId, roomId });
         s.off("webrtc_signal");
         s.off("webrtc_ready");
+        s.off("peer_joined");
         s.off("video_call_accepted");
         s.off("video_call_ended");
         s.off("video_call_declined");
       }
       cleanUpMedia();
     };
-  }, [isOpen, quoteId, partnerId, isInitiator, cleanUpMedia, handleEndCall]);
+  }, [isOpen, quoteId, roomId, partnerId, isInitiator, cleanUpMedia, handleEndCall]);
 
   // Audio Toggle
   const toggleAudio = () => {
@@ -797,7 +919,12 @@ export function VideoCallModal({
               width: "100%",
               height: "100%",
               objectFit: "contain",
-              display: callState === "connected" ? "block" : "none",
+              position: "absolute",
+              inset: 0,
+              opacity: callState === "connected" ? 1 : 0,
+              transition: "opacity 0.4s ease",
+              pointerEvents: callState === "connected" ? "auto" : "none",
+              zIndex: 1,
             }}
           />
 
@@ -1040,10 +1167,10 @@ export function VideoCallModal({
           <div
             style={{
               position: "absolute",
-              bottom: "16px",
-              right: "16px",
-              width: "160px",
-              height: "100px",
+              bottom: "12px",
+              right: "12px",
+              width: "clamp(110px, 25vw, 160px)",
+              height: "clamp(75px, 17vw, 105px)",
               background: "#171915",
               borderRadius: "12px",
               border: "2px solid #FFE66D",
