@@ -340,12 +340,13 @@ function AuthForm({ register, initialPersona }) {
                       as="select"
                       name="category"
                     >
-                      <option value="hotel">Hotel / Resort</option>
-                      <option value="venue">Banquet / Venue</option>
-                      <option value="caterer">Caterer</option>
-                      <option value="event_organizer">Event organizer</option>
-                      <option value="vendor">Equipment vendor</option>
+                      <option value="hotel">Hotel</option>
                       <option value="restaurant">Restaurant</option>
+                      <option value="caterer">Caterer</option>
+                      <option value="venue">Banquet Venue</option>
+                      <option value="resort">Resort</option>
+                      <option value="event_organizer">Event Organizer</option>
+                      <option value="vendor">Equipment & AV Vendor</option>
                     </Field>
                   ) : (
                     <input

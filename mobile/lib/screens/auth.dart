@@ -36,9 +36,12 @@ class _AuthScreenState extends State<AuthScreen> {
   String? _errorMessage;
 
   static const List<Map<String, String>> _categories = [
-    {'value': 'hotel', 'label': 'Hotel / Resort'},
-    {'value': 'venue', 'label': 'Banquet / Venue'},
+    {'value': 'hotel', 'label': 'Hotel'},
+    {'value': 'restaurant', 'label': 'Restaurant'},
     {'value': 'caterer', 'label': 'Caterer'},
+    {'value': 'venue', 'label': 'Banquet Venue'},
+    {'value': 'resort', 'label': 'Resort'},
+    {'value': 'event_organizer', 'label': 'Event Organizer'},
     {'value': 'production', 'label': 'Event Production & AV'},
     {'value': 'logistics', 'label': 'Logistics & Transport'},
     {'value': 'equipment', 'label': 'Furniture & Equipment'},

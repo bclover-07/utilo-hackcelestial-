@@ -13,7 +13,6 @@ export const Message = model("Message", {
     status: {
       type: String,
       enum: ["requested", "accepted", "declined", "ended"],
-      default: "requested",
     },
     roomId: String,
     caller: { type: Schema.Types.ObjectId, ref: "BusinessProfile", required: false },
