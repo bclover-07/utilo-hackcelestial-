@@ -73,9 +73,9 @@ export default function MarketIntelligence() {
                       <Tooltip
                         contentStyle={{
                           background: "#fffef8",
-                          border: "1px solid #171915",
+                          border: "1.5px solid #171915",
                           borderRadius: 12,
-                          boxShadow: "3px 3px 0 #171915",
+                          boxShadow: "2px 2px 0 #171915",
                           fontWeight: 800,
                         }}
                       />
@@ -121,9 +121,9 @@ export default function MarketIntelligence() {
                         formatter={(value) => money(value)}
                         contentStyle={{
                           background: "#fffef8",
-                          border: "1px solid #171915",
+                          border: "1.5px solid #171915",
                           borderRadius: 12,
-                          boxShadow: "3px 3px 0 #171915",
+                          boxShadow: "2px 2px 0 #171915",
                           fontWeight: 800,
                         }}
                       />

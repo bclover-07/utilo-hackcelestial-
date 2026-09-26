@@ -124,7 +124,7 @@ export function RapidoNegotiateModal({ listing, onClose }) {
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {/* Units & Base Price Overview */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div style={{ background: "#FAF8F5", padding: "10px 14px", border: "1.5px solid #171915", borderRadius: 12 }}>
+              <div style={{ background: "#FAF8F5", padding: "10px 14px", border: "1.5px solid #171915", borderRadius: 12, boxShadow: "2px 2px 0 #171915" }}>
                 <span className="eyebrow" style={{ color: "#7B61A8" }}>QUANTITY NEEDED</span>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4 }}>
                   <button type="button" className="rapido-stepper-btn" onClick={() => handleQuantityChange(-1)} disabled={quantity <= 1}>−</button>
@@ -134,7 +134,7 @@ export function RapidoNegotiateModal({ listing, onClose }) {
                 <small style={{ color: "#666", display: "block", marginTop: 4 }}>Pool: {listing.quantity} available</small>
               </div>
 
-              <div style={{ background: "#FAF8F5", padding: "10px 14px", border: "1.5px solid #171915", borderRadius: 12 }}>
+              <div style={{ background: "#FAF8F5", padding: "10px 14px", border: "1.5px solid #171915", borderRadius: 12, boxShadow: "2px 2px 0 #171915" }}>
                 <span className="eyebrow" style={{ color: "#7B61A8" }}>LISTED BASE RATE</span>
                 <div style={{ marginTop: 4 }}>
                   <strong style={{ fontSize: "1.3rem", display: "block" }}>{money(baseRate)}</strong>
@@ -146,7 +146,7 @@ export function RapidoNegotiateModal({ listing, onClose }) {
             {/* Rapido Fare Box */}
             <div className="rapido-bid-box">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span className="eyebrow" style={{ color: "#171915" }}>YOUR COUNTER-OFFER (INR)</span>
+                <span className="eyebrow" style={{ color: "#20201e" }}>YOUR COUNTER-OFFER (INR)</span>
                 <span style={{ fontSize: "0.8rem", fontWeight: 700 }}>Rapido Dynamic Bidding</span>
               </div>
 
@@ -189,22 +189,22 @@ export function RapidoNegotiateModal({ listing, onClose }) {
               {/* Dynamic Bargain Indicator */}
               <div style={{ marginTop: 12 }}>
                 {discountRatio < -0.2 ? (
-                  <div className="bargain-gauge-pill" style={{ background: "#FFE2DB", borderColor: "#171915" }}>
+                  <div className="bargain-gauge-pill" style={{ background: "#FFE2DB", borderColor: "#76271D" }}>
                     <span>⚠️ Aggressive Discount (−{discountPct}%)</span>
                     <small>Provider may decline or counter-offer higher.</small>
                   </div>
                 ) : discountRatio < 0 ? (
-                  <div className="bargain-gauge-pill" style={{ background: "#DDF4D1", borderColor: "#171915" }}>
+                  <div className="bargain-gauge-pill" style={{ background: "#DDF4D1", borderColor: "#244C24" }}>
                     <span>🟢 Competitive Fair Offer (−{discountPct}%)</span>
                     <small>High acceptance probability by provider.</small>
                   </div>
                 ) : discountRatio === 0 ? (
-                  <div className="bargain-gauge-pill" style={{ background: "#E0F2FE", borderColor: "#171915" }}>
+                  <div className="bargain-gauge-pill" style={{ background: "#E0F2FE", borderColor: "#0369A1" }}>
                     <span>⭐ Full Listed Rate</span>
                     <small>Standard terms, instant provider priority.</small>
                   </div>
                 ) : (
-                  <div className="bargain-gauge-pill" style={{ background: "#EDE9FE", borderColor: "#171915" }}>
+                  <div className="bargain-gauge-pill" style={{ background: "#EDE9FE", borderColor: "#6D28D9" }}>
                     <span>⚡ Priority Surge Offer (+{discountPct}%)</span>
                     <small>Maximum priority for peak or urgent events.</small>
                   </div>
@@ -218,7 +218,7 @@ export function RapidoNegotiateModal({ listing, onClose }) {
                 Special Conditions / Notes to Provider (Optional)
               </label>
               <textarea
-                style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: "1.5px solid #171915", fontSize: "0.9rem", minHeight: 60, background: "#fff" }}
+                style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: "1.5px solid #171915", fontSize: "0.9rem", minHeight: 60, background: "#fff", boxShadow: "2px 2px 0 #171915" }}
                 placeholder="e.g. Need 8 AM load-in setup, own transportation arranged, etc."
                 value={conditions}
                 onChange={(e) => setConditions(e.target.value)}
@@ -232,7 +232,7 @@ export function RapidoNegotiateModal({ listing, onClose }) {
               <button
                 type="submit"
                 className="button"
-                style={{ flex: 1, background: "#FFE66D", border: "1.5px solid #171915", fontWeight: 800, fontSize: "1rem", padding: "12px", cursor: "pointer" }}
+                style={{ flex: 1, background: "#FFE66D", border: "1.5px solid #171915", fontWeight: 800, fontSize: "1rem", padding: "12px", cursor: "pointer", boxShadow: "2px 2px 0 #171915" }}
                 disabled={loading || offerPrice <= 0}
               >
                 {loading ? "Dispatching Offer…" : `🚀 Send Offer of ${money(offerPrice)} & Open Chat`}
@@ -240,7 +240,7 @@ export function RapidoNegotiateModal({ listing, onClose }) {
               <button
                 type="button"
                 className="button quiet"
-                style={{ padding: "12px 18px", cursor: "pointer", border: "1.5px solid #171915" }}
+                style={{ padding: "12px 18px", cursor: "pointer" }}
                 onClick={onClose}
               >
                 Cancel
@@ -293,7 +293,7 @@ function SearchResultVisualInsights({ items, total }) {
             <YAxis stroke="#171915" tick={{ fontSize: 10 }} tickFormatter={(v) => `₹${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
             <Tooltip
               formatter={(val, name) => [name === "price" ? money(val) : val, name === "price" ? "Rental Rate" : name === "capacity" ? "Max Capacity" : "Available Stock"]}
-              contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, fontWeight: 700 }}
+              contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, boxShadow: "2px 2px 0 #171915", fontWeight: 700 }}
             />
             <Legend wrapperStyle={{ fontSize: 11, fontWeight: 700, paddingTop: 4 }} />
             <Bar dataKey="price" name="Rental Rate" fill="#4ECDC4" stroke="#171915" strokeWidth={1.5} radius={[4, 4, 0, 0]} />
@@ -382,7 +382,7 @@ function MultiItemComparisonRadar({ items }) {
               <PolarGrid stroke="#D4D1C8" />
               <PolarAngleAxis dataKey="subject" tick={{ fill: "#171915", fontSize: 11, fontWeight: 700 }} />
               <PolarRadiusAxis domain={[0, 100]} stroke="#B5B0A2" tick={{ fontSize: 9 }} />
-              <Tooltip contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, fontWeight: 700 }} />
+              <Tooltip contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, boxShadow: "2px 2px 0 #171915", fontWeight: 700 }} />
               {sample.map((it, idx) => (
                 <Radar
                   key={it._id}
@@ -391,7 +391,7 @@ function MultiItemComparisonRadar({ items }) {
                   stroke={RADAR_STROKES[idx % RADAR_STROKES.length]}
                   fill={RADAR_STROKES[idx % RADAR_STROKES.length]}
                   fillOpacity={0.25}
-                  strokeWidth={1.5}
+                  strokeWidth={2}
                 />
               ))}
               <Legend wrapperStyle={{ fontSize: 11, fontWeight: 700 }} />
@@ -401,8 +401,11 @@ function MultiItemComparisonRadar({ items }) {
 
         <div className="feature-metrics-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
           {sample.map((it, idx) => (
-            <div key={it._id} className="feature-metric-card" style={{ borderLeft: `3px solid ${RADAR_STROKES[idx % RADAR_STROKES.length]}` }}>
-              <span>{it.title}</span>
+            <div key={it._id} className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                <span style={{ width: 10, height: 10, borderRadius: "50%", background: RADAR_STROKES[idx % RADAR_STROKES.length], border: "1px solid #171915", display: "inline-block" }} />
+                <span>{it.title}</span>
+              </div>
               <strong>{money(it.price)} <small>/{it.unit}</small></strong>
               <small>👥 {it.capacity} guests · 📦 {it.quantity} units</small>
             </div>
@@ -649,7 +652,7 @@ export function SearchPage() {
                     <button
                       type="button"
                       className="button"
-                      style={{ background: "#FFE66D", border: "2px solid #20201e", fontWeight: 800, cursor: "pointer" }}
+                      style={{ background: "#FFE66D", border: "1.5px solid #171915", fontWeight: 800, cursor: "pointer", boxShadow: "2px 2px 0 #171915" }}
                       onClick={() => setRapidoListing(l)}
                     >
                       🤝 Counter Offer / Negotiate ₹
@@ -818,7 +821,7 @@ export function ResourceDetail({ id }) {
                   <button
                     type="button"
                     className="button"
-                    style={{ background: "#20201e", color: "#fff", border: "2px solid #20201e", fontWeight: 800, padding: "12px", cursor: "pointer" }}
+                    style={{ background: "#171915", color: "#fff", border: "1.5px solid #171915", fontWeight: 800, padding: "12px", cursor: "pointer", boxShadow: "2px 2px 0 #171915" }}
                     onClick={() => setRapidoListing(l)}
                   >
                     ⚡ Propose Counter-Offer (Rapido)

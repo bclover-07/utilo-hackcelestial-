@@ -290,8 +290,8 @@ export function ActionForm({
       <motion.button
         disabled={busy}
         type="submit"
-        whileHover={reduced || busy ? undefined : { y: -2, boxShadow: "5px 6px 0px #20201e" }}
-        whileTap={reduced || busy ? undefined : { scale: 0.97, y: 1, boxShadow: "1px 1px 0px #20201e" }}
+        whileHover={reduced || busy ? undefined : { y: -1.5, boxShadow: "3px 4px 0px #171915" }}
+        whileTap={reduced || busy ? undefined : { scale: 0.98, y: 1, boxShadow: "1px 1px 0px #171915" }}
         transition={{ type: "spring", stiffness: 450, damping: 25 }}
       >
         {busy ? (
@@ -319,8 +319,8 @@ export function Action({ run, children, className = "", disabled = false }) {
         type="button"
         className={className}
         disabled={busy || disabled}
-        whileHover={reduced || disabled || busy ? undefined : { y: -2, boxShadow: "5px 6px 0px #20201e" }}
-        whileTap={reduced || disabled || busy ? undefined : { scale: 0.97, y: 1, boxShadow: "1px 1px 0px #20201e" }}
+        whileHover={reduced || disabled || busy ? undefined : { y: -1.5, boxShadow: "3px 4px 0px #171915" }}
+        whileTap={reduced || disabled || busy ? undefined : { scale: 0.98, y: 1, boxShadow: "1px 1px 0px #171915" }}
         transition={{ type: "spring", stiffness: 450, damping: 25 }}
         onClick={async () => {
           if (running.current || disabled) return;

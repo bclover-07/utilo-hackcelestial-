@@ -597,16 +597,26 @@ export default function Landing() {
           <a href="#faq" onClick={() => setMenu(false)}>
             FAQ
           </a>
-          <div className="mobile-only-lang" style={{ padding: "8px 0" }}>
+          <div className="mobile-only-lang">
             <LanguageSwitcher />
+          </div>
+          <div className="mobile-only-drawer-actions">
+            <Link className="neo-login-link" href={user ? home : "/login"} onClick={() => setMenu(false)}>
+              {user ? "My workspace" : "Log in"}
+            </Link>
+            <Link className="button" href={destination} onClick={() => setMenu(false)}>
+              Let’s get sharing <ArrowUpRight size={18} />
+            </Link>
           </div>
         </div>
         <div className="neo-nav-actions">
-          <LanguageSwitcher compact />
-          <Link className="neo-login-link" href={user ? home : "/login"}>
+          <div className="desktop-only-lang">
+            <LanguageSwitcher compact />
+          </div>
+          <Link className="neo-login-link desktop-nav-login" href={user ? home : "/login"}>
             {user ? "My workspace" : "Log in"}
           </Link>
-          <Link className="button" href={destination}>
+          <Link className="button desktop-nav-cta" href={destination}>
             Let’s get sharing <ArrowUpRight size={18} />
           </Link>
           <button

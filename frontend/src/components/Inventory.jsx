@@ -65,10 +65,10 @@ function FleetInventoryAnalytics({ listings }) {
           <h3 className="feature-chart-title">Resource Inventory Fleet Telemetry</h3>
         </div>
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-          <span className="badge" style={{ background: "#4ECDC440", border: "1px solid #171915" }}>
+          <span className="badge" style={{ background: "#4ECDC440", border: "1.5px solid #171915" }}>
             {listings.length} Listed Assets ({totalUnits} Units)
           </span>
-          <span className="badge" style={{ background: "#FFE66D", border: "1px solid #171915" }}>
+          <span className="badge" style={{ background: "#FFE66D", border: "1.5px solid #171915" }}>
             Fleet Capital Value: {money(totalValue)}
           </span>
         </div>
@@ -83,9 +83,9 @@ function FleetInventoryAnalytics({ listings }) {
               <YAxis stroke="#171915" tick={{ fontSize: 10 }} />
               <Tooltip
                 formatter={(val) => [`${val} Units`, "Stock Capacity"]}
-                contentStyle={{ background: "#fffef8", border: "1px solid #171915", borderRadius: 10, fontWeight: 700 }}
+                contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, boxShadow: "2px 2px 0 #171915", fontWeight: 700 }}
               />
-              <Bar dataKey="units" name="Fleet Units" fill="#4ECDC4" stroke="#171915" strokeWidth={1} radius={[4, 4, 0, 0]}>
+              <Bar dataKey="units" name="Fleet Units" fill="#4ECDC4" stroke="#171915" strokeWidth={1.5} radius={[4, 4, 0, 0]}>
                 {catData.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={FLEET_COLORS[index % FLEET_COLORS.length]} />
                 ))}
@@ -95,23 +95,23 @@ function FleetInventoryAnalytics({ listings }) {
         </div>
 
         <div className="feature-metrics-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
-          <div className="feature-metric-card" style={{ borderLeft: "3px solid #2ed573" }}>
-            <span>Active Listings</span>
+          <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
+            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#2ed573", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Active Listings</span>
             <strong>{activeCount} live</strong>
             <small>Open for RFQ match</small>
           </div>
-          <div className="feature-metric-card" style={{ borderLeft: "3px solid #ffd13b" }}>
-            <span>Paused Assets</span>
+          <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
+            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ffd13b", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Paused Assets</span>
             <strong>{pausedCount} paused</strong>
             <small>Temporarily withheld</small>
           </div>
-          <div className="feature-metric-card" style={{ borderLeft: "3px solid #60c5f1" }}>
-            <span>Total Units</span>
+          <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
+            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#60c5f1", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Total Units</span>
             <strong>{totalUnits} units</strong>
             <small>Across {Object.keys(catMap).length} categories</small>
           </div>
-          <div className="feature-metric-card" style={{ borderLeft: "3px solid #ff6b6b" }}>
-            <span>Avg Asset Yield</span>
+          <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
+            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff6b6b", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Avg Asset Yield</span>
             <strong>{money(Math.round(totalValue / (listings.length || 1)))}</strong>
             <small>Per active listing</small>
           </div>
@@ -195,7 +195,7 @@ export function ListingCard({ listing, children, index = 0 }) {
         <div className="listing-header-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
           <h3 style={{ margin: 0 }}>{listing.title}</h3>
           {listing.isOwnListing && (
-            <span className="badge" style={{ background: "#FFE66D", border: "2px solid #20201e", fontSize: "0.75rem", fontWeight: 800, whiteSpace: "nowrap" }}>
+            <span className="badge" style={{ background: "#FFE66D", border: "1.5px solid #171915", fontSize: "0.75rem", fontWeight: 800, whiteSpace: "nowrap" }}>
               👑 Your Listing
             </span>
           )}
@@ -542,11 +542,11 @@ function ListingForm({ initial }) {
                       className="category-features-section"
                       style={{
                         background: selectedCatObj?.color ? `${selectedCatObj.color}22` : "rgba(255, 230, 109, 0.15)",
-                        border: "1px solid #171915",
+                        border: "1.5px solid #171915",
                         borderRadius: "16px",
                         padding: "20px",
                         margin: "20px 0",
-                        boxShadow: "4px 4px 0 #171915",
+                        boxShadow: "2px 2px 0 #171915",
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
@@ -765,7 +765,7 @@ function AvailabilityOccupancyTimeline({ blocks }) {
           <span className="eyebrow" style={{ color: "#7B61A8", marginBottom: 2 }}>OCCUPANCY DENSITY</span>
           <h4 className="feature-chart-title">Reserved Units by Block Event</h4>
         </div>
-        <span className="badge" style={{ background: "#FFE66D", border: "1px solid #171915" }}>
+        <span className="badge" style={{ background: "#FFE66D", border: "1.5px solid #171915" }}>
           {blocks.length} Active Blocks
         </span>
       </div>
@@ -777,9 +777,9 @@ function AvailabilityOccupancyTimeline({ blocks }) {
             <YAxis stroke="#171915" tick={{ fontSize: 10 }} />
             <Tooltip
               formatter={(val, name, item) => [`${val} Units (${item.payload.type})`, "Reserved Volume"]}
-              contentStyle={{ background: "#fffef8", border: "1px solid #171915", borderRadius: 8, fontWeight: 700 }}
+              contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, boxShadow: "2px 2px 0 #171915", fontWeight: 700 }}
             />
-            <Bar dataKey="quantity" fill="#FF6B6B" stroke="#171915" strokeWidth={1} radius={[4, 4, 0, 0]} />
+            <Bar dataKey="quantity" fill="#FF6B6B" stroke="#171915" strokeWidth={1.5} radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

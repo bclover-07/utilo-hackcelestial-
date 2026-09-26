@@ -73,7 +73,7 @@ function ActivityPipelineVisual({ data, admin, dashboardRole, user }) {
   return (
     <div className="activity-pipeline-deck">
       {stages.map((st, i) => (
-        <div key={i} className="pipeline-card" style={{ border: "1px solid #171915", borderLeft: `1px solid ${st.color}` }}>
+        <div key={i} className="pipeline-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
           <div className="pipeline-top">
             <span className="pipeline-step-badge">{st.badge}</span>
             <span className="live-dot" />
@@ -430,9 +430,9 @@ function Trend({ data }) {
               <Tooltip
                 contentStyle={{
                   background: "#fffef8",
-                  border: "1px solid #171915",
+                  border: "1.5px solid #171915",
                   borderRadius: 12,
-                  boxShadow: "3px 3px 0 #171915",
+                  boxShadow: "2px 2px 0 #171915",
                   fontWeight: 800,
                 }}
               />
@@ -441,7 +441,7 @@ function Trend({ data }) {
                 name="Agreed INR"
                 fill="#4ECDC4"
                 stroke="#171915"
-                strokeWidth={1}
+                strokeWidth={1.5}
                 radius={[8, 8, 0, 0]}
               />
             </BarChart>
@@ -491,9 +491,9 @@ function MarketDemandRadarChart({ demand }) {
             <Tooltip
               contentStyle={{
                 background: "#fffef8",
-                border: "1px solid #171915",
+                border: "1.5px solid #171915",
                 borderRadius: 12,
-                boxShadow: "3px 3px 0 #171915",
+                boxShadow: "2px 2px 0 #171915",
                 fontWeight: 800,
               }}
             />
@@ -502,7 +502,7 @@ function MarketDemandRadarChart({ demand }) {
               name="Requested Units"
               fill="#FF85A1"
               stroke="#171915"
-              strokeWidth={1}
+              strokeWidth={1.5}
               radius={[6, 6, 0, 0]}
             />
             <Bar
@@ -510,7 +510,7 @@ function MarketDemandRadarChart({ demand }) {
               name="Active Supply"
               fill="#4ECDC4"
               stroke="#171915"
-              strokeWidth={1}
+              strokeWidth={1.5}
               radius={[6, 6, 0, 0]}
             />
           </BarChart>

@@ -148,21 +148,22 @@ export function HorizonProjectionChart({ data }) {
       <div style={{ width: "100%", height: 260, marginTop: "1rem" }}>
         <ResponsiveContainer>
           <AreaChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="day" />
-            <YAxis />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E0CF" />
+            <XAxis dataKey="day" stroke="#171915" tick={{ fontSize: 11, fontWeight: 700 }} />
+            <YAxis stroke="#171915" tick={{ fontSize: 10 }} />
             <Tooltip
               formatter={(value, name) => [value, name === "projectedDemand" ? "Projected Units" : name]}
               labelFormatter={(label, payload) => payload?.[0]?.payload?.date || label}
+              contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, boxShadow: "2px 2px 0 #171915", fontWeight: 700 }}
             />
-            <Area type="monotone" dataKey="projectedDemand" stroke="#673ab7" fill="#c3b1e1" fillOpacity={0.6} />
-            <Area type="monotone" dataKey="confidenceMax" stroke="#9575cd" strokeDasharray="3 3" fill="none" />
+            <Area type="monotone" dataKey="projectedDemand" stroke="#171915" strokeWidth={2} fill="#c3b1e1" fillOpacity={0.6} />
+            <Area type="monotone" dataKey="confidenceMax" stroke="#9575cd" strokeWidth={1.5} strokeDasharray="3 3" fill="none" />
           </AreaChart>
         </ResponsiveContainer>
       </div>
       <div className="forecast-grid" style={{ marginTop: "1rem" }}>
         {data.map((d) => (
-          <div key={d.date} className="forecast-card" style={{ padding: "0.75rem", background: d.isWeekend ? "#ffe082" : "#f5f5f5" }}>
+          <div key={d.date} className="forecast-card" style={{ padding: "0.75rem", background: d.isWeekend ? "#ffe082" : "#f5f5f5", border: "1.5px solid #171915", borderRadius: "14px", boxShadow: "2px 2px 0 #171915" }}>
             <span className="eyebrow" style={{ fontSize: "0.7rem" }}>{d.day} · {d.date.slice(5)}</span>
             <strong style={{ fontSize: "1.2rem", display: "block" }}>{d.projectedDemand} units</strong>
             <small style={{ color: d.isWeekend ? "#d84315" : "#666" }}>
@@ -527,13 +528,13 @@ export function ProviderPerformancePage() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
                   <h2 style={{ margin: 0 }}>Performance radar</h2>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                    <span className="badge" style={{ background: "#A8E6CF", border: "1px solid #20201e" }}>
+                    <span className="badge" style={{ background: "#A8E6CF", border: "1.5px solid #171915" }}>
                       ⚡ Response Speed
                     </span>
-                    <span className="badge" style={{ background: "#FFE66D", border: "1px solid #20201e" }}>
+                    <span className="badge" style={{ background: "#FFE66D", border: "1.5px solid #171915" }}>
                       🎯 Acceptance
                     </span>
-                    <span className="badge" style={{ background: "#FFB347", border: "1px solid #20201e" }}>
+                    <span className="badge" style={{ background: "#FFB347", border: "1.5px solid #171915" }}>
                       ★ Reputation
                     </span>
                   </div>

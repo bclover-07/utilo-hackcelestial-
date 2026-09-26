@@ -59,11 +59,11 @@ function RequestItemDistributionChart({ items, budget }) {
           <h4 className="feature-chart-title">Item Allocation & Progress Breakdown</h4>
         </div>
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-          <span className="badge" style={{ background: "#4ECDC440", border: "1px solid #171915" }}>
+          <span className="badge" style={{ background: "#4ECDC440", border: "1.5px solid #171915" }}>
             {items.length} Category Bundles
           </span>
           {budget && (
-            <span className="badge" style={{ background: "#FFE66D", border: "1px solid #171915" }}>
+            <span className="badge" style={{ background: "#FFE66D", border: "1.5px solid #171915" }}>
               Budget: {money(budget)}
             </span>
           )}
@@ -78,11 +78,11 @@ function RequestItemDistributionChart({ items, budget }) {
               <XAxis dataKey="name" stroke="#171915" tick={{ fontSize: 10, fontWeight: 700 }} />
               <YAxis stroke="#171915" tick={{ fontSize: 10 }} />
               <Tooltip
-                contentStyle={{ background: "#fffef8", border: "1px solid #171915", borderRadius: 10, fontWeight: 700 }}
+                contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, boxShadow: "2px 2px 0 #171915", fontWeight: 700 }}
               />
               <Legend wrapperStyle={{ fontSize: 11, fontWeight: 700, paddingTop: 4 }} />
-              <Bar dataKey="fulfilled" name="Secured Units" fill="#2ed573" stroke="#171915" strokeWidth={1} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="pending" name="In Negotiation" fill="#ffd13b" stroke="#171915" strokeWidth={1} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="fulfilled" name="Secured Units" fill="#2ed573" stroke="#171915" strokeWidth={1.5} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="pending" name="In Negotiation" fill="#ffd13b" stroke="#171915" strokeWidth={1.5} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -100,7 +100,7 @@ function RequestItemDistributionChart({ items, budget }) {
                 innerRadius={32}
                 paddingAngle={3}
                 stroke="#171915"
-                strokeWidth={1}
+                strokeWidth={1.5}
               >
                 {pieData.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
@@ -108,7 +108,7 @@ function RequestItemDistributionChart({ items, budget }) {
               </Pie>
               <Tooltip
                 formatter={(val, name) => [`${val} Units`, name]}
-                contentStyle={{ background: "#fffef8", border: "1px solid #171915", borderRadius: 10, fontWeight: 700 }}
+                contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, boxShadow: "2px 2px 0 #171915", fontWeight: 700 }}
               />
               <Legend wrapperStyle={{ fontSize: 10, fontWeight: 700 }} />
             </PieChart>
@@ -315,8 +315,8 @@ function LiveRequirementEstimator({ items, budget }) {
               <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E5E0CF" />
               <XAxis type="number" stroke="#171915" tick={{ fontSize: 10 }} />
               <YAxis dataKey="name" type="category" stroke="#171915" width={100} tick={{ fontSize: 10, fontWeight: 700 }} />
-              <Tooltip contentStyle={{ background: "#fffef8", border: "1px solid #171915", borderRadius: 8, fontWeight: 700 }} />
-              <Bar dataKey="units" name="Units Needed" fill="#4ECDC4" stroke="#171915" strokeWidth={1} radius={[0, 4, 4, 0]} />
+              <Tooltip contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 8, boxShadow: "2px 2px 0 #171915", fontWeight: 700 }} />
+              <Bar dataKey="units" name="Units Needed" fill="#4ECDC4" stroke="#171915" strokeWidth={1.5} radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -373,7 +373,7 @@ function RequestForm({ categories }) {
               required
             />
             {items.map((item, i) => (
-              <div className="item-editor" key={i} style={{ border: "1px solid #171915", borderRadius: "14px", padding: "16px", background: "#FAF8F5", margin: "14px 0" }}>
+              <div className="item-editor" key={i} style={{ border: "1.5px solid #171915", borderRadius: "14px", padding: "16px", background: "#FAF8F5", margin: "14px 0", boxShadow: "2px 2px 0 #171915" }}>
                 <div className="section-heading" style={{ margin: "0 0 12px" }}>
                   <h3 style={{ margin: 0 }}>Resource {i + 1}</h3>
                   {items.length > 1 && (
@@ -544,7 +544,7 @@ function RequestForm({ categories }) {
               />
             </ActionForm>
             {draft && (
-              <div style={{ marginTop: "14px", padding: "14px", background: "#FFFDF4", border: "1px solid #171915", borderRadius: "12px" }}>
+              <div style={{ marginTop: "14px", padding: "14px", background: "#FFFDF4", border: "1.5px solid #171915", borderRadius: "12px", boxShadow: "2px 2px 0 #171915" }}>
                 <span className="eyebrow" style={{ color: "#7B61A8" }}>PARSED AI SPECIFICATION</span>
                 <strong style={{ display: "block", fontSize: "1rem" }}>{draft.title || "Parsed Event Requirement"}</strong>
                 {draft.items?.length > 0 && (

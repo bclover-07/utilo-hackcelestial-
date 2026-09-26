@@ -17,7 +17,7 @@ export default function ConductorVisuals({ plan, option }) {
       {suppliers.map((supplier, index) => { const rows = option.allocations.filter(a => a.providerId === supplier); return <g key={supplier}><rect x={634} y={y(index, suppliers.length) - 27} width={242} height={54} rx={16} fill={colors[index % colors.length]} stroke="#20201e" strokeWidth={1} /><text x={650} y={y(index, suppliers.length) - 3} className="graph-label">Supplier {index + 1} · {rows.length} allocation{rows.length === 1 ? "" : "s"}</text><text x={650} y={y(index, suppliers.length) + 16} className="graph-detail">{rows.reduce((sum, a) => sum + a.quantity, 0)} units · {money(rows.reduce((sum, a) => sum + a.rentalTotal, 0))} rental</text></g>; })}
     </svg></div>
     {option.corridorOptimized && (
-      <div className="notice conductor-corridor-badge" style={{ marginTop: "1rem", display: "flex", alignItems: "center", gap: "0.75rem", background: "#e8f5e9", border: "1px solid #171915" }}>
+      <div className="notice conductor-corridor-badge" style={{ marginTop: "1rem", display: "flex", alignItems: "center", gap: "0.75rem", background: "#e8f5e9", border: "1.5px solid #171915", borderRadius: "12px", boxShadow: "2px 2px 0 #171915" }}>
         <span style={{ fontSize: "1.25rem" }}>🚚</span>
         <div>
           <strong>Logistics Corridor Aligned</strong>
@@ -27,7 +27,7 @@ export default function ConductorVisuals({ plan, option }) {
     )}
 
     {plan.result?.scenarioSummary && (
-      <div className="conductor-resilience-strip" style={{ marginTop: "1rem", padding: "1rem", borderRadius: "16px", border: "1px solid #171915", background: "#f8f9fa", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem", boxShadow: "3px 3px 0 #171915" }}>
+      <div className="conductor-resilience-strip" style={{ marginTop: "1rem", padding: "1rem", borderRadius: "16px", border: "1.5px solid #171915", background: "#f8f9fa", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem", boxShadow: "2px 2px 0 #171915" }}>
         <div>
           <span className="eyebrow" style={{ fontSize: "0.75rem", letterSpacing: "0.08em" }}>MONTE CARLO RESILIENCE</span>
           <h4 style={{ margin: "0.25rem 0", fontSize: "1.1rem" }}>Multi-Supplier Survivability</h4>
@@ -36,7 +36,7 @@ export default function ConductorVisuals({ plan, option }) {
           </p>
         </div>
         <div style={{ textAlign: "right", display: "flex", alignItems: "center", gap: "1rem" }}>
-          <div style={{ width: "110px", height: "12px", background: "#e0e0e0", borderRadius: "6px", overflow: "hidden", border: "1px solid #171915" }}>
+          <div style={{ width: "110px", height: "12px", background: "#e0e0e0", borderRadius: "6px", overflow: "hidden", border: "1.5px solid #171915" }}>
             <div style={{ width: `${plan.result.scenarioSummary.resilienceScore || 100}%`, height: "100%", background: (plan.result.scenarioSummary.resilienceScore || 100) >= 80 ? "#4caf50" : "#ff9800", borderRadius: "6px" }} />
           </div>
           <strong style={{ fontSize: "1.3rem" }}>{plan.result.scenarioSummary.resilienceScore ?? 100}%</strong>
@@ -45,7 +45,7 @@ export default function ConductorVisuals({ plan, option }) {
     )}
 
     {plan.result?.gaps?.some(g => g.substituteHint) && (
-      <div className="panel conductor-substitutes" style={{ marginTop: "1rem", background: "#fff9c4", border: "1px dashed #171915", padding: "1rem", borderRadius: "16px", boxShadow: "3px 3px 0 #171915" }}>
+      <div className="panel conductor-substitutes" style={{ marginTop: "1rem", background: "#fff9c4", border: "1.5px dashed #171915", padding: "1rem", borderRadius: "16px", boxShadow: "2px 2px 0 #171915" }}>
         <h4 style={{ margin: "0 0 0.5rem 0", display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <span>💡</span> AI Substitute & Relaxation Suggestions
         </h4>

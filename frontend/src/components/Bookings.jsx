@@ -11,6 +11,9 @@ import {
   Tooltip,
   CartesianGrid,
   Cell,
+  PieChart,
+  Pie,
+  Legend,
 } from "recharts";
 import {
   useData,
@@ -97,6 +100,10 @@ function DisputesPipelineVisualizer({ disputes }) {
 
   const openCount = disputes.filter((d) => d.status === "open").length;
   const resolvedCount = disputes.filter((d) => d.status === "resolved" || d.resolution).length;
+  const chartData = [
+    { name: "Active Mediation", value: openCount || 0, fill: "#FF85A1" },
+    { name: "Resolved / Settled", value: resolvedCount || 0, fill: "#2ED573" },
+  ].filter(d => d.value > 0);
 
   return (
     <div className="feature-chart-panel" style={{ background: "#FFFDF8", marginBottom: "2rem" }}>
@@ -105,26 +112,118 @@ function DisputesPipelineVisualizer({ disputes }) {
           <span className="eyebrow" style={{ color: "#0F766E", marginBottom: 2 }}>RESOLUTION HEALTH & SLA</span>
           <h3 className="feature-chart-title">Dispute Resolution Overview</h3>
         </div>
-        <span className="badge" style={{ background: openCount > 0 ? "#FF85A1" : "#A8E6CF", border: "1px solid #171915" }}>
+        <span className="badge" style={{ background: openCount > 0 ? "#FF85A1" : "#A8E6CF", border: "1.5px solid #171915" }}>
           {openCount > 0 ? `${openCount} Action Required` : "100% In Order"}
         </span>
       </div>
 
-      <div className="feature-metrics-grid">
-        <div className="feature-metric-card" style={{ borderLeft: "3px solid #ff4757" }}>
-          <span>Active In Review</span>
-          <strong>{openCount} disputes</strong>
-          <small>Mediation in progress</small>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "16px", alignItems: "center" }}>
+        <div className="feature-metrics-grid" style={{ margin: 0 }}>
+          <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
+            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff4757", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Active In Review</span>
+            <strong>{openCount} disputes</strong>
+            <small>Mediation in progress</small>
+          </div>
+          <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
+            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#2ed573", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Settled & Resolved</span>
+            <strong>{resolvedCount} cases</strong>
+            <small>Agreement reached</small>
+          </div>
+          <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
+            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4ecdc4", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Resolution Ratio</span>
+            <strong>{disputes.length ? Math.round((resolvedCount / disputes.length) * 100) : 100}%</strong>
+            <small>Successful outcomes</small>
+          </div>
         </div>
-        <div className="feature-metric-card" style={{ borderLeft: "3px solid #2ed573" }}>
-          <span>Settled & Resolved</span>
-          <strong>{resolvedCount} cases</strong>
-          <small>Agreement reached</small>
+
+        {chartData.length > 0 && (
+          <div style={{ width: "100%", height: 160 }}>
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} innerRadius={28} paddingAngle={4} stroke="#171915" strokeWidth={1.5}>
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, boxShadow: "2px 2px 0 #171915", fontWeight: 700 }} />
+                <Legend wrapperStyle={{ fontSize: 11, fontWeight: 700 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BookingFulfillmentVisualizer({ bookings, role }) {
+  if (!bookings || bookings.length === 0) return null;
+
+  const totalValue = bookings.reduce((sum, b) => sum + (b.price || 0), 0);
+  const totalUnits = bookings.reduce((sum, b) => sum + (b.quantity || 1), 0);
+  const activeCount = bookings.filter((b) => b.status === "confirmed" || b.status === "in_progress").length;
+  const completedCount = bookings.filter((b) => b.status === "completed").length;
+
+  const chartData = bookings.slice(0, 8).map((b) => ({
+    name: b.listing?.title?.length > 15 ? `${b.listing.title.slice(0, 15)}…` : b.listing?.title || "Booking",
+    rental: b.price || 0,
+    deposit: b.deposit || 0,
+    quantity: b.quantity || 1,
+  }));
+
+  return (
+    <div className="feature-chart-panel" style={{ background: "#FFFDF8", marginBottom: "1.75rem" }}>
+      <div className="feature-chart-header">
+        <div>
+          <span className="eyebrow" style={{ color: "#0F766E", marginBottom: 2 }}>FULFILMENT PORTFOLIO SPECTRUM</span>
+          <h3 className="feature-chart-title">Confirmed Agreements & Financial Flow</h3>
         </div>
-        <div className="feature-metric-card" style={{ borderLeft: "3px solid #4ecdc4" }}>
-          <span>Resolution Ratio</span>
-          <strong>{disputes.length ? Math.round((resolvedCount / disputes.length) * 100) : 100}%</strong>
-          <small>Successful outcomes</small>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          <span className="badge" style={{ background: "#FFE66D", border: "1.5px solid #171915" }}>
+            Total Value: {money(totalValue)}
+          </span>
+          <span className="badge" style={{ background: "#4ECDC440", border: "1.5px solid #171915" }}>
+            {bookings.length} Bookings ({totalUnits} Units)
+          </span>
+        </div>
+      </div>
+
+      <div style={{ width: "100%", height: 190 }}>
+        <ResponsiveContainer>
+          <BarChart data={chartData} barGap={4}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E0CF" />
+            <XAxis dataKey="name" stroke="#171915" tick={{ fontSize: 10, fontWeight: 700 }} />
+            <YAxis stroke="#171915" tick={{ fontSize: 10 }} tickFormatter={(v) => `₹${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} />
+            <Tooltip
+              formatter={(val, name) => [money(val), name === "rental" ? "Rental Fee" : "Security Deposit"]}
+              contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, fontWeight: 700, boxShadow: "2px 2px 0 #171915" }}
+            />
+            <Bar dataKey="rental" name="Agreed Rental" fill="#4ECDC4" stroke="#171915" strokeWidth={1.5} radius={[4, 4, 0, 0]} />
+            <Bar dataKey="deposit" name="Refundable Deposit" fill="#FFE66D" stroke="#171915" strokeWidth={1.5} radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="feature-metrics-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", marginTop: 12 }}>
+        <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
+          <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#2ed573", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Active Exchanges</span>
+          <strong>{activeCount} active</strong>
+          <small>In fulfillment pipeline</small>
+        </div>
+        <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
+          <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4ecdc4", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Completed Orders</span>
+          <strong>{completedCount} delivered</strong>
+          <small>Fulfilled & finalized</small>
+        </div>
+        <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
+          <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#60c5f1", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Total Fleet Assets</span>
+          <strong>{totalUnits} units</strong>
+          <small>Under active custody</small>
+        </div>
+        <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
+          <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ffd13b", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Average Deal Size</span>
+          <strong>{money(Math.round(totalValue / (bookings.length || 1)))}</strong>
+          <small>Per agreed booking</small>
         </div>
       </div>
     </div>
@@ -149,6 +248,7 @@ export function BookingsPage() {
           );
           return filtered.length ? (
             <div className="stack">
+              <BookingFulfillmentVisualizer bookings={filtered} role={dashboardRole} />
               {filtered.map((b) => (
                 <article className="panel" key={b._id}>
                   <div className="section-heading">
@@ -156,13 +256,13 @@ export function BookingsPage() {
                     <Badge>{b.status}</Badge>
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", margin: "8px 0 14px" }}>
-                    <span className="badge" style={{ background: "#89CFF040", border: "1px solid #20201e" }}>
+                    <span className="badge" style={{ background: "#89CFF040", border: "1.5px solid #171915" }}>
                       🏢 Provider: <strong>{b.provider?.name}</strong>
                     </span>
-                    <span className="badge" style={{ background: "#FFE66D40", border: "1px solid #20201e" }}>
+                    <span className="badge" style={{ background: "#FFE66D40", border: "1.5px solid #171915" }}>
                       🎯 Renter: <strong>{b.seeker?.name}</strong>
                     </span>
-                    <span className="badge" style={{ background: "#C3B1E140", border: "1px solid #20201e" }}>
+                    <span className="badge" style={{ background: "#C3B1E140", border: "1.5px solid #171915" }}>
                       📦 {b.quantity} Units
                     </span>
                   </div>
@@ -183,18 +283,18 @@ export function BookingsPage() {
                     }
                   />
 
-                  <div style={{ margin: "1.25rem 0", padding: "1.25rem", background: "#FFFDF8", border: "1px solid #20201e", borderRadius: "14px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", boxShadow: "2px 2px 0 #20201e" }}>
+                  <div style={{ margin: "1.25rem 0", padding: "1.25rem", background: "#FFFDF8", border: "1.5px solid #171915", borderRadius: "14px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", boxShadow: "2px 2px 0 #171915" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                       <span style={{ fontSize: "1.8rem" }}>🔐</span>
                       <div>
                         <span className="eyebrow" style={{ color: "#7B61A8", marginBottom: 2 }}>SECURITY HANDOVER PASS</span>
-                        <div style={{ fontFamily: "monospace", fontSize: "1.2rem", fontWeight: 900, letterSpacing: "1.5px", color: "#20201e" }}>
+                        <div style={{ fontFamily: "monospace", fontSize: "1.2rem", fontWeight: 900, letterSpacing: "1.5px", color: "#171915" }}>
                           {b.handoverCode || "VERIFIED-FULFILMENT"}
                         </div>
                         <small style={{ color: "#555" }}>Verify code upon physical exchange</small>
                       </div>
                     </div>
-                    <span className="badge" style={{ background: "#A8E6CF", border: "1px solid #20201e" }}>
+                    <span className="badge" style={{ background: "#A8E6CF", border: "1.5px solid #171915" }}>
                       ✓ Verified Logistics
                     </span>
                   </div>
@@ -220,7 +320,7 @@ export function BookingsPage() {
                   </div>
 
                   {b.conditions && (
-                    <div style={{ margin: "1rem 0", padding: "0.8rem 1rem", background: "#FFF9C430", border: "1px solid #20201e", borderLeft: "3px solid #FFB347", borderRadius: "8px", fontSize: "0.9rem" }}>
+                    <div style={{ margin: "1rem 0", padding: "0.8rem 1rem", background: "#FFF9C430", border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915", borderRadius: "10px", fontSize: "0.9rem" }}>
                       <strong>Fulfilment terms:</strong> {b.conditions}
                     </div>
                   )}

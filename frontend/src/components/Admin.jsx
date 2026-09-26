@@ -12,6 +12,9 @@ import {
   Tooltip,
   CartesianGrid,
   Cell,
+  PieChart,
+  Pie,
+  Legend,
 } from "recharts";
 import {
   useData,
@@ -46,25 +49,52 @@ function VerificationQueueVisualizer({ users }) {
           <span className="eyebrow" style={{ color: "#0F766E", marginBottom: 2 }}>KYC AUDIT PIPELINE</span>
           <h3 className="feature-chart-title">Business Verification Queue Status</h3>
         </div>
-        <span className="badge" style={{ background: pending > 0 ? "#FFE66D" : "#A8E6CF", border: "1px solid #171915" }}>
+        <span className="badge" style={{ background: pending > 0 ? "#FFE66D" : "#A8E6CF", border: "1.5px solid #171915" }}>
           {pending} Pending Review
         </span>
       </div>
-      <div className="feature-metrics-grid">
-        <div className="feature-metric-card" style={{ borderLeft: "3px solid #ffe66d" }}>
-          <span>Pending Review</span>
-          <strong>{pending} providers</strong>
-          <small>Awaiting KYC document approval</small>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "16px", alignItems: "center" }}>
+        <div className="feature-metrics-grid" style={{ margin: 0 }}>
+          <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
+            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ffe66d", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Pending Review</span>
+            <strong>{pending} providers</strong>
+            <small>Awaiting KYC document approval</small>
+          </div>
+          <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
+            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#2ed573", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Approved Businesses</span>
+            <strong>{verified} verified</strong>
+            <small>Cleared compliance credentials</small>
+          </div>
+          <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
+            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff4757", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Declined Applications</span>
+            <strong>{rejected} rejected</strong>
+            <small>Document mismatch or incomplete</small>
+          </div>
         </div>
-        <div className="feature-metric-card" style={{ borderLeft: "3px solid #2ed573" }}>
-          <span>Approved Businesses</span>
-          <strong>{verified} verified</strong>
-          <small>Cleared compliance credentials</small>
-        </div>
-        <div className="feature-metric-card" style={{ borderLeft: "3px solid #ff4757" }}>
-          <span>Declined Applications</span>
-          <strong>{rejected} rejected</strong>
-          <small>Document mismatch or incomplete</small>
+
+        <div style={{ width: "100%", height: 160 }}>
+          <ResponsiveContainer>
+            <PieChart>
+              <Pie
+                data={chartData.filter(d => d.count > 0)}
+                dataKey="count"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={60}
+                innerRadius={28}
+                paddingAngle={4}
+                stroke="#171915"
+                strokeWidth={1.5}
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, boxShadow: "2px 2px 0 #171915", fontWeight: 700 }} />
+              <Legend wrapperStyle={{ fontSize: 11, fontWeight: 700 }} />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>
@@ -148,6 +178,10 @@ function DisputeQueueVisualizer({ disputes }) {
   if (!disputes || disputes.length === 0) return null;
   const openCount = disputes.filter((d) => d.status === "open").length;
   const resolvedCount = disputes.filter((d) => d.status === "resolved" || d.resolution).length;
+  const chartData = [
+    { name: "Open Escalations", count: openCount, color: "#ff4757" },
+    { name: "Settled Incidents", count: resolvedCount, color: "#2ed573" },
+  ];
 
   return (
     <div className="feature-chart-panel" style={{ background: "#FFFDF8", marginBottom: "1.5rem" }}>
@@ -156,25 +190,52 @@ function DisputeQueueVisualizer({ disputes }) {
           <span className="eyebrow" style={{ color: "#0F766E", marginBottom: 2 }}>ADMIN MEDIATION PIPELINE</span>
           <h3 className="feature-chart-title">Disputes & Incident Resolution Status</h3>
         </div>
-        <span className="badge" style={{ background: openCount > 0 ? "#FF85A1" : "#A8E6CF", border: "1px solid #171915" }}>
+        <span className="badge" style={{ background: openCount > 0 ? "#FF85A1" : "#A8E6CF", border: "1.5px solid #171915" }}>
           {openCount} Awaiting Admin Decision
         </span>
       </div>
-      <div className="feature-metrics-grid">
-        <div className="feature-metric-card" style={{ borderLeft: "3px solid #ff4757" }}>
-          <span>Open Escalations</span>
-          <strong>{openCount} disputes</strong>
-          <small>Needs administrative mediation</small>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "16px", alignItems: "center" }}>
+        <div className="feature-metrics-grid" style={{ margin: 0 }}>
+          <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
+            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff4757", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Open Escalations</span>
+            <strong>{openCount} disputes</strong>
+            <small>Needs administrative mediation</small>
+          </div>
+          <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
+            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#2ed573", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Settled Incidents</span>
+            <strong>{resolvedCount} resolved</strong>
+            <small>Binding resolution closed</small>
+          </div>
+          <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
+            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4ecdc4", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Resolution Ratio</span>
+            <strong>{disputes.length ? Math.round((resolvedCount / disputes.length) * 100) : 100}%</strong>
+            <small>Queue turnaround health</small>
+          </div>
         </div>
-        <div className="feature-metric-card" style={{ borderLeft: "3px solid #2ed573" }}>
-          <span>Settled Incidents</span>
-          <strong>{resolvedCount} resolved</strong>
-          <small>Binding resolution closed</small>
-        </div>
-        <div className="feature-metric-card" style={{ borderLeft: "3px solid #4ecdc4" }}>
-          <span>Resolution Ratio</span>
-          <strong>{disputes.length ? Math.round((resolvedCount / disputes.length) * 100) : 100}%</strong>
-          <small>Queue turnaround health</small>
+
+        <div style={{ width: "100%", height: 160 }}>
+          <ResponsiveContainer>
+            <PieChart>
+              <Pie
+                data={chartData.filter(d => d.count > 0)}
+                dataKey="count"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={60}
+                innerRadius={28}
+                paddingAngle={4}
+                stroke="#171915"
+                strokeWidth={1.5}
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, boxShadow: "2px 2px 0 #171915", fontWeight: 700 }} />
+              <Legend wrapperStyle={{ fontSize: 11, fontWeight: 700 }} />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>
@@ -351,6 +412,49 @@ export function ModerationPage() {
     </>
   );
 }
+function CategoryTaxonomyVisualizer({ categories }) {
+  if (!categories || categories.length === 0) return null;
+
+  const chartData = categories.map((c) => ({
+    name: c.name,
+    specs: c.requiredFields?.length || 0,
+    color: c.color || "#4ECDC4",
+  }));
+
+  return (
+    <div className="feature-chart-panel" style={{ background: "#FFFDF8", marginBottom: "1.5rem" }}>
+      <div className="feature-chart-header">
+        <div>
+          <span className="eyebrow" style={{ color: "#0F766E", marginBottom: 2 }}>TAXONOMY & ATTRIBUTE COMPLEXITY</span>
+          <h3 className="feature-chart-title">Platform Category Specification Blueprint</h3>
+        </div>
+        <span className="badge" style={{ background: "#FFE66D", border: "1.5px solid #171915" }}>
+          {categories.length} Registered Categories
+        </span>
+      </div>
+
+      <div style={{ width: "100%", height: 180 }}>
+        <ResponsiveContainer>
+          <BarChart data={chartData} barGap={4}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E0CF" />
+            <XAxis dataKey="name" stroke="#171915" tick={{ fontSize: 10, fontWeight: 700 }} />
+            <YAxis stroke="#171915" tick={{ fontSize: 10 }} />
+            <Tooltip
+              formatter={(val) => [`${val} required fields`, "Specifications"]}
+              contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, fontWeight: 700, boxShadow: "2px 2px 0 #171915" }}
+            />
+            <Bar dataKey="specs" name="Required Fields" stroke="#171915" strokeWidth={1} radius={[4, 4, 0, 0]}>
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
 export function CategoriesPage() {
   const r = useData("/categories"),
     [editing, setEditing] = useState(null),
@@ -500,6 +604,7 @@ export function CategoriesPage() {
         <State resource={r}>
           {(data) => (
             <div className="stack">
+              <CategoryTaxonomyVisualizer categories={data} />
               {data.map((c, i) => (
                 <article
                   className="panel"

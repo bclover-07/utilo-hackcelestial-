@@ -50,7 +50,7 @@ function AgentExecutionTelemetryChart({ summary }) {
           <span className="eyebrow" style={{ color: "#7B61A8", marginBottom: 2 }}>TELEMETRY & RELIABILITY MATRIX</span>
           <h4 className="feature-chart-title">Agent Execution Outcomes & Latency</h4>
         </div>
-        <span className="badge" style={{ background: "#C3B1E140", border: "1px solid #171915" }}>
+        <span className="badge" style={{ background: "#C3B1E140", border: "1.5px solid #171915" }}>
           {summary.reduce((acc, s) => acc + (s.runs || 0), 0)} Total Executions
         </span>
       </div>
@@ -66,7 +66,7 @@ function AgentExecutionTelemetryChart({ summary }) {
                 name === "avgSec" ? `${val}s avg latency` : `${val} runs`,
                 name === "complete" ? "Complete" : name === "partial" ? "Partial" : name === "failed" ? "Failed" : "Avg Latency"
               ]}
-              contentStyle={{ background: "#fffef8", border: "1px solid #171915", borderRadius: 10, fontWeight: 700 }}
+              contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, fontWeight: 700 }}
             />
             <Legend wrapperStyle={{ fontSize: 11, fontWeight: 700, paddingTop: 4 }} />
             <Bar dataKey="complete" name="Complete" fill="#2ed573" stroke="#171915" strokeWidth={1} radius={[4, 4, 0, 0]} stackId="runs" />

@@ -121,8 +121,100 @@ async function seed() {
     { upsert: true, new: true }
   );
 
+  const shreshta = await BusinessProfile.findOneAndUpdate(
+    { email: "shreshta@utlio.com" },
+    {
+      $set: {
+        name: "Shreshta Banquets & Decor",
+        email: "shreshta@utlio.com",
+        passwordHash: hash,
+        role: "business",
+        mode: "provider",
+        phone: "+91 98203 77003",
+        category: "venue",
+        city: "Mumbai",
+        address: "Juhu Tara Road, Mumbai 400049",
+        gstin: "27SHRES3333C1Z3",
+        verification: "verified",
+        verificationNote: "Verified: Banquet venue operator, FSSAI certified.",
+        sessionVersion: 1,
+      },
+    },
+    { upsert: true, new: true }
+  );
+
+  const shreyas = await BusinessProfile.findOneAndUpdate(
+    { email: "shreyas@utlio.com" },
+    {
+      $set: {
+        name: "Shreyas Sound & Audio Visuals",
+        email: "shreyas@utlio.com",
+        passwordHash: hash,
+        role: "business",
+        mode: "provider",
+        phone: "+91 98204 88004",
+        category: "sound_equipment",
+        city: "Mumbai",
+        address: "Andheri West, Mumbai 400053",
+        gstin: "27SHREY4444D1Z4",
+        verification: "verified",
+        verificationNote: "Verified: Professional sound system gear rental.",
+        sessionVersion: 1,
+      },
+    },
+    { upsert: true, new: true }
+  );
+
+  const shivam = await BusinessProfile.findOneAndUpdate(
+    { email: "shivam@utlio.com" },
+    {
+      $set: {
+        name: "Shivam Creative Events",
+        email: "shivam@utlio.com",
+        passwordHash: hash,
+        role: "business",
+        mode: "seeker",
+        phone: "+91 98205 99005",
+        category: "event_organizer",
+        city: "Mumbai",
+        address: "Powai, Mumbai 400076",
+        gstin: "27SHIV5555E1Z5",
+        verification: "verified",
+        verificationNote: "Verified: Corporate event planner and festival creator.",
+        sessionVersion: 1,
+      },
+    },
+    { upsert: true, new: true }
+  );
+
+  const vaishnavi = await BusinessProfile.findOneAndUpdate(
+    { email: "vaishnavi@utlio.com" },
+    {
+      $set: {
+        name: "Vaishnavi Design & Production",
+        email: "vaishnavi@utlio.com",
+        passwordHash: hash,
+        role: "business",
+        mode: "seeker",
+        phone: "+91 98206 11006",
+        category: "event_organizer",
+        city: "Mumbai",
+        address: "Worli, Mumbai 400018",
+        gstin: "27VAISH6666F1Z6",
+        verification: "verified",
+        verificationNote: "Verified: Luxury weddings and conference staging.",
+        sessionVersion: 1,
+      },
+    },
+    { upsert: true, new: true }
+  );
+
   console.log(`✔ Provider: arjun@utlio.com  (${provider._id})`);
+  console.log(`✔ Provider: shreshta@utlio.com (${shreshta._id})`);
+  console.log(`✔ Provider: shreyas@utlio.com  (${shreyas._id})`);
   console.log(`✔ Seeker:   priya@utlio.com  (${seeker._id})`);
+  console.log(`✔ Seeker:   shivam@utlio.com (${shivam._id})`);
+  console.log(`✔ Seeker:   vaishnavi@utlio.com (${vaishnavi._id})`);
   console.log(`✔ Admin:    admin@utlio.com  (${admin._id})`);
 
   // ─── 4. Wipe old demo data ────────────────────────────────────────

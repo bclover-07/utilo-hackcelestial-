@@ -48,7 +48,7 @@ function DynamicSurgeCurveChart({ autoPilot }) {
           <span className="eyebrow" style={{ color: "#2E7D32", marginBottom: 2 }}>DYNAMIC AUTO-PILOT ELASTICITY</span>
           <h4 className="feature-chart-title">Demand-Surge Price Curve (Floor {money(floor)} → Ceiling {money(ceiling)})</h4>
         </div>
-        <span className="badge" style={{ background: "#4CAF50", color: "#fff", border: "1px solid #171915" }}>
+        <span className="badge" style={{ background: "#4CAF50", color: "#fff", border: "1.5px solid #171915" }}>
           Current Multiplier: {autoPilot.surgeMultiplier}x
         </span>
       </div>
@@ -61,9 +61,9 @@ function DynamicSurgeCurveChart({ autoPilot }) {
             <YAxis stroke="#171915" tick={{ fontSize: 10 }} tickFormatter={(v) => `₹${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} domain={[floor * 0.9, ceiling * 1.1]} />
             <Tooltip
               formatter={(val) => [money(val), "Suggested Dynamic Rate"]}
-              contentStyle={{ background: "#fffef8", border: "1px solid #171915", borderRadius: 8, fontWeight: 700 }}
+              contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, boxShadow: "2px 2px 0 #171915", fontWeight: 700 }}
             />
-            <Area type="monotone" dataKey="price" stroke="#2E7D32" strokeWidth={2} fill="#A8E6CF" fillOpacity={0.5} />
+            <Area type="monotone" dataKey="price" stroke="#2E7D32" strokeWidth={2.5} fill="#A8E6CF" fillOpacity={0.5} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -88,7 +88,7 @@ function MarketComparisonChart({ comparables, suggestedPrice }) {
           <h3 className="feature-chart-title">Competitive Price Spectrum</h3>
         </div>
         {suggestedPrice && (
-          <span className="badge" style={{ background: "#FFE66D", border: "1px solid #171915" }}>
+          <span className="badge" style={{ background: "#FFE66D", border: "1.5px solid #171915" }}>
             Suggested: {money(suggestedPrice)}
           </span>
         )}
@@ -101,12 +101,12 @@ function MarketComparisonChart({ comparables, suggestedPrice }) {
             <YAxis stroke="#171915" tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}`} />
             <Tooltip
               formatter={(val, name) => [money(val), name === "min" ? "Floor Price" : name === "avg" ? "Market Average" : "Ceiling Price"]}
-              contentStyle={{ background: "#fffef8", border: "1px solid #171915", borderRadius: 10, fontWeight: 700 }}
+              contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, boxShadow: "2px 2px 0 #171915", fontWeight: 700 }}
             />
             <Legend wrapperStyle={{ paddingTop: "8px", fontSize: "12px", fontWeight: 700 }} />
-            <Bar dataKey="min" fill="#A8E6CF" name="Floor Price" radius={[4, 4, 0, 0]} stroke="#171915" strokeWidth={1} />
-            <Bar dataKey="avg" fill="#FFE66D" name="Market Average" radius={[4, 4, 0, 0]} stroke="#171915" strokeWidth={1} />
-            <Bar dataKey="max" fill="#FF85A1" name="Ceiling Price" radius={[4, 4, 0, 0]} stroke="#171915" strokeWidth={1} />
+            <Bar dataKey="min" fill="#A8E6CF" name="Floor Price" radius={[4, 4, 0, 0]} stroke="#171915" strokeWidth={1.5} />
+            <Bar dataKey="avg" fill="#FFE66D" name="Market Average" radius={[4, 4, 0, 0]} stroke="#171915" strokeWidth={1.5} />
+            <Bar dataKey="max" fill="#FF85A1" name="Ceiling Price" radius={[4, 4, 0, 0]} stroke="#171915" strokeWidth={1.5} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -139,9 +139,9 @@ function RecentBookingsVisualChart({ recentBookings }) {
             <YAxis stroke="#171915" tick={{ fontSize: 10 }} tickFormatter={(v) => `₹${v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}`} />
             <Tooltip
               formatter={(val) => [money(val), "Exchange Total"]}
-              contentStyle={{ background: "#fffef8", border: "1px solid #171915", borderRadius: 8, fontWeight: 700 }}
+              contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, boxShadow: "2px 2px 0 #171915", fontWeight: 700 }}
             />
-            <Bar dataKey="amount" stroke="#171915" strokeWidth={1} radius={[4, 4, 0, 0]}>
+            <Bar dataKey="amount" stroke="#171915" strokeWidth={1.5} radius={[4, 4, 0, 0]}>
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
@@ -262,7 +262,7 @@ export function SmartPricingPage() {
             <AgentDecision decision={result.decision} generation={result.generation} hideSummary />
 
             {result.cannibalization?.detected && (
-              <div className="panel" style={{ marginTop: "1rem", background: "#ffebee", border: "1px solid #171915", borderRadius: "16px", padding: "1.2rem", boxShadow: "3px 3px 0 #171915" }}>
+              <div className="panel" style={{ marginTop: "1rem", background: "#ffebee", border: "1.5px solid #171915", borderRadius: "16px", padding: "1.2rem", boxShadow: "2px 2px 0 #171915" }}>
                 <span className="eyebrow" style={{ color: "#c62828", fontSize: "0.75rem", letterSpacing: "0.08em" }}>INVENTORY CANNIBALIZATION ALERT</span>
                 <h4 style={{ margin: "0.25rem 0", color: "#b71c1c" }}>Cross-Listing Margin Risk</h4>
                 {result.cannibalization.warnings.map((w, idx) => (
@@ -274,7 +274,7 @@ export function SmartPricingPage() {
             )}
 
             {result.autoPilotRecommendation && (
-              <div className="panel" style={{ marginTop: "1rem", background: "#e8f5e9", border: "1px solid #171915", borderRadius: "16px", padding: "1.2rem", boxShadow: "3px 3px 0 #171915" }}>
+              <div className="panel" style={{ marginTop: "1rem", background: "#e8f5e9", border: "1.5px solid #171915", borderRadius: "16px", padding: "1.2rem", boxShadow: "2px 2px 0 #171915" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
                   <div>
                     <span className="eyebrow" style={{ fontSize: "0.75rem", letterSpacing: "0.08em", color: "#2e7d32" }}>DYNAMIC PRICING AUTO-PILOT</span>
