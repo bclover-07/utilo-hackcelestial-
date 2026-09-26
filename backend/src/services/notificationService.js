@@ -1,10 +1,18 @@
 import nodemailer from "nodemailer";
 import { Notification, BusinessProfile } from "../models/index.js";
+import { getIO } from "../socket.js";
+
 export async function notify(user, title, body, href, session) {
   const docs = await Notification.create(
     [{ user, title, body, href }],
     session ? { session } : {},
   );
+  try {
+    const io = getIO();
+    if (io) {
+      io.to(`user_${user}`).emit("notification", docs[0]);
+    }
+  } catch {}
   return docs[0];
 }
 export async function deliverEmails() {

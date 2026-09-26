@@ -32,6 +32,9 @@ import {
 } from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useTranslation } from "@/lib/i18n";
+import { getSocket } from "@/lib/socket";
+import { IncomingCallModal } from "./IncomingCallModal";
+import { VideoCallModal } from "./VideoCallModal";
 
 const providerSections = [
   {
@@ -168,6 +171,92 @@ export default function DashboardShell({ children, admin = false }) {
   };
 
   const base = admin ? "/admin" : "/dashboard";
+
+  // Global Video Call & Real-Time Alert State
+  const [incomingCall, setIncomingCall] = useState(null);
+  const [activeCall, setActiveCall] = useState(null);
+  const [hasNewAlert, setHasNewAlert] = useState(false);
+
+  useEffect(() => {
+    if (!auth.user) return;
+    const socket = getSocket();
+    if (!socket) return;
+
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    function handleIncoming(data) {
+      setIncomingCall(data);
+    }
+
+    function handleAccepted() {
+      setIncomingCall(null);
+    }
+
+    function handleDeclined() {
+      setIncomingCall(null);
+    }
+
+    function handleNotification() {
+      setHasNewAlert(true);
+    }
+
+    function handleWindowStartCall(e) {
+      if (e.detail) {
+        setActiveCall(e.detail);
+      }
+    }
+
+    socket.on("video_call_incoming", handleIncoming);
+    socket.on("video_call_accepted", handleAccepted);
+    socket.on("video_call_declined", handleDeclined);
+    socket.on("notification", handleNotification);
+    window.addEventListener("utlio:open-video-call", handleWindowStartCall);
+
+    return () => {
+      socket.off("video_call_incoming", handleIncoming);
+      socket.off("video_call_accepted", handleAccepted);
+      socket.off("video_call_declined", handleDeclined);
+      socket.off("notification", handleNotification);
+      window.removeEventListener("utlio:open-video-call", handleWindowStartCall);
+    };
+  }, [auth.user]);
+
+  const handleAcceptIncomingCall = (callData) => {
+    const socket = getSocket();
+    if (socket) {
+      socket.emit("video_call_accept", {
+        quoteId: callData.quoteId,
+        roomId: callData.roomId,
+        messageId: callData.messageId,
+      });
+    }
+    setIncomingCall(null);
+    setActiveCall({
+      quoteId: callData.quoteId,
+      roomId: callData.roomId,
+      partnerId: callData.caller?._id,
+      partnerName: callData.caller?.name,
+      partnerRole: "Seeker",
+      listingTitle: callData.listingTitle,
+      isInitiator: false,
+      messageId: callData.messageId,
+    });
+  };
+
+  const handleDeclineIncomingCall = (callData) => {
+    const socket = getSocket();
+    if (socket) {
+      socket.emit("video_call_decline", {
+        quoteId: callData.quoteId,
+        roomId: callData.roomId,
+        messageId: callData.messageId,
+        reason: "Provider is currently unavailable.",
+      });
+    }
+    setIncomingCall(null);
+  };
 
   useEffect(() => {
     const closeOnEscape = (event) => {
@@ -389,8 +478,24 @@ export default function DashboardShell({ children, admin = false }) {
               className={`top-icon-btn ${path.includes("notifications") ? "active" : ""}`}
               title="Alerts & Notifications"
               aria-label="Alerts & Notifications"
+              style={{ position: "relative" }}
+              onClick={() => setHasNewAlert(false)}
             >
               <Bell size={18} />
+              {hasNewAlert && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "4px",
+                    right: "4px",
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    backgroundColor: "#ef4444",
+                    border: "1.5px solid #20201e",
+                  }}
+                />
+              )}
             </Link>
 
             {/* User Profile Avatar */}
@@ -449,6 +554,29 @@ export default function DashboardShell({ children, admin = false }) {
           </div>
         </footer>
       </div>
+
+      {/* Real-Time Incoming Video Call Modal */}
+      <IncomingCallModal
+        incomingCall={incomingCall}
+        onAccept={handleAcceptIncomingCall}
+        onDecline={handleDeclineIncomingCall}
+      />
+
+      {/* Active WebRTC Video Conference Modal */}
+      {activeCall && (
+        <VideoCallModal
+          isOpen={!!activeCall}
+          onClose={() => setActiveCall(null)}
+          quoteId={activeCall.quoteId}
+          roomId={activeCall.roomId}
+          partnerName={activeCall.partnerName}
+          partnerId={activeCall.partnerId}
+          partnerRole={activeCall.partnerRole}
+          listingTitle={activeCall.listingTitle}
+          isInitiator={activeCall.isInitiator}
+          messageId={activeCall.messageId}
+        />
+      )}
     </div>
   );
 }

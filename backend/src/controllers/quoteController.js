@@ -25,6 +25,7 @@ export const quoteController = {
     await quotes.getQuote(req.user, recordId(req));
     const messages = await Message.find({ quote: req.params.id })
       .populate("sender", "name")
+      .populate("videoCall.caller videoCall.recipient", "name")
       .sort({ createdAt: -1, _id: -1 })
       .limit(500)
       .lean();
@@ -33,4 +34,7 @@ export const quoteController = {
 
   message: send((req) => quotes.message(req.user, recordId(req), req.body)),
   directOffer: send((req) => quotes.directOffer(req.user, req.body)),
+  requestVideoCall: send((req) => quotes.requestVideoCall(req.user, recordId(req))),
+  respondVideoCall: send((req) => quotes.respondVideoCall(req.user, recordId(req), req.body)),
+  endVideoCall: send((req) => quotes.endVideoCall(req.user, recordId(req), req.body)),
 };

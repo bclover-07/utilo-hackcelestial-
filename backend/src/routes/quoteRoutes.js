@@ -20,4 +20,7 @@ quoteRoutes.post("/quotes/:id/accept", verifiedBusiness, c.accept);
 quoteRoutes.post("/quotes/:id/decline", c.decline);
 quoteRoutes.get("/quotes/:id/messages", c.messages);
 quoteRoutes.post("/quotes/:id/messages", c.message);
+quoteRoutes.post("/quotes/:id/video-call/request", c.requestVideoCall);
+quoteRoutes.post("/quotes/:id/video-call/respond", c.respondVideoCall);
+quoteRoutes.post("/quotes/:id/video-call/end", c.endVideoCall);
 quoteRoutes.post("/quotes/:id/assistant", aiLimit, aiController.negotiation);

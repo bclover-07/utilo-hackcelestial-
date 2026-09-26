@@ -14,7 +14,7 @@ import { offerSchema } from "./validation.js";
 import { assert } from "../middlewares/errors.js";
 import { peakReserved } from "./matchingService.js";
 import { notify } from "./notificationService.js";
-import { broadcastMessage } from "../socket.js";
+import { broadcastMessage, getIO } from "../socket.js";
 import { logWorkProcess } from "./workProcessService.js";
 export const participantQuery = (user) => ({
   $or: [{ provider: user._id }, { seeker: user._id }],
@@ -413,4 +413,125 @@ export async function directOffer(user, raw) {
       message: "Offer submitted successfully. Negotiation channel opened.",
     };
   });
+}
+
+export async function requestVideoCall(user, id) {
+  const q = await Quote.findOne({ _id: id, ...participantQuery(user) })
+    .populate("listing", "title")
+    .populate("provider seeker", "name _id");
+  assert(q, 404, "Negotiation not found.");
+
+  const isCallerProvider = String(q.provider._id) === String(user._id);
+  const recipient = isCallerProvider ? q.seeker : q.provider;
+  const roomId = `call_${id}_${Date.now()}`;
+
+  const m = await Message.create({
+    quote: id,
+    sender: user._id,
+    text: `📹 Video call requested by ${user.name}.`,
+    type: "video_call",
+    videoCall: {
+      status: "requested",
+      roomId,
+      caller: user._id,
+      recipient: recipient._id,
+    },
+  });
+
+  const populated = await Message.findById(m._id)
+    .populate("sender", "name")
+    .populate("videoCall.caller videoCall.recipient", "name")
+    .lean();
+
+  const io = getIO();
+  if (io) {
+    io.to(`quote_${id}`).emit("new_message", populated);
+    const incomingPayload = {
+      quoteId: String(id),
+      roomId,
+      messageId: String(m._id),
+      listingTitle: q.listing?.title || "Resource Negotiation",
+      caller: {
+        _id: String(user._id),
+        name: user.name,
+      },
+      createdAt: new Date().toISOString(),
+    };
+    io.to(`user_${recipient._id}`).emit("video_call_incoming", incomingPayload);
+    io.to(`quote_${id}`).emit("video_call_incoming", incomingPayload);
+  }
+
+  await notify(
+    recipient._id,
+    "📹 Incoming Video Call Request",
+    `${user.name} is requesting a live video call for "${q.listing?.title || 'Resource'}".`,
+    `/dashboard/negotiations?selected=${id}`,
+  );
+
+  return { success: true, roomId, messageId: String(m._id), message: populated };
+}
+
+export async function respondVideoCall(user, id, raw) {
+  const q = await getQuote(user, id);
+  const { action, roomId, messageId, reason } = raw;
+  const status = action === "accept" ? "accepted" : "declined";
+
+  if (messageId) {
+    await Message.findByIdAndUpdate(messageId, {
+      "videoCall.status": status,
+    });
+  }
+
+  const io = getIO();
+  const callerId = String(q.provider) === String(user._id) ? String(q.seeker) : String(q.provider);
+
+  if (action === "accept") {
+    const payload = {
+      quoteId: String(id),
+      roomId,
+      messageId,
+      acceptedBy: { _id: String(user._id), name: user.name },
+    };
+    if (io) {
+      io.to(`quote_${id}`).emit("video_call_accepted", payload);
+      io.to(`user_${callerId}`).emit("video_call_accepted", payload);
+    }
+    return { success: true, status: "accepted", roomId };
+  } else {
+    const payload = {
+      quoteId: String(id),
+      roomId,
+      messageId,
+      declinedBy: { _id: String(user._id), name: user.name },
+      reason: reason || "User is currently unavailable.",
+    };
+    if (io) {
+      io.to(`quote_${id}`).emit("video_call_declined", payload);
+      io.to(`user_${callerId}`).emit("video_call_declined", payload);
+    }
+    return { success: true, status: "declined" };
+  }
+}
+
+export async function endVideoCall(user, id, raw) {
+  const { roomId, messageId, durationSeconds } = raw || {};
+  if (messageId) {
+    await Message.findByIdAndUpdate(messageId, {
+      "videoCall.status": "ended",
+      "videoCall.durationSeconds": durationSeconds || 0,
+    });
+  }
+
+  const io = getIO();
+  if (io) {
+    io.to(`quote_${id}`).emit("video_call_ended", {
+      quoteId: String(id),
+      roomId,
+      messageId,
+      durationSeconds: durationSeconds || 0,
+      endedBy: { _id: String(user._id), name: user.name },
+    });
+  }
+
+  return { success: true };
 }
