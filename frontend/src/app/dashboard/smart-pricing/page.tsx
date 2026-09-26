@@ -1,4 +1,4 @@
-import { SmartPricingPage } from "@/components/SmartPricing";
+import YieldContainer from "@/components/YieldContainer";
 export default function Page() {
-  return <SmartPricingPage />;
+  return <YieldContainer />;
 }

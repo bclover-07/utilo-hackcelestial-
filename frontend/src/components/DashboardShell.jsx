@@ -47,8 +47,7 @@ const providerSections = [
     links: [
       ["listings", "My listings", <Package size={17} key="listings" />],
       ["calendar", "Availability & Calendar", <Calendar size={17} key="calendar" />],
-      ["smart-pricing", "Smart pricing advisor", <DollarSign size={17} key="pricing" />],
-      ["forecast", "Demand outlook & trends", <TrendingUp size={17} key="forecast" />],
+      ["smart-pricing", "Smart pricing & demand", <DollarSign size={17} key="pricing" />],
       ["performance", "Provider performance", <Award size={17} key="performance" />],
     ],
   },
