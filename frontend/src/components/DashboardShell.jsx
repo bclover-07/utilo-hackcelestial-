@@ -14,7 +14,6 @@ import {
   BookmarkCheck,
   Package,
   DollarSign,
-  TrendingUp,
   Award,
   MessageSquare,
   CalendarCheck,
@@ -23,12 +22,10 @@ import {
   Activity,
   BarChart3,
   Bell,
-  User,
   LayoutDashboard,
   ShieldCheck,
   CheckCircle,
   Sliders,
-  ArrowLeftRight,
 } from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useTranslation } from "@/lib/i18n";

@@ -131,19 +131,18 @@ export function VideoCallModal({
     if (!isOpen) return;
 
     let isMounted = true;
-    setCallState("initializing");
-    setErrorMessage("");
-    setDuration(0);
     pendingCandidatesRef.current = [];
 
-    const socket = getSocket();
-    if (!socket) {
-      setCallState("error");
-      setErrorMessage("Real-time network connection is unavailable.");
-      return;
-    }
-
     async function startCall() {
+      const socket = getSocket();
+      if (!socket) {
+        if (isMounted) {
+          setCallState("error");
+          setErrorMessage("Real-time network connection is unavailable.");
+        }
+        return;
+      }
+
       try {
         // 1. Get user media (camera + mic)
         let stream;
