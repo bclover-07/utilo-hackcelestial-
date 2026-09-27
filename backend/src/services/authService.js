@@ -12,17 +12,18 @@ export function publicUser(user) {
   delete obj.sessionVersion;
   return obj;
 }
-export function session(res, user) {
+export function session(res, user, req = null) {
   const token = jwt.sign({ version: user.sessionVersion }, config.jwt, {
     subject: String(user._id),
     expiresIn: "8h",
     issuer: "utilo",
     audience: "utilo-web",
   });
+  const isHttps = req ? (req.secure || req.headers?.["x-forwarded-proto"] === "https") : config.production;
   const cookieOptions = {
     httpOnly: true,
-    sameSite: config.production ? "none" : "lax",
-    secure: config.production,
+    sameSite: isHttps ? "none" : "lax",
+    secure: isHttps,
     maxAge: 8 * 3600000,
     path: "/",
   };
@@ -52,6 +53,7 @@ export async function login(body) {
       role: z.enum(["business", "admin"]),
       mode: z.enum(["provider", "seeker"]).optional(),
     })
+    .parse(body);
   const altEmail = data.email.includes("@utilo.com")
     ? data.email.replace("@utilo.com", "@utlio.com")
     : data.email.includes("@utlio.com")

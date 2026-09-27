@@ -52,23 +52,20 @@ export function isAllowedOrigin(origin) {
 
   if (configuredList.includes(cleanOrigin)) return true;
 
-  // Always permit production Utilo frontend Vercel deployments & previews
+  // Always permit any Vercel deployment (*.vercel.app)
+  if (cleanOrigin.endsWith(".vercel.app") || cleanOrigin.includes(".vercel.app:")) {
+    return true;
+  }
+
+  // Always permit local development hosts (localhost, 127.0.0.1, LAN IPs) on any port
   if (
-    cleanOrigin === "https://utilo-hackcelestial-frontend.vercel.app" ||
-    /^https:\/\/utilo-hackcelestial-frontend(-[a-z0-9-]+)?\.vercel\.app$/.test(cleanOrigin)
+    /^https?:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/.test(
+      cleanOrigin,
+    )
   ) {
     return true;
   }
 
-  if (!config.production) {
-    if (
-      /^https?:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/.test(
-        cleanOrigin,
-      )
-    ) {
-      return true;
-    }
-  }
   return false;
 }
 
