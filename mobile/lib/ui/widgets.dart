@@ -249,12 +249,20 @@ class _RemoteState extends State<Remote> {
   @override
   void didUpdateWidget(Remote old) {
     super.didUpdateWidget(old);
-    if (old.path != widget.path) future = widget.api.call(widget.path);
+    if (old.path != widget.path) {
+      setState(() {
+        future = widget.api.call(widget.path);
+      });
+    }
   }
 
   Future<void> reload() async {
     final next = widget.api.call(widget.path);
-    setState(() => future = next);
+    if (mounted) {
+      setState(() {
+        future = next;
+      });
+    }
     await next;
   }
 
@@ -1701,7 +1709,11 @@ class _AiResultButtonState extends State<AiResultButton> {
             method: 'POST',
             body: widget.body,
           );
-          if (mounted) setState(() => result = r);
+          if (mounted) {
+            setState(() {
+              result = r;
+            });
+          }
           return 'Analysis ready.';
         },
       ),

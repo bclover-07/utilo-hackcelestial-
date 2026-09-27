@@ -135,12 +135,16 @@ class _WorkspaceState extends State<Workspace> {
   ];
 
   void go(String path) {
-    setState(() => selected = path);
+    setState(() {
+      selected = path;
+    });
   }
 
   Future<void> toggleMode() async {
     if (isSwitchingMode) return;
-    setState(() => isSwitchingMode = true);
+    setState(() {
+      isSwitchingMode = true;
+    });
     try {
       final next = s.mode == 'provider' ? 'seeker' : 'provider';
       await s.profile({'mode': next});
@@ -160,7 +164,9 @@ class _WorkspaceState extends State<Workspace> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => isSwitchingMode = false);
+        setState(() {
+          isSwitchingMode = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Could not switch mode: $e'),

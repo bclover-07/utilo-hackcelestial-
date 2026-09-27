@@ -2161,7 +2161,11 @@ class _ItemsEditorState extends State<ItemsEditor> {
               ],
               if (widget.items.length > 1)
                 TextButton.icon(
-                  onPressed: () => setState(() => widget.items.remove(item)),
+                  onPressed: () {
+                    setState(() {
+                      widget.items.remove(item);
+                    });
+                  },
                   icon: const Icon(Icons.remove_circle_outline),
                   label: const Text('Remove item'),
                 ),
@@ -2170,9 +2174,11 @@ class _ItemsEditorState extends State<ItemsEditor> {
         ),
       if (widget.items.length < 10)
         OutlinedButton.icon(
-          onPressed: () => setState(
-            () => widget.items.add({'quantity': 1, 'capacity': 1, 'specs': ''}),
-          ),
+          onPressed: () {
+            setState(() {
+              widget.items.add({'quantity': 1, 'capacity': 1, 'specs': ''});
+            });
+          },
           icon: const Icon(Icons.add),
           label: const Text('Add another resource'),
         ),

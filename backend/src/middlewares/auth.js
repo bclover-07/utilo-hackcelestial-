@@ -43,7 +43,7 @@ export function isAllowedOrigin(origin) {
   if (!origin) return true;
   if (origin === config.origin) return true;
   if (!config.production) {
-    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
+    if (/^https?:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/.test(origin)) return true;
   }
   return false;
 }

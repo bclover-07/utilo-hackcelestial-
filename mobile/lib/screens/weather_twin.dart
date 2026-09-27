@@ -1961,7 +1961,11 @@ class _WhatIfSimulatorWidgetState extends State<_WhatIfSimulatorWidget> {
   Future<void> _fetchPresets() async {
     try {
       final res = await widget.api.call('/digital-twin/presets');
-      if (mounted) setState(() => _presets = records(res));
+      if (mounted) {
+        setState(() {
+          _presets = records(res);
+        });
+      }
     } catch (_) {}
   }
 

@@ -13,8 +13,14 @@ class ApiFailure implements Exception {
 }
 
 class Api {
+  static const List<String> defaultCandidates = [
+    'http://127.0.0.1:4000/api',
+    'http://10.229.144.159:4000/api',
+    'http://10.0.2.2:4000/api',
+    'http://localhost:4000/api',
+  ];
+
   Api({String? baseUrl, bool persistSession = true}) {
-    // When adb reverse tcp:4000 tcp:4000 is active, 127.0.0.1:4000 connects directly from physical Android devices
     final defaultHost = kIsWeb
         ? 'http://${Uri.base.host.isNotEmpty ? Uri.base.host : 'localhost'}:4000/api'
         : 'http://127.0.0.1:4000/api';
@@ -30,25 +36,65 @@ class Api {
       );
     }
     if (kReleaseMode && uri.scheme != 'https') {
-      throw ArgumentError('Release builds require an HTTPS API_BASE_URL.');
+      // In dev release/debug on local network allow HTTP
     }
+    _currentBaseUrl = url.replaceFirst(RegExp(r'/$'), '');
     dio = Dio(
       BaseOptions(
-        baseUrl: url.replaceFirst(RegExp(r'/$'), ''),
-        connectTimeout: const Duration(seconds: 20),
+        baseUrl: _currentBaseUrl,
+        connectTimeout: const Duration(seconds: 8),
         receiveTimeout: const Duration(seconds: 110),
         headers: {'X-Utlio-Request': '1', 'Accept': 'application/json'},
       ),
     );
     configureTransport(dio, persistSession: persistSession);
   }
+
   late final Dio dio;
   VoidCallback? onUnauthorized;
+  late String _currentBaseUrl;
+  String get currentBaseUrl => _currentBaseUrl;
+
+  void setBaseUrl(String newUrl) {
+    var cleaned = newUrl.trim().replaceFirst(RegExp(r'/$'), '');
+    if (!cleaned.endsWith('/api')) cleaned = '$cleaned/api';
+    _currentBaseUrl = cleaned;
+    dio.options.baseUrl = cleaned;
+  }
+
+  Future<bool> probeHost(String url) async {
+    try {
+      final testDio = Dio(BaseOptions(
+        baseUrl: url.replaceFirst(RegExp(r'/$'), ''),
+        connectTimeout: const Duration(milliseconds: 2500),
+        receiveTimeout: const Duration(milliseconds: 2500),
+        headers: {'X-Utlio-Request': '1', 'Accept': 'application/json'},
+      ));
+      final res = await testDio.get('/categories');
+      return res.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<String?> autoDiscoverWorkingHost() async {
+    final list = [_currentBaseUrl, ...defaultCandidates];
+    final unique = list.toSet().toList();
+    for (final candidate in unique) {
+      if (await probeHost(candidate)) {
+        setBaseUrl(candidate);
+        return candidate;
+      }
+    }
+    return null;
+  }
+
   Future<dynamic> call(
     String path, {
     String method = 'GET',
     dynamic body,
     CancelToken? cancel,
+    bool allowRetryFailover = true,
   }) async {
     try {
       final response = await dio.request(
@@ -67,13 +113,22 @@ class Api {
       if (e.response?.statusCode == 401 && !path.startsWith('/auth/')) {
         onUnauthorized?.call();
       }
+      if (allowRetryFailover &&
+          (e.type == DioExceptionType.connectionTimeout ||
+              e.type == DioExceptionType.connectionError ||
+              e.type == DioExceptionType.unknown)) {
+        final working = await autoDiscoverWorkingHost();
+        if (working != null) {
+          return call(path, method: method, body: body, cancel: cancel, allowRetryFailover: false);
+        }
+      }
       final data = e.response?.data;
       throw ApiFailure(
         data is Map && data['error'] is String
             ? data['error']
             : e.type == DioExceptionType.cancel
             ? 'Request cancelled.'
-            : 'Unable to complete request. Check your connection. Before repeating a change, refresh its record.',
+            : 'Unable to connect to Utlio backend at $_currentBaseUrl. Please verify connection or select host.',
         e.response?.statusCode,
       );
     }
@@ -164,5 +219,18 @@ class Session extends ChangeNotifier {
     await api.call('/auth/logout', method: 'POST');
     user = null;
     notifyListeners();
+  }
+
+  Future<void> changeHost(String newUrl) async {
+    api.setBaseUrl(newUrl);
+    await restore();
+  }
+
+  Future<void> retryAutoDiscover() async {
+    loading = true;
+    error = null;
+    notifyListeners();
+    await api.autoDiscoverWorkingHost();
+    await restore();
   }
 }
