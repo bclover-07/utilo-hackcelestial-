@@ -75,7 +75,11 @@ class _VideoCallScreenState extends State<VideoCallScreen> with TickerProviderSt
   void _startConnectedTimers() {
     _durationTimer?.cancel();
     _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() => _duration++);
+      if (mounted) {
+        setState(() {
+          _duration++;
+        });
+      }
     });
 
     // When connected, poll call status every 3 seconds to detect if remote peer hangs up
@@ -89,7 +93,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> with TickerProviderSt
     _callingTimeoutTimer?.cancel();
     _callingTimeoutTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
-      setState(() => _callingSeconds++);
+      setState(() {
+        _callingSeconds++;
+      });
       if (_callingSeconds >= 45 && _callState == 'calling') {
         _handleCallingTimeout();
       }
@@ -104,7 +110,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> with TickerProviderSt
     _statusPollingTimer?.cancel();
     _callingTimeoutTimer?.cancel();
     if (!mounted) return;
-    setState(() => _callState = 'timeout');
+    setState(() {
+      _callState = 'timeout';
+    });
 
     try {
       await widget.session.api.call(
@@ -138,7 +146,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> with TickerProviderSt
           if (status == 'accepted' && _callState != 'connected') {
             _callingTimeoutTimer?.cancel();
             if (mounted) {
-              setState(() => _callState = 'connected');
+              setState(() {
+                _callState = 'connected';
+              });
               _startConnectedTimers();
             }
           } else if (status == 'declined' && _callState != 'declined') {
@@ -146,7 +156,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> with TickerProviderSt
             _callingTimeoutTimer?.cancel();
             _durationTimer?.cancel();
             if (mounted) {
-              setState(() => _callState = 'declined');
+              setState(() {
+                _callState = 'declined';
+              });
             }
             Future.delayed(const Duration(seconds: 2), () {
               if (mounted) Navigator.pop(context);
@@ -156,7 +168,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> with TickerProviderSt
             _callingTimeoutTimer?.cancel();
             _durationTimer?.cancel();
             if (mounted) {
-              setState(() => _callState = 'ended');
+              setState(() {
+                _callState = 'ended';
+              });
             }
             Future.delayed(const Duration(seconds: 2), () {
               if (mounted) Navigator.pop(context);
@@ -171,7 +185,9 @@ class _VideoCallScreenState extends State<VideoCallScreen> with TickerProviderSt
     _durationTimer?.cancel();
     _statusPollingTimer?.cancel();
     _callingTimeoutTimer?.cancel();
-    setState(() => _callState = 'ended');
+    setState(() {
+      _callState = 'ended';
+    });
 
     try {
       await widget.session.api.call(
@@ -761,7 +777,11 @@ class _VideoCallScreenState extends State<VideoCallScreen> with TickerProviderSt
                 children: [
                   // Microphone Toggle
                   IconButton.filled(
-                    onPressed: () => setState(() => _audioMuted = !_audioMuted),
+                    onPressed: () {
+                      setState(() {
+                        _audioMuted = !_audioMuted;
+                      });
+                    },
                     icon: Icon(_audioMuted ? Icons.mic_off : Icons.mic),
                     style: IconButton.styleFrom(
                       backgroundColor: _audioMuted ? const Color(0xfff58e7e) : card,
@@ -773,7 +793,11 @@ class _VideoCallScreenState extends State<VideoCallScreen> with TickerProviderSt
 
                   // Camera Toggle
                   IconButton.filled(
-                    onPressed: () => setState(() => _videoOff = !_videoOff),
+                    onPressed: () {
+                      setState(() {
+                        _videoOff = !_videoOff;
+                      });
+                    },
                     icon: Icon(_videoOff ? Icons.videocam_off : Icons.videocam),
                     style: IconButton.styleFrom(
                       backgroundColor: _videoOff ? const Color(0xfff58e7e) : card,
@@ -785,7 +809,11 @@ class _VideoCallScreenState extends State<VideoCallScreen> with TickerProviderSt
 
                   // Flip Camera
                   IconButton.filled(
-                    onPressed: () => setState(() => _isFrontCamera = !_isFrontCamera),
+                    onPressed: () {
+                      setState(() {
+                        _isFrontCamera = !_isFrontCamera;
+                      });
+                    },
                     icon: const Icon(Icons.flip_camera_ios),
                     style: IconButton.styleFrom(
                       backgroundColor: card,
@@ -797,7 +825,11 @@ class _VideoCallScreenState extends State<VideoCallScreen> with TickerProviderSt
 
                   // Speaker Toggle
                   IconButton.filled(
-                    onPressed: () => setState(() => _speakerOn = !_speakerOn),
+                    onPressed: () {
+                      setState(() {
+                        _speakerOn = !_speakerOn;
+                      });
+                    },
                     icon: Icon(_speakerOn ? Icons.volume_up : Icons.volume_off),
                     style: IconButton.styleFrom(
                       backgroundColor: card,

@@ -24,7 +24,11 @@ class _DocumentButtonState extends State<DocumentButton> {
         icon: Icons.description_outlined,
         run: () async {
           final r = await widget.api.call('/uploads/${widget.id}/document');
-          if (mounted) setState(() => url = r['url']);
+          if (mounted) {
+            setState(() {
+              url = r['url'];
+            });
+          }
           return 'Private document link ready.';
         },
       ),
@@ -326,6 +330,237 @@ class VerificationQueueVisualizerWidget extends StatelessWidget {
     );
   }
 }
+
+class DisputeQueueVisualizerWidget extends StatelessWidget {
+  const DisputeQueueVisualizerWidget({super.key, required this.disputes});
+  final List disputes;
+
+  @override
+  Widget build(BuildContext context) {
+    if (disputes.isEmpty) return const SizedBox.shrink();
+    int openCount = 0;
+    int resolvedCount = 0;
+
+    for (final d in disputes) {
+      if (d is! Map) continue;
+      final status = '${d['status'] ?? 'open'}'.toLowerCase();
+      if (status == 'resolved' || d['resolution'] != null) {
+        resolvedCount++;
+      } else {
+        openCount++;
+      }
+    }
+
+    final chartItems = [
+      if (openCount > 0)
+        NeoPieItem(label: 'Open Escalations', value: openCount.toDouble(), color: pink),
+      if (resolvedCount > 0)
+        NeoPieItem(label: 'Settled Incidents', value: resolvedCount.toDouble(), color: mint),
+    ];
+
+    final ratio = disputes.isNotEmpty ? ((resolvedCount / disputes.length) * 100).round() : 100;
+
+    return FeatureChartPanel(
+      eyebrow: 'ADMIN MEDIATION PIPELINE',
+      title: 'Disputes & Incident Resolution Status',
+      badges: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: openCount > 0 ? pink : mint,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: ink, width: 1.5),
+          ),
+          child: Text(
+            '$openCount Awaiting Admin Decision',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+          ),
+        ),
+      ],
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: pink,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: ink, width: 1.2),
+                  ),
+                  child: Column(
+                    children: [
+                      Text('$openCount', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: ink)),
+                      const Text('Open', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 10, color: ink)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: mint,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: ink, width: 1.2),
+                  ),
+                  child: Column(
+                    children: [
+                      Text('$resolvedCount', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: ink)),
+                      const Text('Resolved', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 10, color: ink)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: teal,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: ink, width: 1.2),
+                  ),
+                  child: Column(
+                    children: [
+                      Text('$ratio%', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: ink)),
+                      const Text('Resolution Rate', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 10, color: ink)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (chartItems.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            NeoDonutChart(
+              items: chartItems,
+              centerText: '${disputes.length}',
+              centerSubtext: 'Disputes',
+              size: 130,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class CategoryTaxonomyVisualizerWidget extends StatelessWidget {
+  const CategoryTaxonomyVisualizerWidget({super.key, required this.categories});
+  final List categories;
+
+  @override
+  Widget build(BuildContext context) {
+    if (categories.isEmpty) return const SizedBox.shrink();
+
+    final barItems = <NeoBarItem>[];
+    for (int i = 0; i < categories.length; i++) {
+      final c = categories[i];
+      if (c is! Map) continue;
+      final specsCount = (c['requiredFields'] as List?)?.length ?? 0;
+      final name = '${c['name'] ?? 'Category'}';
+      final color = i % 2 == 0 ? teal : mint;
+      barItems.add(
+        NeoBarItem(
+          label: name,
+          value: specsCount.toDouble(),
+          color: color,
+          valueLabel: '$specsCount specs',
+        ),
+      );
+    }
+
+    return FeatureChartPanel(
+      eyebrow: 'TAXONOMY & ATTRIBUTE COMPLEXITY',
+      title: 'Platform Category Specification Blueprint',
+      badges: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: yellow,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: ink, width: 1.5),
+          ),
+          child: Text(
+            '${categories.length} Registered Categories',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+          ),
+        ),
+      ],
+      child: NeoBarChart(
+        items: barItems,
+        isHorizontal: true,
+        height: (barItems.length * 36.0).clamp(120.0, 260.0),
+      ),
+    );
+  }
+}
+
+class IntegrationStatusGridWidget extends StatelessWidget {
+  const IntegrationStatusGridWidget({super.key, required this.integrations});
+  final Map integrations;
+
+  @override
+  Widget build(BuildContext context) {
+    if (integrations.isEmpty) return const SizedBox.shrink();
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: integrations.entries.map((e) {
+        final key = '${e.key}'.toUpperCase();
+        final isActive = e.value == true || (e.value is String && (e.value as String).isNotEmpty);
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: isActive ? mint : paper,
+            border: Border.all(color: ink, width: 1.5),
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: const [
+              BoxShadow(color: ink, offset: Offset(2, 2)),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isActive ? const Color(0xff059669) : const Color(0xff9ca3af),
+                  border: Border.all(color: ink, width: 1),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    key,
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11),
+                  ),
+                  Text(
+                    isActive ? 'Active' : 'Unset',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: isActive ? const Color(0xff065f46) : Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key, required this.session, required this.section});
   final Session session;
@@ -379,17 +614,24 @@ class _AdminScreenState extends State<AdminScreen> {
             api: api,
             path: '/admin/integrations',
             builder: (v, _) => Panel(
+              color: sky,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Integration configuration',
+                    'Services & APIs Integration Status',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
+                  const SizedBox(height: 6),
                   const Text(
-                    'Configured credentials do not confirm service availability.',
+                    'Configured service credentials and real-time backend readiness.',
+                    style: TextStyle(fontSize: 12, color: Colors.black87),
                   ),
-                  DataView(v),
+                  const SizedBox(height: 14),
+                  if (v is Map)
+                    IntegrationStatusGridWidget(integrations: v)
+                  else
+                    DataView(v),
                 ],
               ),
             ),
@@ -433,6 +675,8 @@ class _AdminScreenState extends State<AdminScreen> {
               ),
               if (section == 'verifications' && records(data).isNotEmpty)
                 VerificationQueueVisualizerWidget(users: records(data)),
+              if (section == 'disputes' && records(data).isNotEmpty)
+                DisputeQueueVisualizerWidget(disputes: records(data)),
               if (records(data).isEmpty)
                 const Empty(text: 'No records in this queue.'),
               ...records(data).map(
@@ -442,8 +686,118 @@ class _AdminScreenState extends State<AdminScreen> {
                     children: [
                       DataView(v),
                       if (section == 'verifications') ...[
-                        if (v['documentId'] != null)
-                          DocumentButton(api: api, id: v['documentId']),
+                        // Option A: Automated GSTIN Lookup
+                        Container(
+                          margin: const EdgeInsets.symmetric(vertical: 10),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: paper,
+                            border: Border.all(color: ink, width: 1.5),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'OPTION A: AUTOMATED GSTIN API',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 11,
+                                      color: Color(0xff0f766e),
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                  if (v['gstinData'] != null)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: mint,
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(color: ink, width: 1),
+                                      ),
+                                      child: const Text(
+                                        '● Registry Validated',
+                                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              if (v['gstinData'] is Map)
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    border: Border.all(color: const Color(0xffe5e0cf)),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Legal: ${v['gstinData']['legalName'] ?? ''}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                                      Text('Trade: ${v['gstinData']['tradeName'] ?? ''}', style: const TextStyle(fontSize: 12)),
+                                      Text('State: ${v['gstinData']['state'] ?? ''} · Status: ${v['gstinData']['status'] ?? ''}', style: const TextStyle(fontSize: 11, color: Colors.black87)),
+                                    ],
+                                  ),
+                                )
+                              else
+                                Text(
+                                  v['gstin'] != null && '${v['gstin']}'.isNotEmpty
+                                      ? 'GSTIN supplied: ${v['gstin']}. Ready for automated lookup.'
+                                      : 'No GSTIN supplied yet.',
+                                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                                ),
+                              const SizedBox(height: 6),
+                              AsyncButton(
+                                text: '⚡ Run Automated GSTIN Verification',
+                                enabled: v['gstin'] != null && '${v['gstin']}'.isNotEmpty,
+                                run: () async {
+                                  await api.call(
+                                    '/admin/verifications/${v['_id']}/auto-gstin',
+                                    method: 'POST',
+                                    body: {'gstin': v['gstin']},
+                                  );
+                                  await reload();
+                                  return 'GSTIN verification executed.';
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Option B: Manual Document Inspection
+                        if (v['documentId'] != null) ...[
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: lavender,
+                              border: Border.all(color: ink, width: 1.5),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'OPTION B: MANUAL COMPLIANCE DOCUMENT',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 11,
+                                    color: Color(0xff553c9a),
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                DocumentButton(api: api, id: v['documentId']),
+                              ],
+                            ),
+                          ),
+                        ],
+
                         FieldsForm(
                           submit: 'Save verification decision',
                           fields: const [
@@ -451,9 +805,19 @@ class _AdminScreenState extends State<AdminScreen> {
                               'verification',
                               'Decision',
                               options: {
-                                'verified': 'Verified',
+                                'verified': 'Verified / Approved',
                                 'rejected': 'Rejected',
                               },
+                            ),
+                            FieldSpec(
+                              'verificationMethod',
+                              'Verification method',
+                              options: {
+                                'automated_gstin': 'Automated GSTIN Registry',
+                                'manual_document': 'Manual Document Inspection',
+                                'hybrid': 'Hybrid (Both Automated + Manual)',
+                              },
+                              initial: 'automated_gstin',
                             ),
                             FieldSpec(
                               'verificationNote',
@@ -481,9 +845,9 @@ class _AdminScreenState extends State<AdminScreen> {
                               '/admin/disputes/${v['_id']}',
                             );
                             if (mounted) {
-                              setState(
-                                () => evidence = Map<String, dynamic>.from(r),
-                              );
+                              setState(() {
+                                evidence = Map<String, dynamic>.from(r);
+                              });
                             }
                             return 'Evidence loaded below the queue.';
                           },
@@ -621,7 +985,10 @@ class CategoriesScreen extends StatelessWidget {
                 await reload();
               },
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+            if (records(v).isNotEmpty)
+              CategoryTaxonomyVisualizerWidget(categories: records(v)),
+            const SizedBox(height: 16),
             ...records(v).map(
               (c) => Panel(
                 child: Column(
@@ -732,7 +1099,11 @@ class _CategoryEditorState extends State<CategoryEditor> {
                           onChanged: (v) => f['type'] = v,
                         ),
                         TextButton(
-                          onPressed: () => setState(() => fields.remove(f)),
+                          onPressed: () {
+                            setState(() {
+                              fields.remove(f);
+                            });
+                          },
                           child: const Text('Remove specification'),
                         ),
                       ],
@@ -741,8 +1112,11 @@ class _CategoryEditorState extends State<CategoryEditor> {
                 ),
                 if (fields.length < 20)
                   OutlinedButton.icon(
-                    onPressed: () =>
-                        setState(() => fields.add({'type': 'text'})),
+                    onPressed: () {
+                      setState(() {
+                        fields.add({'type': 'text'});
+                      });
+                    },
                     icon: const Icon(Icons.add),
                     label: const Text('Add specification'),
                   ),

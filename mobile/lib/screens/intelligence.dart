@@ -95,7 +95,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 FieldSpec('category', 'Category slug', required: false),
               ],
               onSubmit: (v) async {
-                setState(() => filters = v);
+                setState(() {
+                  filters = v;
+                });
                 return 'Filters applied.';
               },
             ),

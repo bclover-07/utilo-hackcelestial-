@@ -322,6 +322,176 @@ class DisputeResolutionAnalyticsWidget extends StatelessWidget {
     );
   }
 }
+
+class BookingFulfillmentVisualizerWidget extends StatelessWidget {
+  const BookingFulfillmentVisualizerWidget({
+    super.key,
+    required this.bookings,
+    required this.mode,
+  });
+  final List bookings;
+  final String mode;
+
+  @override
+  Widget build(BuildContext context) {
+    if (bookings.isEmpty) return const SizedBox.shrink();
+
+    double totalValue = 0;
+    int totalUnits = 0;
+    int activeCount = 0;
+    int completedCount = 0;
+
+    for (final b in bookings) {
+      if (b is! Map) continue;
+      final price = (b['price'] is num) ? (b['price'] as num).toDouble() : 0.0;
+      final qty = (b['quantity'] is num) ? (b['quantity'] as num).toInt() : 1;
+      final status = '${b['status']}'.toLowerCase();
+
+      totalValue += price;
+      totalUnits += qty;
+      if (status == 'confirmed' || status == 'in_progress') {
+        activeCount++;
+      } else if (status == 'completed') {
+        completedCount++;
+      }
+    }
+
+    final topBookings = bookings.take(6).toList();
+    final barItems = <NeoBarItem>[];
+    for (int i = 0; i < topBookings.length; i++) {
+      final b = topBookings[i];
+      if (b is! Map) continue;
+      final title = identity(b['listing']);
+      final shortTitle = title.length > 14 ? '${title.substring(0, 14)}…' : title;
+      final price = (b['price'] is num) ? (b['price'] as num).toDouble() : 0.0;
+      barItems.add(
+        NeoBarItem(
+          label: shortTitle,
+          value: price,
+          color: i % 2 == 0 ? teal : mint,
+          valueLabel: money(price.toInt()),
+        ),
+      );
+    }
+
+    final avgDeal = bookings.isNotEmpty ? (totalValue / bookings.length).round() : 0;
+
+    return FeatureChartPanel(
+      eyebrow: 'FULFILMENT PORTFOLIO SPECTRUM',
+      title: 'Confirmed Agreements & Financial Flow',
+      badges: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: yellow,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: ink, width: 1.5),
+          ),
+          child: Text(
+            'Total Value: ${money(totalValue.toInt())}',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: mint,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: ink, width: 1.5),
+          ),
+          child: Text(
+            '${bookings.length} Bookings ($totalUnits Units)',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+          ),
+        ),
+      ],
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: mint,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: ink, width: 1.2),
+                  ),
+                  child: Column(
+                    children: [
+                      Text('$activeCount', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: ink)),
+                      const Text('Active', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 10, color: ink)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: teal,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: ink, width: 1.2),
+                  ),
+                  child: Column(
+                    children: [
+                      Text('$completedCount', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: ink)),
+                      const Text('Delivered', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 10, color: ink)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: lavender,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: ink, width: 1.2),
+                  ),
+                  child: Column(
+                    children: [
+                      Text('$totalUnits', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: ink)),
+                      const Text('Fleet Units', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 10, color: ink)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: yellow,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: ink, width: 1.2),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(money(avgDeal), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: ink)),
+                      const Text('Avg Deal', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 10, color: ink)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (barItems.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            NeoBarChart(
+              items: barItems,
+              isHorizontal: true,
+              height: (barItems.length * 36.0).clamp(120.0, 220.0),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class QuoteScreen extends StatefulWidget {
   const QuoteScreen({super.key, required this.session, required this.id});
   final Session session;
@@ -517,7 +687,11 @@ class _QuoteScreenState extends State<QuoteScreen> {
                             method: 'POST',
                             body: b,
                           );
-                          if (mounted) setState(() => advice = r);
+                          if (mounted) {
+                            setState(() {
+                              advice = r;
+                            });
+                          }
                           return 'Advice ready. You choose what to offer.';
                         },
                       ),
@@ -526,12 +700,14 @@ class _QuoteScreenState extends State<QuoteScreen> {
                         if (canOffer)
                           ...records(advice['counterOffers']).map(
                             (offer) => OutlinedButton(
-                              onPressed: () => setState(
-                                () => proposed = {
-                                  'price': offer['price'],
-                                  'conditions': offer['rationale'],
-                                },
-                              ),
+                              onPressed: () {
+                                setState(() {
+                                  proposed = {
+                                    'price': offer['price'],
+                                    'conditions': offer['rationale'],
+                                  };
+                                });
+                              },
                               child: Text(
                                 'Apply ${offer['label']}: ₹${offer['price']}',
                               ),
@@ -963,7 +1139,11 @@ class _MessageThreadState extends State<MessageThread> {
                         'createdAt': 'Just now',
                         'isPending': true,
                       };
-                      if (mounted) setState(() => _pendingMessages.add(optMsg));
+                      if (mounted) {
+                        setState(() {
+                          _pendingMessages.add(optMsg);
+                        });
+                      }
 
                       try {
                         await widget.session.api.call(
@@ -972,11 +1152,17 @@ class _MessageThreadState extends State<MessageThread> {
                           body: {'text': cleanText},
                         );
                         await refresh();
-                        if (mounted) setState(() => _pendingMessages.remove(optMsg));
+                        if (mounted) {
+                          setState(() {
+                            _pendingMessages.remove(optMsg);
+                          });
+                        }
                         return 'Message sent.';
                       } catch (e) {
                         if (mounted) {
-                          setState(() => _pendingMessages.remove(optMsg));
+                          setState(() {
+                            _pendingMessages.remove(optMsg);
+                          });
                           message.text = cleanText;
                         }
                         rethrow;
@@ -989,7 +1175,9 @@ class _MessageThreadState extends State<MessageThread> {
                   onTap: _requestingCall
                       ? null
                       : () async {
-                          setState(() => _requestingCall = true);
+                          setState(() {
+                            _requestingCall = true;
+                          });
                           try {
                             final res = await widget.session.api.call(
                               '/quotes/${widget.quoteId}/video-call/request',
@@ -1022,7 +1210,11 @@ class _MessageThreadState extends State<MessageThread> {
                               );
                             }
                           } finally {
-                            if (mounted) setState(() => _requestingCall = false);
+                            if (mounted) {
+                              setState(() {
+                                _requestingCall = false;
+                              });
+                            }
                           }
                         },
                   borderRadius: BorderRadius.circular(10),
@@ -1087,6 +1279,13 @@ class BookingsScreen extends StatelessWidget {
                 run: reload,
                 icon: Icons.refresh,
               ),
+              const SizedBox(height: 16),
+              if (rows.isNotEmpty)
+                BookingFulfillmentVisualizerWidget(
+                  bookings: rows,
+                  mode: session.mode,
+                ),
+              const SizedBox(height: 16),
               if (rows.isEmpty) const Empty(),
               ...rows.map((b) {
                 final providerId = b['provider'] is Map ? b['provider']['_id']?.toString() : b['provider']?.toString();
@@ -1280,6 +1479,71 @@ class BookingsScreen extends StatelessWidget {
                               'utlio-booking.ics',
                               'text/calendar',
                             ),
+                          ),
+                          AsyncButton(
+                            text: 'Check-in Pass / QR',
+                            icon: Icons.qr_code_2,
+                            run: () async {
+                              await showDialog(
+                                context: context,
+                                builder: (_) => AlertDialog(
+                                  backgroundColor: paper,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    side: const BorderSide(color: ink, width: 2),
+                                  ),
+                                  title: const Row(
+                                    children: [
+                                      Icon(Icons.qr_code, color: ink),
+                                      SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'HANDOVER VERIFICATION',
+                                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          border: Border.all(color: ink, width: 2),
+                                          borderRadius: BorderRadius.circular(12),
+                                          boxShadow: const [BoxShadow(color: ink, offset: Offset(3, 3))],
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            const Icon(Icons.qr_code_2, size: 140, color: ink),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              'CODE: ${b['_id'].toString().substring(0, 8).toUpperCase()}',
+                                              style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.5, fontSize: 14),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        'Show this pass at delivery or pickup to confirm inventory transfer.',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(fontSize: 12, color: Colors.grey.shade800),
+                                      ),
+                                    ],
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Close', style: TextStyle(fontWeight: FontWeight.w800, color: ink)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              return null;
+                            },
                           ),
                           if (provider &&
                               [

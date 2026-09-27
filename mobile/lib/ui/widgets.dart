@@ -53,9 +53,27 @@ class _PanelState extends State<Panel> {
       ),
     ),
     child: GestureDetector(
-      onTapDown: widget.onTap != null ? (_) => setState(() => _pressed = true) : null,
-      onTapUp: widget.onTap != null ? (_) => setState(() => _pressed = false) : null,
-      onTapCancel: widget.onTap != null ? () => setState(() => _pressed = false) : null,
+      onTapDown: widget.onTap != null
+          ? (_) {
+              setState(() {
+                _pressed = true;
+              });
+            }
+          : null,
+      onTapUp: widget.onTap != null
+          ? (_) {
+              setState(() {
+                _pressed = false;
+              });
+            }
+          : null,
+      onTapCancel: widget.onTap != null
+          ? () {
+              setState(() {
+                _pressed = false;
+              });
+            }
+          : null,
       onTap: widget.onTap,
       child: AnimatedScale(
         scale: _pressed ? 0.98 : 1.0,
@@ -167,9 +185,21 @@ class _AsyncButtonState extends State<AsyncButton> {
         duration: const Duration(milliseconds: 100),
         curve: Curves.easeInOut,
         child: Listener(
-          onPointerDown: (_) => setState(() => pressed = true),
-          onPointerUp: (_) => setState(() => pressed = false),
-          onPointerCancel: (_) => setState(() => pressed = false),
+          onPointerDown: (_) {
+            setState(() {
+              pressed = true;
+            });
+          },
+          onPointerUp: (_) {
+            setState(() {
+              pressed = false;
+            });
+          },
+          onPointerCancel: (_) {
+            setState(() {
+              pressed = false;
+            });
+          },
           child: FilledButton.icon(
             onPressed: busy || !widget.enabled
                 ? null
@@ -654,9 +684,27 @@ class _NeoButtonState extends State<NeoButton> {
   @override
   Widget build(BuildContext context) {
     final child = GestureDetector(
-      onTapDown: widget.onPressed != null ? (_) => setState(() => _pressed = true) : null,
-      onTapUp: widget.onPressed != null ? (_) => setState(() => _pressed = false) : null,
-      onTapCancel: widget.onPressed != null ? () => setState(() => _pressed = false) : null,
+      onTapDown: widget.onPressed != null
+          ? (_) {
+              setState(() {
+                _pressed = true;
+              });
+            }
+          : null,
+      onTapUp: widget.onPressed != null
+          ? (_) {
+              setState(() {
+                _pressed = false;
+              });
+            }
+          : null,
+      onTapCancel: widget.onPressed != null
+          ? () {
+              setState(() {
+                _pressed = false;
+              });
+            }
+          : null,
       onTap: widget.onPressed,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 100),
@@ -850,7 +898,11 @@ class _NeoAccordionState extends State<NeoAccordion> {
         child: Column(
           children: [
             InkWell(
-              onTap: () => setState(() => _isOpen = !_isOpen),
+              onTap: () {
+                setState(() {
+                  _isOpen = !_isOpen;
+                });
+              },
               borderRadius: BorderRadius.circular(16),
               child: Padding(
                 padding: const EdgeInsets.all(16),

@@ -164,7 +164,11 @@ class _LocalAiPanelState extends State<LocalAiPanel> {
                       DropdownMenuItem(value: n, child: Text('Last $n lines')),
                 )
                 .toList(),
-            onChanged: active ? null : (v) => setState(() => messages = v!),
+            onChanged: active ? null : (v) {
+              setState(() {
+                messages = v!;
+              });
+            },
           ),
         AsyncButton(
           text: widget.task == 'polish'
@@ -184,7 +188,11 @@ class _LocalAiPanelState extends State<LocalAiPanel> {
                 widget.task,
                 input,
                 (p) {
-                  if (mounted) setState(() => progress = p);
+                  if (mounted) {
+                    setState(() {
+                      progress = p;
+                    });
+                  }
                 },
               );
               if (mounted) {
@@ -221,7 +229,9 @@ class _LocalAiPanelState extends State<LocalAiPanel> {
                   ? null
                   : () {
                       widget.onApply!(output!);
-                      setState(() => output = null);
+                      setState(() {
+                        output = null;
+                      });
                     },
               child: const Text('Use this description'),
             ),
