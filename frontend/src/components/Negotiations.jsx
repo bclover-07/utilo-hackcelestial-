@@ -214,20 +214,18 @@ function QuoteDetail({ q, reload }) {
           return [...prev, res.message];
         });
       }
-      window.dispatchEvent(
-        new CustomEvent("utlio:open-video-call", {
-          detail: {
-            quoteId: String(q._id),
-            roomId: res.roomId,
-            partnerId: partnerId,
-            partnerName,
-            partnerRole,
-            listingTitle: q.listing?.title || "Asset Negotiation",
-            isInitiator: true,
-            messageId: res.messageId || res.message?._id,
-          },
-        })
-      );
+      const callDetail = {
+        quoteId: String(q._id),
+        roomId: res.roomId,
+        partnerId: partnerId,
+        partnerName,
+        partnerRole,
+        listingTitle: q.listing?.title || "Asset Negotiation",
+        isInitiator: true,
+        messageId: res.messageId || res.message?._id,
+      };
+      window.dispatchEvent(new CustomEvent("utilo:open-video-call", { detail: callDetail }));
+      window.dispatchEvent(new CustomEvent("utlio:open-video-call", { detail: callDetail }));
       setCallAlert("Video call request dispatched to provider.");
     } catch (err) {
       setCallAlert(err.message || "Failed to request video call.");
@@ -250,20 +248,18 @@ function QuoteDetail({ q, reload }) {
           body: { action: "accept", roomId, messageId },
         });
       }
-      window.dispatchEvent(
-        new CustomEvent("utlio:open-video-call", {
-          detail: {
-            quoteId: String(q._id),
-            roomId,
-            partnerId: partnerId,
-            partnerName,
-            partnerRole,
-            listingTitle: q.listing?.title || "Asset Negotiation",
-            isInitiator: isCaller,
-            messageId,
-          },
-        })
-      );
+      const acceptDetail = {
+        quoteId: String(q._id),
+        roomId,
+        partnerId: partnerId,
+        partnerName,
+        partnerRole,
+        listingTitle: q.listing?.title || "Asset Negotiation",
+        isInitiator: isCaller,
+        messageId,
+      };
+      window.dispatchEvent(new CustomEvent("utilo:open-video-call", { detail: acceptDetail }));
+      window.dispatchEvent(new CustomEvent("utlio:open-video-call", { detail: acceptDetail }));
     } catch (err) {
       console.error("Failed to accept call:", err);
     }
@@ -893,31 +889,22 @@ function QuoteDetail({ q, reload }) {
         <div style={{ marginTop: "1rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "8px" }}>
             <span style={{ fontSize: "0.8rem", color: "#52525b" }}>Need deep domain pricing strategy or contract risk analysis?</span>
-            <button
-              type="button"
-              onClick={() => {
-                if (typeof window !== "undefined") {
-                  window.dispatchEvent(new CustomEvent("utlio:open-nugen-assistant", { detail: { tab: "negotiate" } }));
-                }
-              }}
+            <span
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "6px",
-                padding: "6px 12px",
-                background: "#171915",
-                color: "#fff",
-                border: "1.5px solid #171915",
-                borderRadius: "8px",
-                fontSize: "0.78rem",
-                fontWeight: 800,
-                cursor: "pointer",
-                boxShadow: "2px 2px 0 #C3B1E1",
+                gap: "5px",
+                padding: "4px 10px",
+                background: "#f0ecfc",
+                color: "#6c38cc",
+                border: "1px solid #d4c4fb",
+                borderRadius: "99px",
+                fontSize: "0.75rem",
+                fontWeight: 700,
               }}
             >
-              <Bot size={14} color="#C3B1E1" />
-              <span>Nugen Domain Deal Advisor</span>
-            </button>
+              <Bot size={13} /> Powered by Nugen AI
+            </span>
           </div>
           <ActionForm
             label="Ask for pricing trade-offs"

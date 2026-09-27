@@ -50,7 +50,7 @@ export default function NugenAssistant() {
     {
       role: "assistant",
       content:
-        "Hello! I am your domain-aligned B2B Rental Copilot, powered by Nugen Intelligence (Base: Qwen-2.5-0.5B fine-tuned on Utlio's B2B rental contracts, pricing matrices, and negotiation guides). How can I assist your fleet or rental deal today?",
+        "Hello! I am your domain-aligned B2B Rental Copilot, powered by Nugen Intelligence (Base: Qwen-2.5-0.5B fine-tuned on Utilo's B2B rental contracts, pricing matrices, and negotiation guides). How can I assist your fleet or rental deal today?",
       model: "qwen-v2p5-0p5b-instruct [Domain-Aligned]",
       confidence: 0.984,
     },
@@ -123,8 +123,12 @@ export default function NugenAssistant() {
       setIsOpen(true);
       if (e?.detail?.tab) setActiveTab(e.detail.tab);
     };
+    window.addEventListener("utilo:open-nugen-assistant", handleOpen);
     window.addEventListener("utlio:open-nugen-assistant", handleOpen);
-    return () => window.removeEventListener("utlio:open-nugen-assistant", handleOpen);
+    return () => {
+      window.removeEventListener("utilo:open-nugen-assistant", handleOpen);
+      window.removeEventListener("utlio:open-nugen-assistant", handleOpen);
+    };
   }, []);
 
   useEffect(() => {
@@ -143,7 +147,7 @@ export default function NugenAssistant() {
         apiConfigured: false,
         simulatedMode: true,
         baseModel: "qwen-v2p5-0p5b-instruct",
-        alignedModelId: "qwen-v2p5-0p5b-instruct-utlio-b2b-aligned",
+        alignedModelId: "qwen-v2p5-0p5b-instruct-utilo-b2b-aligned",
         isAligned: true,
         apiReachable: true,
       });
@@ -186,7 +190,7 @@ export default function NugenAssistant() {
         {
           role: "assistant",
           content:
-            "Based on Utlio B2B Rental benchmarks, standard equipment rental agreements require 15-20% security deposit, clear idle-time terms, and SLA response within 4 hours for on-site breakdowns.",
+            "Based on Utilo B2B Rental benchmarks, standard equipment rental agreements require 15-20% security deposit, clear idle-time terms, and SLA response within 4 hours for on-site breakdowns.",
           model: "qwen-v2p5-0p5b-instruct [Domain Fallback]",
           confidence: 0.95,
         },
@@ -237,7 +241,7 @@ export default function NugenAssistant() {
         titleSuggestion:
           "2023 JCB 3DX Backhoe Loader (76 HP) — Certified Operator & On-Site Maintenance Included",
         descriptionSuggestion:
-          "Heavy-duty 4WD Backhoe Loader with 0.28m³ bucket capacity and 4.77m max digging depth. Perfect for urban infrastructure, pipeline laying, and site clearance. Compliant with Utlio Fleet Safety Standard. Includes certified operator, daily logbook tracking, and fast on-site mechanic replacement within 3 hours.",
+          "Heavy-duty 4WD Backhoe Loader with 0.28m³ bucket capacity and 4.77m max digging depth. Perfect for urban infrastructure, pipeline laying, and site clearance. Compliant with Utilo Fleet Safety Standard. Includes certified operator, daily logbook tracking, and fast on-site mechanic replacement within 3 hours.",
         pricingAdvice:
           "Recommended base price: ₹5,200/day for 1-7 days; ₹4,750/day for 14+ day commitments. Current ₹4,800 is 8% below local median for certified units.",
         missingFields: [
@@ -263,15 +267,15 @@ export default function NugenAssistant() {
       await new Promise((r) => setTimeout(r, 900));
       setAlignLog((prev) => [
         ...prev,
-        "[1/4] Uploading to Nugen Documents API: b2b_rental_negotiation_strategies.txt, b2b_equipment_pricing_matrix.txt, utlio_platform_policies.txt, b2b_market_benchmarks.txt",
+        "[1/4] Uploading to Nugen Documents API: b2b_rental_negotiation_strategies.txt, b2b_equipment_pricing_matrix.txt, utilo_platform_policies.txt, b2b_market_benchmarks.txt",
       ]);
 
       const uploadRes = await api("/nugen/corpus/upload", { method: "POST" });
       const docIds = uploadRes.document_ids || [
-        "doc-utlio-01",
-        "doc-utlio-02",
-        "doc-utlio-03",
-        "doc-utlio-04",
+        "doc-utilo-01",
+        "doc-utilo-02",
+        "doc-utilo-03",
+        "doc-utilo-04",
       ];
 
       setAlignStep(2);
@@ -285,7 +289,7 @@ export default function NugenAssistant() {
       const alignRes = await api("/nugen/alignment/create", {
         method: "POST",
         body: {
-          name: "Utlio B2B Rental Domain Alignment",
+          name: "Utilo B2B Rental Domain Alignment",
           documentIds: docIds,
           description: "Domain alignment for B2B industrial equipment rental platform",
         },
@@ -293,7 +297,7 @@ export default function NugenAssistant() {
 
       setAlignLog((prev) => [
         ...prev,
-        `[3/4] Alignment project created (${alignRes.alignment_id || "align-utlio-qwen25"}). Aligning domain vectors across 3 epochs...`,
+        `[3/4] Alignment project created (${alignRes.alignment_id || "align-utilo-qwen25"}). Aligning domain vectors across 3 epochs...`,
         `[3/4] Loss: 0.180 ➔ 0.082 ➔ 0.038 (Target convergence reached)`,
       ]);
 
@@ -302,7 +306,7 @@ export default function NugenAssistant() {
       setAlignLog((prev) => [
         ...prev,
         `[4/4] Alignment complete! Deployed domain model: '${
-          alignRes.aligned_model_id || "qwen-v2p5-0p5b-instruct-utlio-b2b-aligned"
+          alignRes.aligned_model_id || "qwen-v2p5-0p5b-instruct-utilo-b2b-aligned"
         }'`,
         `[✓] Live inference routed through domain-aligned Qwen 2.5 with 98.4% domain confidence.`,
       ]);
@@ -312,7 +316,7 @@ export default function NugenAssistant() {
       setAlignStep(3);
       setAlignLog((prev) => [
         ...prev,
-        `[✓] Alignment completed in accelerated demonstration mode. Model ID: qwen-v2p5-0p5b-instruct-utlio-b2b-aligned. Ready for inference!`,
+        `[✓] Alignment completed in accelerated demonstration mode. Model ID: qwen-v2p5-0p5b-instruct-utilo-b2b-aligned. Ready for inference!`,
       ]);
     }
   };
@@ -487,7 +491,7 @@ export default function NugenAssistant() {
                       </span>
                     </div>
                     <p style={{ margin: 0, fontSize: "0.75rem", color: "#a1a1aa" }}>
-                      Base: <strong>qwen-v2p5-0p5b</strong> ➔ Domain: <strong>Utlio B2B Rental</strong>
+                      Base: <strong>qwen-v2p5-0p5b</strong> ➔ Domain: <strong>Utilo B2B Rental</strong>
                     </p>
                   </div>
                 </div>
@@ -549,7 +553,7 @@ export default function NugenAssistant() {
                       border: "1px solid #171915",
                     }}
                   >
-                    {pipelineStatus?.alignedModelId || "qwen-v2p5-0p5b-utlio-b2b"}
+                    {pipelineStatus?.alignedModelId || "qwen-v2p5-0p5b-utilo-b2b"}
                   </code>
                 </div>
 
@@ -1098,7 +1102,7 @@ export default function NugenAssistant() {
                         {
                           step: 4,
                           title: "Domain-Specific Model Deployment",
-                          desc: "Inference endpoint active: 'qwen-v2p5-0p5b-instruct-utlio-b2b-aligned' powering deal advice & search.",
+                          desc: "Inference endpoint active: 'qwen-v2p5-0p5b-instruct-utilo-b2b-aligned' powering deal advice & search.",
                           badge: "Deployed",
                           color: "#A8E6CF",
                         },
@@ -1254,10 +1258,10 @@ export default function NugenAssistant() {
 
                       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                         {(corpusDocs.length > 0 ? corpusDocs : [
-                          { name: "01_utlio_b2b_rental_domain_master.txt", content: "" },
-                          { name: "02_utlio_seeker_event_planner_intelligence.txt", content: "" },
-                          { name: "03_utlio_b2b_negotiation_and_contracts.txt", content: "" },
-                          { name: "04_utlio_verified_inventory_catalog_benchmark.txt", content: "" },
+                          { name: "01_utilo_b2b_rental_domain_master.txt", content: "" },
+                          { name: "02_utilo_seeker_event_planner_intelligence.txt", content: "" },
+                          { name: "03_utilo_b2b_negotiation_and_contracts.txt", content: "" },
+                          { name: "04_utilo_verified_inventory_catalog_benchmark.txt", content: "" },
                         ]).map((doc, idx) => (
                           <div
                             key={idx}

@@ -68,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError("");
       setLoading(false);
     };
+    window.addEventListener("utilo:session-expired", expired);
     window.addEventListener("utlio:session-expired", expired);
     api<User>("/auth/me")
       .then((u) => {
@@ -85,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     return () => {
       active = false;
+      window.removeEventListener("utilo:session-expired", expired);
       window.removeEventListener("utlio:session-expired", expired);
     };
   }, []);

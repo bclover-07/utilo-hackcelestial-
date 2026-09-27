@@ -212,7 +212,7 @@ function AuthForm({ register, initialPersona }) {
                   className="button"
                   style={{ fontSize: "0.78rem", padding: "5px 10px", background: "#FFE66D", border: "1.5px solid #171915", boxShadow: "1.5px 1.5px 0 #171915", cursor: "pointer", fontWeight: 700 }}
                   onClick={() => {
-                    setEmail("arjun@utlio.com");
+                    setEmail("arjun@utilo.com");
                     setPassword("Password123!");
                     selectPersona("provider");
                   }}
@@ -224,7 +224,7 @@ function AuthForm({ register, initialPersona }) {
                   className="button"
                   style={{ fontSize: "0.78rem", padding: "5px 10px", background: "#FFE66D", border: "1.5px solid #171915", boxShadow: "1.5px 1.5px 0 #171915", cursor: "pointer", fontWeight: 700 }}
                   onClick={() => {
-                    setEmail("shreshta@utlio.com");
+                    setEmail("shreshta@utilo.com");
                     setPassword("Password123!");
                     selectPersona("provider");
                   }}
@@ -236,7 +236,7 @@ function AuthForm({ register, initialPersona }) {
                   className="button"
                   style={{ fontSize: "0.78rem", padding: "5px 10px", background: "#FFE66D", border: "1.5px solid #171915", boxShadow: "1.5px 1.5px 0 #171915", cursor: "pointer", fontWeight: 700 }}
                   onClick={() => {
-                    setEmail("shreyas@utlio.com");
+                    setEmail("shreyas@utilo.com");
                     setPassword("Password123!");
                     selectPersona("provider");
                   }}
@@ -248,7 +248,7 @@ function AuthForm({ register, initialPersona }) {
                   className="button"
                   style={{ fontSize: "0.78rem", padding: "5px 10px", background: "#4ECDC4", border: "1.5px solid #171915", boxShadow: "1.5px 1.5px 0 #171915", cursor: "pointer", fontWeight: 700 }}
                   onClick={() => {
-                    setEmail("priya@utlio.com");
+                    setEmail("priya@utilo.com");
                     setPassword("Password123!");
                     selectPersona("seeker");
                   }}
@@ -260,7 +260,7 @@ function AuthForm({ register, initialPersona }) {
                   className="button"
                   style={{ fontSize: "0.78rem", padding: "5px 10px", background: "#4ECDC4", border: "1.5px solid #171915", boxShadow: "1.5px 1.5px 0 #171915", cursor: "pointer", fontWeight: 700 }}
                   onClick={() => {
-                    setEmail("shivam@utlio.com");
+                    setEmail("shivam@utilo.com");
                     setPassword("Password123!");
                     selectPersona("seeker");
                   }}
@@ -272,7 +272,7 @@ function AuthForm({ register, initialPersona }) {
                   className="button"
                   style={{ fontSize: "0.78rem", padding: "5px 10px", background: "#4ECDC4", border: "1.5px solid #171915", boxShadow: "1.5px 1.5px 0 #171915", cursor: "pointer", fontWeight: 700 }}
                   onClick={() => {
-                    setEmail("vaishnavi@utlio.com");
+                    setEmail("vaishnavi@utilo.com");
                     setPassword("Password123!");
                     selectPersona("seeker");
                   }}
@@ -284,7 +284,7 @@ function AuthForm({ register, initialPersona }) {
                   className="button"
                   style={{ fontSize: "0.78rem", padding: "5px 10px", background: "#C3B1E1", border: "1.5px solid #171915", boxShadow: "1.5px 1.5px 0 #171915", cursor: "pointer", fontWeight: 700 }}
                   onClick={() => {
-                    setEmail("admin@utlio.com");
+                    setEmail("admin@utilo.com");
                     setPassword("Password123!");
                     selectPersona("admin");
                   }}

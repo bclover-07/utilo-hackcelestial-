@@ -1,8 +1,11 @@
 type Options = { method?: string; body?: unknown; signal?: AbortSignal };
 export async function streamPlan<T = unknown>(body: unknown, onProgress: (event: { step: string; status: string; elapsedMs?: number }) => void): Promise<T> {
-  const response = await fetch("/api/ai/plans/stream", { method: "POST", credentials: "include", cache: "no-store", signal: AbortSignal.timeout(110000), headers: { "Content-Type": "application/json", "X-Utlio-Request": "1" }, body: JSON.stringify(body) });
+  const response = await fetch("/api/ai/plans/stream", { method: "POST", credentials: "include", cache: "no-store", signal: AbortSignal.timeout(110000), headers: { "Content-Type": "application/json", "X-Utilo-Request": "1", "X-Utlio-Request": "1" }, body: JSON.stringify(body) });
   if (!response.ok) {
-    if (response.status === 401) window.dispatchEvent(new Event("utlio:session-expired"));
+    if (response.status === 401) {
+      window.dispatchEvent(new Event("utilo:session-expired"));
+      window.dispatchEvent(new Event("utlio:session-expired"));
+    }
     const data = await response.json().catch(() => ({}));
     throw new Error(data.error || "Unable to start planning.");
   }
@@ -46,8 +49,8 @@ export async function api<T = unknown>(
         : deadline,
       headers:
         options.body instanceof FormData
-          ? { "X-Utlio-Request": "1" }
-          : { "Content-Type": "application/json", "X-Utlio-Request": "1" },
+          ? { "X-Utilo-Request": "1", "X-Utlio-Request": "1" }
+          : { "Content-Type": "application/json", "X-Utilo-Request": "1", "X-Utlio-Request": "1" },
       body:
         options.body instanceof FormData
           ? options.body
@@ -90,6 +93,7 @@ export async function api<T = unknown>(
       !["/auth/login", "/auth/register"].includes(path) &&
       typeof window !== "undefined"
     ) {
+      window.dispatchEvent(new Event("utilo:session-expired"));
       window.dispatchEvent(new Event("utlio:session-expired"));
     }
     const error = Object.assign(new Error(data?.error || `Request failed (${response.status}).`), {

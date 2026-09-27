@@ -368,6 +368,24 @@ export function SearchPage() {
                 ✕
               </button>
             )}
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                background: "#f0ecfc",
+                color: "#6c38cc",
+                border: "1px solid #d4c4fb",
+                borderRadius: "99px",
+                padding: "2px 8px",
+                fontSize: "0.72rem",
+                fontWeight: 700,
+                whiteSpace: "nowrap",
+              }}
+              title="Marketplace matching powered by Nugen domain intelligence"
+            >
+              ⚡ Powered by Nugen AI
+            </span>
             <span style={{ fontSize: "0.85rem", color: "#666", fontWeight: 700 }}>
               {result ? `${result.total} available` : "Loading..."}
             </span>

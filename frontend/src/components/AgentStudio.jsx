@@ -287,7 +287,7 @@ export default function AgentStudio({ admin = false }) {
               </span>
             </div>
             <p style={{ margin: "0 0 12px", fontSize: "0.86rem", color: "#d4d4d8", lineHeight: 1.45 }}>
-              Base Model <strong>qwen-v2p5-0p5b-instruct</strong> fine-tuned and aligned on Utlio's proprietary B2B equipment rental datasets (negotiation tactics, pricing matrices, damage mitigation, and platform SLAs).
+              Base Model <strong>qwen-v2p5-0p5b-instruct</strong> fine-tuned and aligned on Utilo's proprietary B2B equipment rental datasets (negotiation tactics, pricing matrices, damage mitigation, and platform SLAs).
             </p>
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", fontSize: "0.78rem" }}>
@@ -297,7 +297,7 @@ export default function AgentStudio({ admin = false }) {
               </div>
               <div style={{ background: "rgba(255,255,255,0.08)", padding: "4px 10px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.15)" }}>
                 <span style={{ color: "#a1a1aa" }}>Aligned Model: </span>
-                <span style={{ fontWeight: 700, color: "#C3B1E1" }}>utlio-b2b-rental-aligned</span>
+                <span style={{ fontWeight: 700, color: "#C3B1E1" }}>utilo-b2b-rental-aligned</span>
               </div>
               <div style={{ background: "rgba(255,255,255,0.08)", padding: "4px 10px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.15)" }}>
                 <span style={{ color: "#a1a1aa" }}>Corpus Size: </span>
@@ -311,12 +311,8 @@ export default function AgentStudio({ admin = false }) {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "8px", alignSelf: "center" }}>
-            <button
-              onClick={() => {
-                if (typeof window !== "undefined") {
-                  window.dispatchEvent(new CustomEvent("utlio:open-nugen-assistant", { detail: { tab: "chat" } }));
-                }
-              }}
+            <Link
+              href="/dashboard/planner"
               style={{
                 padding: "10px 18px",
                 background: "#C3B1E1",
@@ -330,17 +326,14 @@ export default function AgentStudio({ admin = false }) {
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
+                textDecoration: "none",
               }}
             >
               <Bot size={16} />
-              <span>Launch Aligned Copilot</span>
-            </button>
-            <button
-              onClick={() => {
-                if (typeof window !== "undefined") {
-                  window.dispatchEvent(new CustomEvent("utlio:open-nugen-assistant", { detail: { tab: "pipeline" } }));
-                }
-              }}
+              <span>Launch AI Conductor</span>
+            </Link>
+            <Link
+              href="/dashboard/search"
               style={{
                 padding: "8px 14px",
                 background: "transparent",
@@ -354,11 +347,12 @@ export default function AgentStudio({ admin = false }) {
                 alignItems: "center",
                 justifyContent: "center",
                 gap: "6px",
+                textDecoration: "none",
               }}
             >
-              <Layers size={14} />
-              <span>View Alignment Pipeline & Loss</span>
-            </button>
+              <Search size={14} />
+              <span>Discover Resources</span>
+            </Link>
           </div>
         </div>
       </section>

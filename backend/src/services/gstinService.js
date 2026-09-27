@@ -1,4 +1,4 @@
-// GSTIN Verification Service for Utlio
+// GSTIN Verification Service for Utilo
 // Supports automated Indian GST validation, checksum check, and registry lookup
 
 const STATE_CODES = {

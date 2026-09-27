@@ -22,15 +22,17 @@ export const LANGUAGES = [
 function readLanguage() {
   if (typeof window === "undefined") return "en";
   const match = document.cookie.match(/(?:^|; )googtrans=([^;]+)/);
-  const value = match?.[1]?.split("/").at(-1) || localStorage.getItem("utlio_lang");
+  const value = match?.[1]?.split("/").at(-1) || localStorage.getItem("utilo_lang") || localStorage.getItem("utlio_lang");
   return LANGUAGES.some((language) => language.code === value) ? value : "en";
 }
 
 function subscribeLanguage(listener) {
   if (typeof window === "undefined") return () => {};
+  window.addEventListener("utilo:language", listener);
   window.addEventListener("utlio:language", listener);
   window.addEventListener("storage", listener);
   return () => {
+    window.removeEventListener("utilo:language", listener);
     window.removeEventListener("utlio:language", listener);
     window.removeEventListener("storage", listener);
   };
@@ -38,6 +40,7 @@ function subscribeLanguage(listener) {
 
 function persistLanguage(langCode) {
   if (typeof window === "undefined") return;
+  localStorage.setItem("utilo_lang", langCode);
   localStorage.setItem("utlio_lang", langCode);
   const hostname = window.location.hostname;
 
@@ -58,6 +61,7 @@ function persistLanguage(langCode) {
       document.cookie = `googtrans=/en/${langCode}; path=/; domain=.${hostname}; SameSite=Lax`;
     }
   }
+  window.dispatchEvent(new Event("utilo:language"));
   window.dispatchEvent(new Event("utlio:language"));
 }
 
@@ -82,7 +86,7 @@ export default function LanguageSwitcher({ compact = false, showLabel = true }) 
 
   // Auto-sync Google Translate widget on initial load if user already picked a language
   useEffect(() => {
-    const saved = localStorage.getItem("utlio_lang");
+    const saved = localStorage.getItem("utilo_lang") || localStorage.getItem("utlio_lang");
     if (saved && saved !== "en") {
       let tries = 0;
       const interval = setInterval(() => {

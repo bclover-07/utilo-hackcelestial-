@@ -35,7 +35,7 @@ export async function upload(user, file, kind) {
       cloudinary.uploader
         .upload_stream(
           {
-            folder: `utlio/${user._id}/${kind}`,
+            folder: `utilo/${user._id}/${kind}`,
             resource_type: type.mime === "application/pdf" ? "raw" : "image",
             type: kind === "document" ? "authenticated" : "upload",
           },

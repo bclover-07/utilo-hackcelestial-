@@ -329,15 +329,17 @@ export const I18N_DICTIONARY = {
 function readCurrentLang() {
   if (typeof window === "undefined") return "en";
   const match = document.cookie.match(/(?:^|; )googtrans=([^;]+)/);
-  const value = match?.[1]?.split("/").at(-1) || localStorage.getItem("utlio_lang");
+  const value = match?.[1]?.split("/").at(-1) || localStorage.getItem("utilo_lang") || localStorage.getItem("utlio_lang");
   return value || "en";
 }
 
 function subscribe(listener) {
   if (typeof window === "undefined") return () => {};
+  window.addEventListener("utilo:language", listener);
   window.addEventListener("utlio:language", listener);
   window.addEventListener("storage", listener);
   return () => {
+    window.removeEventListener("utilo:language", listener);
     window.removeEventListener("utlio:language", listener);
     window.removeEventListener("storage", listener);
   };

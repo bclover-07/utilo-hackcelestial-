@@ -105,7 +105,7 @@ async function generateRequirements(state) {
   return measureStep("Generate requirements via Nugen", async () => {
     const categoryList = state.categories.map(c => c.slug).join(", ");
 
-    const nugenPrompt = `You are Utlio's domain-aligned B2B event resource planner trained on industrial and event equipment rental data.
+    const nugenPrompt = `You are Utilo's domain-aligned B2B event resource planner trained on industrial and event equipment rental data.
 
 Given this event:
 - Type: ${state.eventIntent.eventType}
@@ -116,7 +116,7 @@ Given this event:
 - Venue: ${state.eventIntent.venue || "standard venue"}
 - Special needs: ${state.eventIntent.specialRequirements.join(", ") || "none"}
 
-Available equipment categories on Utlio platform: ${categoryList}
+Available equipment categories on Utilo platform: ${categoryList}
 
 Generate a comprehensive list of rental equipment needed. For each item:
 1. Map to the closest available category from the list above
@@ -260,7 +260,7 @@ IMPORTANT: Only use categories from this exact list: ${categoryList}. If no cate
         requirements = {
           title: `${state.eventIntent.eventType} Package (${guests} Guests)`,
           items,
-          reasoning: `Domain-calculated equipment package for ${guests} guests in ${state.city}. Proportions calibrated according to Utlio B2B rental standards: 1 seat/attendee, 1 dining/round table per ${tableRatio} guests, and professional AV matched to venue acoustics.`,
+          reasoning: `Domain-calculated equipment package for ${guests} guests in ${state.city}. Proportions calibrated according to Utilo B2B rental standards: 1 seat/attendee, 1 dining/round table per ${tableRatio} guests, and professional AV matched to venue acoustics.`,
         };
       }
     }
@@ -291,7 +291,7 @@ IMPORTANT: Only use categories from this exact list: ${categoryList}. If no cate
         title: requirements.title || `${state.eventIntent.eventType} — ${state.eventIntent.guestCount} guests`,
         items: validItems,
         reasoning: requirements.reasoning || "Equipment selected based on event type and guest count.",
-        nugenModel: nugenResponse?.model || "qwen-v2p5-0p5b-instruct (Utlio Domain Aligned)",
+        nugenModel: nugenResponse?.model || "qwen-v2p5-0p5b-instruct (Utilo Domain Aligned)",
         nugenSource: nugenResponse?.source || "nugen-aligned-domain-model",
         confidence: nugenResponse?.confidence_score || 0.98,
       },

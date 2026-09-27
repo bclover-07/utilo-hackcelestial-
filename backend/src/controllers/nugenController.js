@@ -1,6 +1,5 @@
 import { z } from "zod";
 import * as nugen from "../services/nugenService.js";
-import { generateB2BRentalCorpus } from "../services/nugenCorpus.js";
 
 export const nugenController = {
   status: async (req, res) => {
@@ -42,7 +41,7 @@ export const nugenController = {
 
   createAlignment: async (req, res) => {
     const body = z.object({
-      name: z.string().min(3).max(200).default("Utlio B2B Rental Domain Alignment"),
+      name: z.string().min(3).max(200).default("Utilo B2B Rental Domain Alignment"),
       documentIds: z.array(z.string()).min(1),
       description: z.string().max(500).default("Domain alignment for B2B industrial equipment rental platform"),
     }).parse(req.body);
@@ -73,7 +72,6 @@ export const nugenController = {
     const status = await nugen.getDeploymentStatus(modelId);
     res.json(status);
   },
-
   chat: async (req, res) => {
     const body = z.object({
       message: z.string().trim().min(1).max(2000),
@@ -87,10 +85,7 @@ export const nugenController = {
     const answer = result.choices?.[0]?.message?.content || "I couldn't generate a response. Please try again.";
     res.json({
       answer,
-      model: result.model,
-      usage: result.usage,
-      confidenceScore: result.confidence_score,
-      source: "nugen-aligned",
+      source: result.source,
     });
   },
 
@@ -103,10 +98,10 @@ export const nugenController = {
     const advice = result.choices?.[0]?.message?.content || "Unable to generate advice.";
     res.json({
       advice,
-      model: result.model,
-      usage: result.usage,
-      confidenceScore: result.confidence_score,
-      source: "nugen-aligned",
+      marketStats: result.marketStats,
+      recommendedCounter: result.recommendedCounter,
+      estimatedSavings: result.estimatedSavings,
+      source: result.source,
     });
   },
 
@@ -125,20 +120,8 @@ export const nugenController = {
     }
     res.json({
       suggestions: parsed,
-      model: result.model,
-      usage: result.usage,
-      confidenceScore: result.confidence_score,
-      source: "nugen-aligned",
+      marketStats: result.marketStats,
+      source: result.source,
     });
-  },
-
-  updateConfig: async (req, res) => {
-    const body = z.object({
-      apiKey: z.string().optional(),
-      alignedModelId: z.string().optional(),
-    }).parse(req.body);
-
-    const status = await nugen.updateConfig(body);
-    res.json({ message: "Nugen configuration updated successfully", status });
   },
 };

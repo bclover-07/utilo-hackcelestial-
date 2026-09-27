@@ -1153,7 +1153,7 @@ function OfflineDealForm() {
                 <div style={{ fontWeight: 800, marginBottom: "0.25rem", display: "flex", alignItems: "center", gap: "0.35rem", color: "#065F46" }}>
                   <Shield size={14} /> Automated Return Alert
                 </div>
-<span style={{ color: "#047857" }}>
+                <span style={{ color: "#047857" }}>
                   Utilo&apos;s background scheduler will monitor this booking and send you a notification when the rental expires so you can inspect the returned asset and immediately repost it.
                 </span>
               </div>
