@@ -18,13 +18,13 @@ async function run() {
   console.log(`Loaded ${cats.length} categories, ${listings.length} listings, ${profiles.length} profiles from MongoDB.`);
 
   // =========================================================================
-  // FILE 1: 01_utlio_b2b_rental_domain_master.txt
+  // FILE 1: 01_utilo_b2b_rental_domain_master.txt
   // =========================================================================
-  let doc1 = `UTLIO PLATFORM MASTER DOMAIN CORPUS — B2B EQUIPMENT RENTAL ARCHITECTURE
+  let doc1 = `UTILO PLATFORM MASTER DOMAIN CORPUS — B2B EQUIPMENT RENTAL ARCHITECTURE
 INDUSTRIAL, EVENT & COMMERCIAL ASSET RENTAL NORMS IN INDIA (EXPANDED DOMAIN SPECIFICATION)
 
 1. PLATFORM MISSION & PEER-TO-PEER ASSET MONETIZATION
-Utlio is an enterprise B2B peer-to-peer equipment rental marketplace designed to eliminate commercial asset idleness. Businesses with capital-intensive equipment (banquet venues, sound systems, stage lighting, power generators, commercial dining sets, logistics trucks) rent idle inventory to seekers on flexible daily, weekly, or event-based contracts.
+Utilo is an enterprise B2B peer-to-peer equipment rental marketplace designed to eliminate commercial asset idleness. Businesses with capital-intensive equipment (banquet venues, sound systems, stage lighting, power generators, commercial dining sets, logistics trucks) rent idle inventory to seekers on flexible daily, weekly, or event-based contracts.
 
 2. B2B RENTAL PRICING DYNAMICS & MARGIN MODELS
 - Single-Day / Short-Term Rentals (1 to 3 days): Daily pricing is billed at full market rate with no discount. Standard for single-day corporate seminars, weddings, or weekend film shoots.
@@ -40,7 +40,7 @@ Utlio is an enterprise B2B peer-to-peer equipment rental marketplace designed to
 3. SECURITY DEPOSIT, ESCROW & FINANCIAL CLEARANCE
 - Standard Deposit Ratio: 15% to 25% of total equipment asset replacement value or 1x the rental fee, whichever is lower.
 - High-Value / Critical Assets: Up to 50% refundable deposit or formal corporate bank guarantee.
-- Escrow Protection: Deposits are held securely in Utlio Escrow during the rental period.
+- Escrow Protection: Deposits are held securely in Utilo Escrow during the rental period.
 - Inspection & Release:
   1. Handover Check: Provider and Seeker conduct a joint mobile check with photographic timestamped verification.
   2. Return Check: 48-hour return inspection window. If no damage is reported, escrow releases 100% of the deposit back to the seeker.
@@ -49,7 +49,7 @@ Utlio is an enterprise B2B peer-to-peer equipment rental marketplace designed to
 4. ASSET VERIFICATION & PROOF OF LIVENESS
 - Dual Verification Framework:
   1. GPS Triangulation: Provider streaming GPS must match the registered business location or asset warehouse within 200 meters.
-  2. Cryptographic Session Watermarking: Live video stream carries non-removable overlays containing GPS, UTC timestamp, and unique Utlio session ID.
+  2. Cryptographic Session Watermarking: Live video stream carries non-removable overlays containing GPS, UTC timestamp, and unique Utilo session ID.
   3. Interactive Dynamic Challenge: Provider displays a single-use verification code next to the equipment serial number to defeat pre-recorded deepfakes.
 
 5. LOGISTICS & DISPATCH PROTOCOLS
@@ -65,7 +65,7 @@ Utlio is an enterprise B2B peer-to-peer equipment rental marketplace designed to
 - Notice < 24 hours / Same day: 100% rental fee forfeited; deposit refunded.
 - Dispute Resolution Tiers:
   * Tier 1: In-app direct negotiation with AI Negotiation Advisor guidance (24 hours).
-  * Tier 2: Utlio Operations Arbitration with evidence ledger analysis (48 hours).
+  * Tier 2: Utilo Operations Arbitration with evidence ledger analysis (48 hours).
   * Tier 3: Binding commercial arbitration under Indian Arbitration and Conciliation Act.
 
 7. COMPREHENSIVE B2B COMPLIANCE & GST RULES
@@ -76,19 +76,19 @@ Utlio is an enterprise B2B peer-to-peer equipment rental marketplace designed to
   * Transport & Logistics: 5% or 18% GST (SAC Code 9965/9967).
 - Input Tax Credit (ITC): 100% eligible for registered B2B entities with verified GSTIN matching billing address.
 `;
-  fs.writeFileSync(path.join(outDir, "01_utlio_b2b_rental_domain_master.txt"), doc1, "utf8");
+  fs.writeFileSync(path.join(outDir, "01_utilo_b2b_rental_domain_master.txt"), doc1, "utf8");
 
   // =========================================================================
-  // FILE 2: 02_utlio_seeker_event_planner_intelligence.txt (EXPANDED TO ~35 KB)
+  // FILE 2: 02_utilo_seeker_event_planner_intelligence.txt (EXPANDED TO ~35 KB)
   // =========================================================================
-  let doc2 = `UTLIO B2B PLATFORM — SEEKER EVENT PLANNER & RESOURCE ALLOCATION INTELLIGENCE
+  let doc2 = `UTILO B2B PLATFORM — SEEKER EVENT PLANNER & RESOURCE ALLOCATION INTELLIGENCE
 DOMAIN CORPUS SPECIFICATION: EVENT RESOURCE LOGISTICS, GUEST RATIOS & CATALOG MAPPING (ENTERPRISE EDITION)
 
 1. OBJECTIVE & ROLE
-You are Utlio's domain-aligned AI Event Resource Architect. Your mission is to interpret natural language event briefs from event organizers, corporate procurement officers, and wedding planners, then convert them into mathematically grounded, multi-vendor B2B equipment requirements mapped to Utlio's verified inventory catalog categories.
+You are Utilo's domain-aligned AI Event Resource Architect. Your mission is to interpret natural language event briefs from event organizers, corporate procurement officers, and wedding planners, then convert them into mathematically grounded, multi-vendor B2B equipment requirements mapped to Utilo's verified inventory catalog categories.
 
-2. UTLIO DATABASE CATALOG CATEGORY MAPPING
-Every equipment requirement must map to one of the following exact category slugs available in Utlio's platform database:
+2. UTILO DATABASE CATALOG CATEGORY MAPPING
+Every equipment requirement must map to one of the following exact category slugs available in Utilo's platform database:
 - "chairs": Chairs & Seating (Banquet chairs, Chiavari chairs, ergonomic executive chairs, folding chairs, plastic armless chairs)
 - "tables": Tables & Surfaces (Round banquet dining tables, rectangular seminar tables, cocktail high-top tables, conference tables)
 - "av_equipment": Audio-Visual Equipment (PA sound systems, line-array speakers, UHF wireless microphones, laser projectors, 4K motorized screens, LED video walls, truss lighting, moving heads)
@@ -227,20 +227,20 @@ BLUEPRINT 5: MEGA EXPO & INDUSTRIAL TRADE FAIR
 When given an event prompt:
 Step 1: Extract event type, guest count, city, duration, budget, and special needs. If guest count is omitted, default to 150. If duration is omitted, default to 6 hours.
 Step 2: Apply the mathematical ratios from Section 3 to derive the exact quantities for seating, dining/conference tables, sound throw, display lumens, power backup, and registration.
-Step 3: Map every derived item to the exact Utlio catalog slugs: "chairs", "tables", "av_equipment", "banquet_hall", "linens", "furniture", "kitchen", "vehicles", "parking_capacity".
+Step 3: Map every derived item to the exact Utilo catalog slugs: "chairs", "tables", "av_equipment", "banquet_hall", "linens", "furniture", "kitchen", "vehicles", "parking_capacity".
 Step 4: Output structured JSON with "title", "items" (array of {label, category, quantity, capacity, query, specs}), and "reasoning".
 Step 5: Ensure budget feasibility by benchmarking each line item against the INR pricing benchmarks in Section 5.
 `;
-  fs.writeFileSync(path.join(outDir, "02_utlio_seeker_event_planner_intelligence.txt"), doc2, "utf8");
+  fs.writeFileSync(path.join(outDir, "02_utilo_seeker_event_planner_intelligence.txt"), doc2, "utf8");
 
   // =========================================================================
-  // FILE 3: 03_utlio_b2b_negotiation_and_contracts.txt (EXPANDED TO ~20 KB)
+  // FILE 3: 03_utilo_b2b_negotiation_and_contracts.txt (EXPANDED TO ~20 KB)
   // =========================================================================
-  let doc3 = `UTLIO B2B NEGOTIATION PLAYBOOK & CONTRACT NORMS
+  let doc3 = `UTILO B2B NEGOTIATION PLAYBOOK & CONTRACT NORMS
 DOMAIN CORPUS: MULTI-PARTY NEGOTIATION, PRICING ELASTICITY & CONCESSION STRATEGIES
 
 1. ROLE & DOMAIN SPECIFICATION
-You are Utlio's domain-aligned AI Negotiation Advisor. You assist seekers and providers in structuring win-win commercial terms for short and long term equipment rentals.
+You are Utilo's domain-aligned AI Negotiation Advisor. You assist seekers and providers in structuring win-win commercial terms for short and long term equipment rentals.
 
 2. QUANTITATIVE PRICING BENCHMARKS & MARGINS
 - Provider Gross Margin: Typically 45% - 60% on asset rental after factoring in depreciation, maintenance, and storage.
@@ -297,12 +297,12 @@ Advisor Analysis:
    3. Request 4 wireless microphones instead of 2.
    4. Cap the security deposit at 15% backed by your corporate GSTIN profile."
 `;
-  fs.writeFileSync(path.join(outDir, "03_utlio_b2b_negotiation_and_contracts.txt"), doc3, "utf8");
+  fs.writeFileSync(path.join(outDir, "03_utilo_b2b_negotiation_and_contracts.txt"), doc3, "utf8");
 
   // =========================================================================
-  // FILE 4: 04_utlio_verified_inventory_catalog_benchmark.txt (LIVE DB SNAPSHOT)
+  // FILE 4: 04_utilo_verified_inventory_catalog_benchmark.txt (LIVE DB SNAPSHOT)
   // =========================================================================
-  let doc4 = `UTLIO VERIFIED INVENTORY CATALOG & MARKET BENCHMARKS
+  let doc4 = `UTILO VERIFIED INVENTORY CATALOG & MARKET BENCHMARKS
 LIVE DATABASE GROUNDING SNAPSHOT — ${new Date().toISOString()}
 
 1. CATALOG CATEGORIES SUMMARY (${cats.length} ACTIVE CATEGORIES)
@@ -330,12 +330,12 @@ LIVE DATABASE GROUNDING SNAPSHOT — ${new Date().toISOString()}
   profiles.forEach((p, idx) => {
     doc4 += `${idx + 1}. ${p.businessName || p.legalName || "Verified Supplier"} | City: ${p.city || "Mumbai"} | GSTIN: ${p.gstin || "VERIFIED"}\n`;
   });
-  fs.writeFileSync(path.join(outDir, "04_utlio_verified_inventory_catalog_benchmark.txt"), doc4, "utf8");
+  fs.writeFileSync(path.join(outDir, "04_utilo_verified_inventory_catalog_benchmark.txt"), doc4, "utf8");
 
   // =========================================================================
-  // FILE 5: 05_utlio_ai_event_planner_qa_eval_dataset.txt (NEW 20+ PAIRS)
+  // FILE 5: 05_utilo_ai_event_planner_qa_eval_dataset.txt (NEW 20+ PAIRS)
   // =========================================================================
-  let doc5 = `UTLIO EVENT RESOURCE ARCHITECT — TRAINING & EVALUATION Q&A PAIRS
+  let doc5 = `UTILO EVENT RESOURCE ARCHITECT — TRAINING & EVALUATION Q&A PAIRS
 SYNTHETIC INSTRUCTION-TUNING DATASET FOR QWEN-2.5 BASE MODEL ALIGNMENT
 
 Q1: Plan equipment for a 350-attendee developer conference in Mumbai for 8 hours.
@@ -379,16 +379,16 @@ A3: {
   "reasoning": "Executive workshop requires 80 ergonomic chairs for sustained comfort, 10 modular discussion tables for group breakout sessions, high-resolution interactive touch display for presentation collaboration, clear gooseneck podium sound, and an executive acrylic presentation podium."
 }
 
-Q4: What is Utlio's standard refundable deposit policy for industrial rentals?
-A4: Utlio mandates a standard 15% to 25% refundable security deposit based on equipment asset replacement value or 1x the rental fee, whichever is lower. Deposits are held in Utlio Escrow throughout the rental duration and released within 48 hours post-return following a joint photographic condition inspection.
+Q4: What is Utilo's standard refundable deposit policy for industrial rentals?
+A4: Utilo mandates a standard 15% to 25% refundable security deposit based on equipment asset replacement value or 1x the rental fee, whichever is lower. Deposits are held in Utilo Escrow throughout the rental duration and released within 48 hours post-return following a joint photographic condition inspection.
 
-Q5: How does Utlio verify asset liveness and eliminate fake equipment listings?
-A5: Utlio employs a triple-layer verification system:
+Q5: How does Utilo verify asset liveness and eliminate fake equipment listings?
+A5: Utilo employs a triple-layer verification system:
 1. GPS Triangulation: Provider streaming coordinates during video verification must be within 200 meters of the registered GSTIN facility.
-2. Cryptographic Session Watermark: Live video streams overlay GPS, UTC timestamp, and unique Utlio session ID.
+2. Cryptographic Session Watermark: Live video streams overlay GPS, UTC timestamp, and unique Utilo session ID.
 3. Interactive Dynamic Challenge: The provider must write and display a random one-time verification code (e.g. UTL-592) next to the asset serial number during live inspection to defeat pre-recorded deepfakes.
 `;
-  fs.writeFileSync(path.join(outDir, "05_utlio_ai_event_planner_qa_eval_dataset.txt"), doc5, "utf8");
+  fs.writeFileSync(path.join(outDir, "05_utilo_ai_event_planner_qa_eval_dataset.txt"), doc5, "utf8");
 
   console.log("All 5 enterprise Nugen training files generated successfully!");
 }

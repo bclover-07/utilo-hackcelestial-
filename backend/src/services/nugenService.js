@@ -11,19 +11,19 @@ const BASE_MODEL = "qwen-v2p5-0p5b-instruct";
 // In-memory state tracking for active model and documents
 let simulatedState = {
   documents: [
-    { id: "doc-utlio-01", name: "01_utlio_b2b_rental_domain_master.txt", status: "PROCESSED", tokens: 2840, category: "b2b-rental" },
-    { id: "doc-utlio-02", name: "02_utlio_seeker_event_planner_intelligence.txt", status: "PROCESSED", tokens: 3950, category: "seeker-planner" },
-    { id: "doc-utlio-03", name: "03_utlio_b2b_negotiation_and_contracts.txt", status: "PROCESSED", tokens: 2450, category: "negotiation" },
-    { id: "doc-utlio-04", name: "04_utlio_verified_inventory_catalog_benchmark.txt", status: "PROCESSED", tokens: 3820, category: "verified-inventory" },
+    { id: "doc-utilo-01", name: "01_utilo_b2b_rental_domain_master.txt", status: "PROCESSED", tokens: 2840, category: "b2b-rental" },
+    { id: "doc-utilo-02", name: "02_utilo_seeker_event_planner_intelligence.txt", status: "PROCESSED", tokens: 3950, category: "seeker-planner" },
+    { id: "doc-utilo-03", name: "03_utilo_b2b_negotiation_and_contracts.txt", status: "PROCESSED", tokens: 2450, category: "negotiation" },
+    { id: "doc-utilo-04", name: "04_utilo_verified_inventory_catalog_benchmark.txt", status: "PROCESSED", tokens: 3820, category: "verified-inventory" },
   ],
   alignments: [
     {
-      id: "align-utlio-qwen25-01",
-      name: "Utlio B2B Rental & Seeker Planner Domain Alignment",
+      id: "align-utilo-qwen25-01",
+      name: "Utilo B2B Rental & Seeker Planner Domain Alignment",
       base_model_id: BASE_MODEL,
       status: "COMPLETED",
       progress: 100,
-      aligned_model_id: process.env.NUGEN_ALIGNED_MODEL_ID || "qwen-v2p5-0p5b-instruct-utlio-aligned",
+      aligned_model_id: process.env.NUGEN_ALIGNED_MODEL_ID || "qwen-v2p5-0p5b-instruct-utilo-aligned",
       loss: 0.038,
       epochs: 3,
       domain_documents: 4,
@@ -81,11 +81,11 @@ export async function listAlignedModels() {
   return [
     {
       id: simulatedState.activeModelId,
-      name: "Utlio B2B Industrial Rental & Seeker Planner Specialist",
+      name: "Utilo B2B Industrial Rental & Seeker Planner Specialist",
       base_model: BASE_MODEL,
       status: "DEPLOYED",
       created_at: simulatedState.alignments[0]?.created_at || new Date().toISOString(),
-      alignment_id: "align-utlio-qwen25-01",
+      alignment_id: "align-utilo-qwen25-01",
       domain: "B2B Equipment Rental & Autonomous Event Planning",
       confidence: 0.984,
     }
@@ -101,7 +101,7 @@ export async function uploadDocuments(textFiles) {
         const blob = new Blob([file.content], { type: "text/plain" });
         formData.append("files", blob, file.name);
       }
-      formData.append("categories", JSON.stringify(["b2b-rental", "seeker-planner", "utlio-domain"]));
+      formData.append("categories", JSON.stringify(["b2b-rental", "seeker-planner", "utilo-domain"]));
 
       const res = await fetch(`${NUGEN_BASE}/documents/create`, {
         method: "POST",
@@ -117,7 +117,7 @@ export async function uploadDocuments(textFiles) {
   }
 
   const uploaded = textFiles.map((f, idx) => ({
-    id: `doc-utlio-${Date.now()}-${idx}`,
+    id: `doc-utilo-${Date.now()}-${idx}`,
     name: f.name,
     status: "PROCESSED",
     tokens: Math.round(f.content.length / 4),
@@ -169,8 +169,8 @@ export async function createAlignment(name, documentIds, description) {
     }
   }
 
-  const alignmentId = `align-utlio-qwen25-${Date.now().toString(36)}`;
-  const alignedModelId = `qwen-v2p5-0p5b-instruct-utlio-${Date.now().toString(36)}`;
+  const alignmentId = `align-utilo-qwen25-${Date.now().toString(36)}`;
+  const alignedModelId = `qwen-v2p5-0p5b-instruct-utilo-${Date.now().toString(36)}`;
   const alignment = {
     id: alignmentId,
     name,
@@ -331,7 +331,7 @@ export async function chatCompletion(messages, opts = {}) {
     responseContent = JSON.stringify({
       title: `${isWedding ? "Wedding Reception" : isTech ? "Tech Conference" : "Corporate Event"} Package (${guests} Guests)`,
       items,
-      reasoning: `Domain-calibrated equipment allocation based on Utlio B2B platform standards: 1 seat/attendee (${chairQty} chairs), 1 dining/conference table per ${tableRatio} guests (${tableQty} tables), and acoustic throw scaled to ${guests} attendees.`,
+      reasoning: `Domain-calibrated equipment allocation based on Utilo B2B platform standards: 1 seat/attendee (${chairQty} chairs), 1 dining/conference table per ${tableRatio} guests (${tableQty} tables), and acoustic throw scaled to ${guests} attendees.`,
     });
   }
   // CASE 2: Negotiation Advice
@@ -341,7 +341,7 @@ export async function chatCompletion(messages, opts = {}) {
     const avgTable = Math.round(listings.filter(l => l.category === "tables").reduce((s, l) => s + l.price, 0) / 4) || 363;
     const avgAV = Math.round(listings.filter(l => l.category === "av_equipment").reduce((s, l) => s + l.price, 0) / 6) || 15000;
 
-    responseContent = `### Utlio B2B Negotiation Intelligence Report
+    responseContent = `### Utilo B2B Negotiation Intelligence Report
 **Grounding Source**: Live Database Benchmark (${listings.length} verified listings consulted).
 
 1. **Market Rate Benchmarks**:
@@ -352,7 +352,7 @@ export async function chatCompletion(messages, opts = {}) {
 2. **Strategic Counter-Offer Recommendations**:
    - **Recommended Anchor**: Counter at 82% to 85% of quoted rate, proposing immediate 100% advance payment to sweeten the closing terms.
    - **Logistics Concession**: Offer self-pickup or flexible delivery windows (±2 hours) to negotiate a 5% to 8% discount on asset rentals.
-   - **Multi-Day Curve**: If renting for 3+ days, demand a 15% tier discount based on Utlio standard multi-day rental curves.
+   - **Multi-Day Curve**: If renting for 3+ days, demand a 15% tier discount based on Utilo standard multi-day rental curves.
    - **Deposit Optimization**: Cap refundable security deposit at 15-20% backed by your verified business GSTIN profile.`;
   }
   // CASE 3: Smart Listing Optimization
@@ -362,7 +362,7 @@ export async function chatCompletion(messages, opts = {}) {
       descriptionSuggestion: "Fully inspected and certified for immediate B2B deployment. Includes operator manual, all standard accessories, and 24/7 technical breakdown support. B2B tax invoice with GST credit provided.",
       pricingAdvice: "Set price within 5% of category median to achieve 2.4x higher conversion while maintaining healthy gross margins.",
       missingFields: ["security_deposit", "delivery_fee", "minimum_rental_days", "specifications_sheet"],
-      competitiveInsight: "Top-booked listings on Utlio feature at least 4 high-resolution photos, verified GPS location badge, and clear refundable deposit policies.",
+      competitiveInsight: "Top-booked listings on Utilo feature at least 4 high-resolution photos, verified GPS location badge, and clear refundable deposit policies.",
     });
   }
   // CASE 4: General B2B Assistant Query
@@ -373,11 +373,11 @@ export async function chatCompletion(messages, opts = {}) {
       : await Listing.find({ status: "active" }).limit(3).lean().catch(() => []);
 
     if (matches.length > 0) {
-      responseContent = `Based on live verified inventory in Utlio's database:\n\n` +
+      responseContent = `Based on live verified inventory in Utilo's database:\n\n` +
         matches.map(m => `• **${m.title}** (${m.category}) — ₹${m.price}/${m.unit || "day"} | Available stock: ${m.quantity} units in ${m.city || "Mumbai"}`).join("\n") +
         `\n\nStandard platform terms: 15-20% refundable deposit held in escrow, verified GSTIN invoicing, and guaranteed asset condition check at delivery.`;
     } else {
-      responseContent = `Utlio connects businesses with verified industrial and event equipment. All transactions include 15-20% refundable security deposit protection in escrow, cryptographic GPS delivery verification, and multi-vendor RFQ matching.`;
+      responseContent = `Utilo connects businesses with verified industrial and event equipment. All transactions include 15-20% refundable security deposit protection in escrow, cryptographic GPS delivery verification, and multi-vendor RFQ matching.`;
     }
   }
 
@@ -426,7 +426,7 @@ export async function negotiationAdvice(context = {}) {
 1. **Counter-Offer Target**: Propose **₹${recommendedCounter.toLocaleString("en-IN")}** (saves ₹${estimatedSavings.toLocaleString("en-IN")}, a 15% reduction). This stays comfortably within provider operational gross margins.
 2. **Logistics Trade-off**: If the provider is firm on price, offer flexible drop-off hours or self-pickup to waive the delivery fee.
 3. **Volume / Duration Clause**: If renting for 3+ days, request a 15% multi-day tier discount.
-4. **Deposit Cap**: Hold refundable security deposit to maximum 15-20% under Utlio Escrow protection.
+4. **Deposit Cap**: Hold refundable security deposit to maximum 15-20% under Utilo Escrow protection.
 
 **Verified Comparables in Category**:
 ${catListings.slice(0, 3).map(l => `• ${l.title}: ₹${l.price}/${l.unit || "day"} (City: ${l.city})`).join("\n") || "• Standard market rates apply."}`;
@@ -508,11 +508,11 @@ export async function assistantChat(question = "", conversationHistory = []) {
 
   let answer = "";
   if (listings.length > 0) {
-    answer = `Hello! Based on Utlio's active verified database, here are relevant resources for your inquiry:\n\n` +
+    answer = `Hello! Based on Utilo's active verified database, here are relevant resources for your inquiry:\n\n` +
       listings.map(l => `• **${l.title}** (${l.category.toUpperCase()}): ₹${l.price}/${l.unit || "day"} | Available stock: ${l.quantity} units in ${l.city || "Mumbai"} (Deposit: ₹${l.deposit || 0})`).join("\n") +
-      `\n\nAll rentals on Utlio feature verified GSTIN suppliers, 15-20% refundable deposit protection via escrow, and GPS-verified asset liveness checks. Would you like me to add any of these to an RFQ or generate a multi-vendor event plan?`;
+      `\n\nAll rentals on Utilo feature verified GSTIN suppliers, 15-20% refundable deposit protection via escrow, and GPS-verified asset liveness checks. Would you like me to add any of these to an RFQ or generate a multi-vendor event plan?`;
   } else {
-    answer = `Welcome to Utlio B2B Equipment Rental. You can search our active catalog across 9 categories including Banquet Spaces, Chairs, Tables, Audio-Visual Systems, and Commercial Kitchens. How many attendees or what equipment do you need for your upcoming project?`;
+    answer = `Welcome to Utilo B2B Equipment Rental. You can search our active catalog across 9 categories including Banquet Spaces, Chairs, Tables, Audio-Visual Systems, and Commercial Kitchens. How many attendees or what equipment do you need for your upcoming project?`;
   }
 
   return {

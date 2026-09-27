@@ -111,7 +111,7 @@ export function State({ resource, children }) {
 
 export function Empty({
   title = "Nothing here yet",
-  text = "Your activity will appear here as you use Utlio.",
+  text = "Your activity will appear here as you use Utilo.",
   href,
   label,
 }) {

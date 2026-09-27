@@ -6,7 +6,7 @@ import { indexListing } from "../src/agents/workflows.js";
 
 try {
   await mongoose.connect(config.mongo, { serverSelectionTimeoutMS: 15000 });
-  const name = process.env.MONGODB_VECTOR_INDEX || "utlio_resources_vector";
+  const name = process.env.MONGODB_VECTOR_INDEX || "utilo_resources_vector";
   const dimensions = Number(process.env.HF_EMBEDDING_DIMENSIONS || 384);
   const indexes = await Listing.collection.listSearchIndexes().toArray();
   const existing = indexes.find(index => index.name === name);

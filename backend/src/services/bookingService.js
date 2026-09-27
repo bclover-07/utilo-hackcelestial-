@@ -190,9 +190,9 @@ export async function calendar(user, id) {
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Utlio//Bookings//EN",
+    "PRODID:-//Utilo//Bookings//EN",
     "BEGIN:VEVENT",
-    `UID:${b._id}@utlio`,
+    `UID:${b._id}@utilo`,
     `DTSTAMP:${utc(new Date())}`,
     `DTSTART:${utc(b.start)}`,
     `DTEND:${utc(b.end)}`,

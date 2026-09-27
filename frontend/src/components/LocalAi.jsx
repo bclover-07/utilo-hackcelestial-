@@ -48,7 +48,7 @@ export default function LocalAi({ task = "summarize", text = "", onApply }) {
   }
   return <div className="local-ai panel" style={{ background: "var(--lilac)", marginBlock: 16 }}>
     <h4><Sparkles size={18} /> AI on your device</h4>
-    <p>Download a model once, then reuse it from this browser. Local AI sends no draft or conversation text to an AI server. Model files download from external hosts; saving listings and messages still uses Utlio.</p>
+    <p>Download a model once, then reuse it from this browser. Local AI sends no draft or conversation text to an AI server. Model files download from external hosts; saving listings and messages still uses Utilo.</p>
     <label className="check"><input type="checkbox" checked={compact} disabled={active} onChange={e => { setCompact(e.target.checked); setDevice(null); }} /> Use smaller model (less memory and faster loading)</label>
     <p><small>{shared.ready ? `Loaded in GPU memory: ${shared.modelId}` : "Model is not loaded in GPU memory."} GPU memory is released after five idle minutes.</small></p>
     {device && <p role="status"><small>{device.modelId} · {device.cached === true ? "Model weights found in browser cache" : device.cached === false ? "Model weights not yet cached" : "Browser cache status unavailable"}{device.memoryMB ? ` · Estimated GPU memory ${(device.memoryMB / 1024).toFixed(1)} GB` : ""}. A successful load verifies the complete runtime.</small></p>}

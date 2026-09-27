@@ -19,7 +19,7 @@ export const analyticsController = {
   csv: async (req, res) =>
     res
       .type("text/csv")
-      .attachment("utlio-bookings.csv")
+      .attachment("utilo-bookings.csv")
       .send(await csv(req.user, accountMode(req))),
 
   demandHeatmap: send((req) => pipelines.demandHeatmap(filters(req))),

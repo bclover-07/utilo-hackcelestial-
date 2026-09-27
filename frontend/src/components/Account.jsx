@@ -65,7 +65,7 @@ export function ProfilePage() {
             <Badge>{user.verification || "pending"}</Badge>
           </div>
           <p style={{ fontSize: "0.9rem", color: "#555", marginBottom: "1rem" }}>
-            Utlio offers two trust pathways: Instant Automated GSTIN verification or Manual Document review (utility bills, lease deeds, or incorporation certificates).
+            Utilo offers two trust pathways: Instant Automated GSTIN verification or Manual Document review (utility bills, lease deeds, or incorporation certificates).
           </p>
 
           {/* Option A: Automated GSTIN Verification */}

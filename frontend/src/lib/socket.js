@@ -6,15 +6,22 @@ let isFetchingToken = false;
 
 export function getStoredSocketToken() {
   if (typeof window === "undefined") return null;
-  return currentToken || localStorage.getItem("utlio_socket_token") || null;
+  return (
+    currentToken ||
+    localStorage.getItem("utilo_socket_token") ||
+    localStorage.getItem("utlio_socket_token") ||
+    null
+  );
 }
 
 export function setSocketAuthToken(token) {
   currentToken = token;
   if (typeof window !== "undefined") {
     if (token) {
+      localStorage.setItem("utilo_socket_token", token);
       localStorage.setItem("utlio_socket_token", token);
     } else {
+      localStorage.removeItem("utilo_socket_token");
       localStorage.removeItem("utlio_socket_token");
     }
   }
@@ -52,7 +59,7 @@ async function requestFreshSocketToken() {
   try {
     const res = await fetch("/api/auth/socket-token", {
       credentials: "include",
-      headers: { "X-Utlio-Request": "1" },
+      headers: { "X-Utilo-Request": "1", "X-Utlio-Request": "1" },
     });
     if (res.ok) {
       const data = await res.json();

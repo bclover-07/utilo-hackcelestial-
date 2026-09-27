@@ -26,6 +26,7 @@ export function PlannerPage() {
   const [questions, setQuestions] = useState([]), [excluded, setExcluded] = useState([]), [acknowledged, setAcknowledged] = useState(false);
   const [budget, setBudget] = useState("");
   const [answer, setAnswer] = useState(null);
+  const [progress, setProgress] = useState([]);
   const result = plan?.result;
   const alternatives = Array.isArray(result?.alternatives) ? result.alternatives : [];
   const option = alternatives.find(p => p.id === selected) || alternatives[0] || null;
@@ -85,7 +86,7 @@ export function PlannerPage() {
     });
   }
   return <>
-    <Heading eyebrow="UTLIO CONDUCTOR · PLAN / TEST / ADAPT" title="Make every moving part work." description="Turn an event brief into a checked resource package. Explore the trade-offs. Be ready when plans change." />
+    <Heading eyebrow="UTILO CONDUCTOR · PLAN / TEST / ADAPT" title="Make every moving part work." description="Turn an event brief into a checked resource package. Explore the trade-offs. Be ready when plans change." />
     <div role="status" aria-live="polite">{busy && <div className="notice conductor-busy"><span className="live-dot" /> {busy}</div>}{notice && <div className="notice">{notice}</div>}</div>
     {error && <div className="notice error-panel" role="alert">{error}</div>}
     <AIEventArchitect onApplyToConductor={handleApplyAIPlan} defaultCity={user?.city || "Mumbai"} />

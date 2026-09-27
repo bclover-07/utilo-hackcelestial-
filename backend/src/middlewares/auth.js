@@ -4,11 +4,12 @@ import { BusinessProfile } from "../models/index.js";
 import { ApiError, assert } from "./errors.js";
 export async function auth(req, res, next) {
   let payload;
+  const sessionToken = req.cookies?.utilo_session || req.cookies?.utlio_session;
   try {
-    payload = jwt.verify(req.cookies.utlio_session, config.jwt, {
+    payload = jwt.verify(sessionToken, config.jwt, {
       algorithms: ["HS256"],
-      issuer: "utlio",
-      audience: "utlio-web",
+      issuer: ["utilo", "utlio"],
+      audience: ["utilo-web", "utlio-web"],
     });
   } catch {
     throw new ApiError(401, "Please log in to continue.");
@@ -51,7 +52,7 @@ export function isAllowedOrigin(origin) {
 
   if (configuredList.includes(cleanOrigin)) return true;
 
-  // Always permit production Utlio frontend Vercel deployments & previews
+  // Always permit production Utilo frontend Vercel deployments & previews
   if (
     cleanOrigin === "https://utilo-hackcelestial-frontend.vercel.app" ||
     /^https:\/\/utilo-hackcelestial-frontend(-[a-z0-9-]+)?\.vercel\.app$/.test(cleanOrigin)
@@ -74,7 +75,7 @@ export function isAllowedOrigin(origin) {
 export function csrf(req, res, next) {
   if (!["GET", "HEAD", "OPTIONS"].includes(req.method)) {
     assert(
-      req.get("X-Utlio-Request") === "1",
+      req.get("X-Utilo-Request") === "1" || req.get("X-Utlio-Request") === "1",
       403,
       "Missing request verification header.",
     );

@@ -42,7 +42,7 @@ export const nugenController = {
 
   createAlignment: async (req, res) => {
     const body = z.object({
-      name: z.string().min(3).max(200).default("Utlio B2B Rental Domain Alignment"),
+      name: z.string().min(3).max(200).default("Utilo B2B Rental Domain Alignment"),
       documentIds: z.array(z.string()).min(1),
       description: z.string().max(500).default("Domain alignment for B2B industrial equipment rental platform"),
     }).parse(req.body);

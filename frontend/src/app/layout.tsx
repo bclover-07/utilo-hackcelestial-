@@ -19,7 +19,7 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 export const metadata: Metadata = {
-  title: "Utlio | Less idle. More possible.",
+  title: "Utilo | Less idle. More possible.",
   description:
     "A B2B hospitality exchange for resources, requests, structured negotiation and quantity-aware booking.",
 };

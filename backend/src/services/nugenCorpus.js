@@ -29,12 +29,12 @@ export async function generateB2BRentalCorpus() {
   // If no files read from disk or to augment with live DB data
   if (documents.length === 0) {
     documents.push({
-      name: "01_utlio_b2b_rental_domain_master.txt",
-      content: `UTLIO PLATFORM MASTER DOMAIN CORPUS — B2B EQUIPMENT RENTAL ARCHITECTURE
+      name: "01_utilo_b2b_rental_domain_master.txt",
+      content: `UTILO PLATFORM MASTER DOMAIN CORPUS — B2B EQUIPMENT RENTAL ARCHITECTURE
 INDUSTRIAL, EVENT & COMMERCIAL ASSET RENTAL NORMS IN INDIA
 
 1. OVERVIEW & PLATFORM PRINCIPLES
-Utlio is an enterprise B2B peer-to-peer equipment rental marketplace designed to eliminate asset idleness. Businesses rent idle capital equipment (banquet venues, sound systems, stage lighting, power generators, commercial dining sets, logistics trucks) to seekers on flexible daily, weekly, or event-based contracts.
+Utilo is an enterprise B2B peer-to-peer equipment rental marketplace designed to eliminate asset idleness. Businesses rent idle capital equipment (banquet venues, sound systems, stage lighting, power generators, commercial dining sets, logistics trucks) to seekers on flexible daily, weekly, or event-based contracts.
 
 2. B2B RENTAL PRICING DYNAMICS
 - Short-term rentals (1 to 3 days): Daily pricing is billed at full market rate with no discount. Standard for single-day corporate seminars, weddings, or weekend shoots.
@@ -46,7 +46,7 @@ Utlio is an enterprise B2B peer-to-peer equipment rental marketplace designed to
 3. SECURITY DEPOSIT, ESCROW & FINANCIAL CLEARANCE
 - Standard Deposit Ratio: 15% to 25% of total equipment asset replacement value or 1x the rental fee, whichever is lower.
 - High-Value / Critical Assets: Up to 50% refundable deposit or formal corporate bank guarantee.
-- Escrow Protection: Deposits are held securely in Utlio Escrow during the rental period.`,
+- Escrow Protection: Deposits are held securely in Utilo Escrow during the rental period.`,
     });
   }
 
@@ -59,7 +59,7 @@ Utlio is an enterprise B2B peer-to-peer equipment rental marketplace designed to
     ]);
 
     if (cats.length > 0 || listings.length > 0) {
-      let liveBenchmark = `UTLIO VERIFIED INVENTORY CATALOG & MARKET BENCHMARKS\n`;
+      let liveBenchmark = `UTILO VERIFIED INVENTORY CATALOG & MARKET BENCHMARKS\n`;
       liveBenchmark += `LIVE DATABASE GROUNDING SNAPSHOT — ${new Date().toISOString()}\n\n`;
       liveBenchmark += `1. CATALOG CATEGORIES SUMMARY (${cats.length} ACTIVE CATEGORIES)\n`;
       cats.forEach(c => {
@@ -90,7 +90,7 @@ Utlio is an enterprise B2B peer-to-peer equipment rental marketplace designed to
         documents[existingIdx].content = liveBenchmark;
       } else {
         documents.push({
-          name: "04_utlio_verified_inventory_catalog_benchmark.txt",
+          name: "04_utilo_verified_inventory_catalog_benchmark.txt",
           content: liveBenchmark,
         });
       }

@@ -201,7 +201,7 @@ function generateLiveTravelerSignals(city = "Mumbai") {
     {
       title: `Surge in urgent requests for backup diesel generators and marquee tents across hospitality venues in ${city}.`,
       sourceType: "supplier_radar",
-      author: "UtlioIntel",
+      author: "UtiloIntel",
       score: 140,
       numComments: 45,
       tag: "resource_demand",

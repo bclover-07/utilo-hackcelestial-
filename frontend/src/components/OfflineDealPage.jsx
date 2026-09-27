@@ -311,7 +311,7 @@ function OfflineDealForm() {
             }}
           >
             Renting out items to direct walk-in clients, phone inquiries, or event partners? Lock
-            fleet units here so Utlio tracks availability in real time and automatically triggers
+            fleet units here so Utilo tracks availability in real time and automatically triggers
             return reminder notifications when the rental period expires.
           </p>
         </div>
@@ -1154,7 +1154,7 @@ function OfflineDealForm() {
                   <Shield size={14} /> Automated Return Alert
                 </div>
                 <span style={{ color: "#047857" }}>
-                  Utlio&apos;s background scheduler will monitor this booking and send you a notification when the rental expires so you can inspect the returned asset and immediately repost it.
+                  Utilo&apos;s background scheduler will monitor this booking and send you a notification when the rental expires so you can inspect the returned asset and immediately repost it.
                 </span>
               </div>
             </div>

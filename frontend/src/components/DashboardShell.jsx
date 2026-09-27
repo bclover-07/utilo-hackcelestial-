@@ -251,7 +251,9 @@ export default function DashboardShell({ children, admin = false }) {
     socket.on("video_call_declined", handleDeclined);
     socket.on("notification", handleNotification);
     socket.on("notification_new", handleNotification);
+    window.addEventListener("utilo:notify", handleCustomNotify);
     window.addEventListener("utlio:notify", handleCustomNotify);
+    window.addEventListener("utilo:open-video-call", handleWindowStartCall);
     window.addEventListener("utlio:open-video-call", handleWindowStartCall);
 
     return () => {
@@ -260,7 +262,9 @@ export default function DashboardShell({ children, admin = false }) {
       socket.off("video_call_declined", handleDeclined);
       socket.off("notification", handleNotification);
       socket.off("notification_new", handleNotification);
+      window.removeEventListener("utilo:notify", handleCustomNotify);
       window.removeEventListener("utlio:notify", handleCustomNotify);
+      window.removeEventListener("utilo:open-video-call", handleWindowStartCall);
       window.removeEventListener("utlio:open-video-call", handleWindowStartCall);
     };
   }, [auth.user]);
@@ -365,7 +369,7 @@ export default function DashboardShell({ children, admin = false }) {
       >
         <div className="sidebar-top-row">
           <Link className="brand" href="/" onClick={() => setMenu(false)}>
-            <span>U</span>utlio<span className="brand-dot">✳</span>
+            <span>U</span>utilo<span className="brand-dot">✳</span>
           </Link>
           <button
             className="sidebar-close quiet"
@@ -446,7 +450,7 @@ export default function DashboardShell({ children, admin = false }) {
             <div className="workspace-brand-badge">
               <span className="live-dot" />
               <Link href="/" className="workspace-title-link">
-                <strong>UTLIO</strong>
+                <strong>UTILO</strong>
                 <span className="workspace-doodle-star">✳</span>
               </Link>
               <span className="workspace-nav-divider">/</span>
@@ -583,7 +587,7 @@ export default function DashboardShell({ children, admin = false }) {
         {/* Footer */}
         <footer className="workspace-footer">
           <div>
-            UTLIO B2B EXCHANGE <span>· Less idle. More possible.</span>
+            UTILO B2B EXCHANGE <span>· Less idle. More possible.</span>
           </div>
           <div className="footer-links">
             <Link href="/">Home</Link>

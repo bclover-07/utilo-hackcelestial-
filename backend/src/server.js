@@ -96,7 +96,7 @@ startJobs();
 const httpServer = createServer(app);
 export const io = initSocketServer(httpServer);
 const server = httpServer.listen(config.port, () =>
-  console.log(`Utlio API ready on port ${config.port} with Socket.io real-time chat`),
+  console.log(`Utilo API ready on port ${config.port} with Socket.io real-time chat`),
 );
 async function stop() {
   server.close();

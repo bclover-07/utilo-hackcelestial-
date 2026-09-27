@@ -120,7 +120,10 @@ export default function AIEventArchitect({ onApplyToConductor, defaultCity = "Mu
             </span>
             <button
               type="button"
-              onClick={() => window.dispatchEvent(new CustomEvent("utlio:open-nugen-assistant", { detail: { tab: "pipeline" } }))}
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent("utilo:open-nugen-assistant", { detail: { tab: "pipeline" } }));
+                window.dispatchEvent(new CustomEvent("utlio:open-nugen-assistant", { detail: { tab: "pipeline" } }));
+              }}
               style={{
                 background: "#c8beff",
                 border: "1.5px solid #171915",
@@ -523,7 +526,7 @@ export default function AIEventArchitect({ onApplyToConductor, defaultCity = "Mu
                   </div>
                 ) : (
                   <div style={{ fontSize: "0.8rem", color: "#777", background: "#fdf8f6", padding: "0.5rem", borderRadius: "8px", border: "1px solid #fbd5c5" }}>
-                    No exact listings currently active in {result.eventIntent?.city} for this category. Utlio's multi-vendor RFQ will broadcast this requirement to regional verified suppliers upon package creation.
+                    No exact listings currently active in {result.eventIntent?.city} for this category. Utilo's multi-vendor RFQ will broadcast this requirement to regional verified suppliers upon package creation.
                   </div>
                 )}
               </div>
