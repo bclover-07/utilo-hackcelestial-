@@ -157,33 +157,169 @@ export function DemandHeatmap({ data }) {
         text="Open resource requests will appear here when businesses submit them."
       />
     );
+
   const maxIntensity = Math.max(...data.map((d) => d.intensity || 1));
-  const heatColors = ["#A8E6CF", "#FFE66D", "#FFB347", "#FF85A1", "#FF6B6B"];
+  const heatPalettes = [
+    { bg: "#F0FDF4", border: "#BBF7D0", text: "#166534", accent: "#22C55E", label: "Normal" },
+    { bg: "#FEFCE8", border: "#FEF08A", text: "#854D0E", accent: "#EAB308", label: "Elevated" },
+    { bg: "#FFF7ED", border: "#FED7AA", text: "#9A3412", accent: "#F97316", label: "High" },
+    { bg: "#FFF1F2", border: "#FECDD3", text: "#9F1239", accent: "#F43F5E", label: "Surge" },
+    { bg: "#FEF2F2", border: "#FCA5A5", text: "#991B1B", accent: "#EF4444", label: "Peak Deficit" },
+  ];
+
   return (
-    <section className="panel">
-      <div className="section-heading">
-        <h2>Demand heatmap</h2>
-        <Badge>LIVE DATA</Badge>
+    <section
+      className="panel"
+      style={{
+        background: "linear-gradient(135deg, #FFFFFF 0%, #FAF8F5 100%)",
+        border: "1px solid rgba(23, 25, 21, 0.12)",
+        borderRadius: "20px",
+        boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.04), 0 2px 8px -2px rgba(0, 0, 0, 0.02)",
+        padding: "1.5rem",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "10px",
+          marginBottom: "1rem",
+        }}
+      >
+        <div>
+          <span
+            style={{
+              fontSize: "0.72rem",
+              fontWeight: 800,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "#0F766E",
+              display: "inline-block",
+              marginBottom: 3,
+            }}
+          >
+            REAL-TIME ABSORPTION
+          </span>
+          <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: "#171915" }}>
+            Demand Heatmap
+          </h2>
+        </div>
+        <span
+          style={{
+            fontSize: "0.76rem",
+            fontWeight: 700,
+            padding: "4px 10px",
+            borderRadius: "9999px",
+            background: "#CCFBF1",
+            color: "#0F766E",
+            border: "1px solid #5EEAD4",
+          }}
+        >
+          Live Market Ingestion
+        </span>
       </div>
-      <p>Hotter cells indicate higher unmet demand based on open requests.</p>
-      <div className="heatmap-grid">
+      <p style={{ margin: "0 0 1.25rem", color: "#64748B", fontSize: "0.88rem" }}>
+        Hotter nodes represent higher unmet equipment & venue demand aggregated from live RFQs.
+      </p>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+          gap: "12px",
+        }}
+      >
         {data.slice(0, 20).map((d, i) => {
           const level = Math.min(
             4,
-            Math.floor(((d.intensity || 0) / maxIntensity) * 5),
+            Math.floor(((d.intensity || 0) / maxIntensity) * 5)
           );
+          const palette = heatPalettes[level];
+
           return (
             <div
               key={i}
-              className="heatmap-cell"
-              style={{ background: heatColors[level] }}
+              style={{
+                background: palette.bg,
+                border: `1px solid ${palette.border}`,
+                borderRadius: "16px",
+                padding: "1rem",
+                boxShadow: "0 3px 12px -2px rgba(0, 0, 0, 0.03)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                minHeight: "110px",
+                position: "relative",
+                overflow: "hidden",
+                transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              }}
             >
-              <strong>{d.totalUnits}</strong>
-              {(d.category || "").replaceAll("_", " ")}
-              <br />
-              <small>
-                {d.city} · {d.requestCount} requests
-              </small>
+              {/* Top Temperature Glow Accent */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: "3px",
+                  background: palette.accent,
+                }}
+              />
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "6px" }}>
+                <span
+                  style={{
+                    fontSize: "0.78rem",
+                    fontWeight: 800,
+                    color: "#1E293B",
+                    textTransform: "capitalize",
+                    letterSpacing: "-0.2px",
+                  }}
+                >
+                  {(d.category || "").replaceAll("_", " ")}
+                </span>
+                <span
+                  style={{
+                    fontSize: "0.62rem",
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    padding: "2px 6px",
+                    borderRadius: "9999px",
+                    background: "#FFFFFF",
+                    color: palette.text,
+                    border: `1px solid ${palette.border}`,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {palette.label}
+                </span>
+              </div>
+
+              <div style={{ margin: "6px 0 4px" }}>
+                <div style={{ fontSize: "1.6rem", fontWeight: 900, color: palette.text, lineHeight: 1 }}>
+                  {d.totalUnits?.toLocaleString() || 0}
+                </div>
+                <div style={{ fontSize: "0.7rem", fontWeight: 600, color: "#64748B", marginTop: 2 }}>
+                  units requested
+                </div>
+              </div>
+
+              <div
+                style={{
+                  fontSize: "0.72rem",
+                  color: "#64748B",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  paddingTop: "6px",
+                  borderTop: "1px solid rgba(0,0,0,0.05)",
+                }}
+              >
+                <span style={{ fontWeight: 600 }}>📍 {d.city || "All"}</span>
+                <span>{d.requestCount} RFQs</span>
+              </div>
             </div>
           );
         })}

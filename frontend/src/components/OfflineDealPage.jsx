@@ -234,12 +234,14 @@ function OfflineDealForm() {
             display: "inline-flex",
             alignItems: "center",
             gap: "0.35rem",
-            color: "#000",
+            color: "#171915",
             textDecoration: "none",
-            border: "1.5px solid #000",
-            padding: "0.3rem 0.65rem",
+            border: "1px solid rgba(23, 25, 21, 0.15)",
+            borderRadius: "10px",
+            padding: "0.35rem 0.75rem",
             background: "#fff",
-            boxShadow: "2px 2px 0px #000",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
+            fontWeight: 700,
           }}
         >
           <ArrowLeft size={14} /> Back to Fleet Hub
@@ -255,16 +257,17 @@ function OfflineDealForm() {
       {/* Header Banner */}
       <div
         style={{
-          background: "#FFE66D",
-          border: "3px solid #000",
-          boxShadow: "5px 5px 0px #000",
-          padding: "1.5rem",
+          background: "linear-gradient(135deg, #FFF9D2 0%, #FFE66D 100%)",
+          border: "1px solid rgba(23, 25, 21, 0.12)",
+          borderRadius: "20px",
+          boxShadow: "0 8px 24px -4px rgba(255, 230, 109, 0.35)",
+          padding: "1.75rem",
           marginBottom: "2rem",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           flexWrap: "wrap",
-          gap: "1rem",
+          gap: "1.25rem",
         }}
       >
         <div>
@@ -273,14 +276,15 @@ function OfflineDealForm() {
               display: "inline-flex",
               alignItems: "center",
               gap: "0.4rem",
-              background: "#000",
+              background: "#171915",
               color: "#FFE66D",
-              padding: "0.2rem 0.5rem",
+              padding: "0.25rem 0.65rem",
+              borderRadius: "8px",
               fontWeight: 900,
-              fontSize: "0.75rem",
+              fontSize: "0.72rem",
               textTransform: "uppercase",
               letterSpacing: "0.5px",
-              marginBottom: "0.5rem",
+              marginBottom: "0.6rem",
             }}
           >
             <Zap size={14} /> Direct Offline Booking & Fleet Lock
@@ -290,19 +294,20 @@ function OfflineDealForm() {
               margin: 0,
               fontSize: "1.85rem",
               fontWeight: 900,
-              textTransform: "uppercase",
               letterSpacing: "-0.5px",
+              color: "#171915",
             }}
           >
             Record Offline Rental Deal
           </h1>
           <p
             style={{
-              margin: "0.35rem 0 0 0",
+              margin: "0.4rem 0 0 0",
               fontSize: "0.95rem",
-              color: "#111",
+              color: "#374151",
               maxWidth: "650px",
               fontWeight: 600,
+              lineHeight: 1.5,
             }}
           >
             Renting out items to direct walk-in clients, phone inquiries, or event partners? Lock
@@ -311,22 +316,23 @@ function OfflineDealForm() {
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: "0.75rem" }}>
+        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
           <Link
             href="/dashboard/inventory"
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: "0.4rem",
-              padding: "0.6rem 1rem",
+              padding: "0.65rem 1.15rem",
               background: "#FFF",
-              color: "#000",
-              border: "2px solid #000",
-              boxShadow: "3px 3px 0px #000",
+              color: "#171915",
+              border: "1px solid rgba(23, 25, 21, 0.15)",
+              borderRadius: "12px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
               fontWeight: 800,
               textDecoration: "none",
               textTransform: "uppercase",
-              fontSize: "0.85rem",
+              fontSize: "0.82rem",
             }}
           >
             <Boxes size={16} /> Fleet Hub
@@ -337,15 +343,16 @@ function OfflineDealForm() {
               display: "inline-flex",
               alignItems: "center",
               gap: "0.4rem",
-              padding: "0.6rem 1rem",
+              padding: "0.65rem 1.15rem",
               background: "#4ECDC4",
-              color: "#000",
-              border: "2px solid #000",
-              boxShadow: "3px 3px 0px #000",
+              color: "#171915",
+              border: "1px solid rgba(23, 25, 21, 0.2)",
+              borderRadius: "12px",
+              boxShadow: "0 4px 14px rgba(78, 205, 196, 0.4)",
               fontWeight: 800,
               textDecoration: "none",
               textTransform: "uppercase",
-              fontSize: "0.85rem",
+              fontSize: "0.82rem",
             }}
           >
             <Package size={16} /> + New Resource
@@ -357,10 +364,11 @@ function OfflineDealForm() {
       {successDeal ? (
         <div
           style={{
-            background: "#D4EDDA",
-            border: "3px solid #000",
-            boxShadow: "6px 6px 0px #000",
-            padding: "2rem",
+            background: "linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)",
+            border: "1px solid rgba(16, 185, 129, 0.25)",
+            borderRadius: "20px",
+            boxShadow: "0 10px 30px -6px rgba(16, 185, 129, 0.15)",
+            padding: "2.25rem",
             textAlign: "center",
             maxWidth: "750px",
             margin: "0 auto",
@@ -371,21 +379,21 @@ function OfflineDealForm() {
               width: "60px",
               height: "60px",
               borderRadius: "50%",
-              background: "#28a745",
+              background: "#10B981",
               color: "#fff",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               margin: "0 auto 1rem",
-              border: "2px solid #000",
+              boxShadow: "0 6px 20px rgba(16, 185, 129, 0.35)",
             }}
           >
             <CheckCircle2 size={36} />
           </div>
-          <h2 style={{ fontSize: "1.75rem", fontWeight: 900, margin: "0 0 0.5rem" }}>
+          <h2 style={{ fontSize: "1.75rem", fontWeight: 900, margin: "0 0 0.5rem", color: "#065F46" }}>
             ✓ Offline Deal Successfully Recorded!
           </h2>
-          <p style={{ fontSize: "1rem", color: "#155724", fontWeight: 600, marginBottom: "1.5rem" }}>
+          <p style={{ fontSize: "1rem", color: "#047857", fontWeight: 600, marginBottom: "1.5rem" }}>
             <strong>{successDeal.quantity} unit(s)</strong> of{" "}
             <strong>&quot;{successDeal.listingTitle}&quot;</strong> have been marked rented and deducted from
             your available fleet capacity.
@@ -394,10 +402,12 @@ function OfflineDealForm() {
           <div
             style={{
               background: "#fff",
-              border: "2px solid #000",
-              padding: "1.25rem",
+              border: "1px solid rgba(23, 25, 21, 0.1)",
+              borderRadius: "16px",
+              boxShadow: "0 4px 14px -2px rgba(0,0,0,0.04)",
+              padding: "1.35rem",
               textAlign: "left",
-              marginBottom: "1.5rem",
+              marginBottom: "1.75rem",
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
               gap: "1rem",
@@ -405,24 +415,24 @@ function OfflineDealForm() {
             }}
           >
             <div>
-              <span style={{ color: "#666", fontSize: "0.8rem", textTransform: "uppercase", fontWeight: 700 }}>
+              <span style={{ color: "#666", fontSize: "0.78rem", textTransform: "uppercase", fontWeight: 700 }}>
                 Client
               </span>
-              <div style={{ fontWeight: 800 }}>{successDeal.clientName}</div>
+              <div style={{ fontWeight: 800, marginTop: "2px" }}>{successDeal.clientName}</div>
               <div style={{ color: "#444" }}>{successDeal.clientPhone}</div>
             </div>
             <div>
-              <span style={{ color: "#666", fontSize: "0.8rem", textTransform: "uppercase", fontWeight: 700 }}>
+              <span style={{ color: "#666", fontSize: "0.78rem", textTransform: "uppercase", fontWeight: 700 }}>
                 Commercials
               </span>
-              <div style={{ fontWeight: 800 }}>Rent: {money(successDeal.price)}</div>
+              <div style={{ fontWeight: 800, marginTop: "2px" }}>Rent: {money(successDeal.price)}</div>
               <div style={{ color: "#444" }}>Deposit: {money(successDeal.deposit)}</div>
             </div>
             <div>
-              <span style={{ color: "#666", fontSize: "0.8rem", textTransform: "uppercase", fontWeight: 700 }}>
+              <span style={{ color: "#666", fontSize: "0.78rem", textTransform: "uppercase", fontWeight: 700 }}>
                 Return Due Date
               </span>
-              <div style={{ fontWeight: 800, color: "#d9534f" }}>
+              <div style={{ fontWeight: 800, color: "#d9534f", marginTop: "2px" }}>
                 {new Date(successDeal.end).toLocaleString("en-IN", {
                   dateStyle: "medium",
                   timeStyle: "short",
@@ -436,11 +446,12 @@ function OfflineDealForm() {
             <button
               onClick={resetForm}
               style={{
-                padding: "0.75rem 1.25rem",
+                padding: "0.75rem 1.35rem",
                 background: "#FFE66D",
-                color: "#000",
-                border: "2px solid #000",
-                boxShadow: "3px 3px 0px #000",
+                color: "#171915",
+                border: "1px solid rgba(23, 25, 21, 0.2)",
+                borderRadius: "12px",
+                boxShadow: "0 4px 12px rgba(255, 230, 109, 0.4)",
                 fontWeight: 800,
                 cursor: "pointer",
                 textTransform: "uppercase",
@@ -451,11 +462,12 @@ function OfflineDealForm() {
             <Link
               href="/dashboard/inventory"
               style={{
-                padding: "0.75rem 1.25rem",
+                padding: "0.75rem 1.35rem",
                 background: "#4ECDC4",
-                color: "#000",
-                border: "2px solid #000",
-                boxShadow: "3px 3px 0px #000",
+                color: "#171915",
+                border: "1px solid rgba(23, 25, 21, 0.2)",
+                borderRadius: "12px",
+                boxShadow: "0 4px 14px rgba(78, 205, 196, 0.4)",
                 fontWeight: 800,
                 textDecoration: "none",
                 textTransform: "uppercase",
@@ -469,11 +481,12 @@ function OfflineDealForm() {
             <Link
               href="/dashboard/listings"
               style={{
-                padding: "0.75rem 1.25rem",
+                padding: "0.75rem 1.35rem",
                 background: "#FFF",
-                color: "#000",
-                border: "2px solid #000",
-                boxShadow: "3px 3px 0px #000",
+                color: "#171915",
+                border: "1px solid rgba(23, 25, 21, 0.15)",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
                 fontWeight: 800,
                 textDecoration: "none",
                 textTransform: "uppercase",
@@ -497,17 +510,19 @@ function OfflineDealForm() {
           <div
             style={{
               background: "#FFFFFF",
-              border: "3px solid #000",
-              boxShadow: "5px 5px 0px #000",
-              padding: "1.75rem",
+              border: "1px solid rgba(23, 25, 21, 0.1)",
+              borderRadius: "20px",
+              boxShadow: "0 8px 28px -4px rgba(0,0,0,0.05)",
+              padding: "2rem",
             }}
           >
             {error && (
               <div
                 style={{
-                  background: "#FFD2D2",
-                  color: "#D8000C",
-                  border: "2px solid #000",
+                  background: "#FEE2E2",
+                  color: "#991B1B",
+                  border: "1px solid #FCA5A5",
+                  borderRadius: "12px",
                   padding: "0.85rem 1rem",
                   marginBottom: "1.5rem",
                   fontWeight: 700,
@@ -525,9 +540,11 @@ function OfflineDealForm() {
               {/* STEP 1: ASSET SELECTION */}
               <div
                 style={{
-                  border: "2px solid #000",
-                  padding: "1.25rem",
-                  background: "#F8F9FA",
+                  border: "1px solid rgba(23, 25, 21, 0.08)",
+                  borderRadius: "16px",
+                  padding: "1.35rem",
+                  background: "#FAF9F5",
+                  boxShadow: "0 2px 8px -2px rgba(0,0,0,0.02)",
                 }}
               >
                 <div
@@ -556,12 +573,14 @@ function OfflineDealForm() {
                             style={{
                               display: "inline-block",
                               marginTop: "0.5rem",
-                              padding: "0.5rem 1rem",
+                              padding: "0.55rem 1.15rem",
                               background: "#4ECDC4",
-                              border: "2px solid #000",
+                              border: "1px solid rgba(23, 25, 21, 0.2)",
+                              borderRadius: "10px",
+                              boxShadow: "0 2px 8px rgba(78, 205, 196, 0.3)",
                               fontWeight: 800,
                               textDecoration: "none",
-                              color: "#000",
+                              color: "#171915",
                             }}
                           >
                             + Add Your First Resource
@@ -578,12 +597,14 @@ function OfflineDealForm() {
                           style={{
                             width: "100%",
                             padding: "0.75rem",
-                            border: "2px solid #000",
+                            border: "1.5px solid rgba(23, 25, 21, 0.15)",
+                            borderRadius: "12px",
                             fontWeight: 700,
-                            fontSize: "0.95rem",
+                            fontSize: "0.92rem",
                             background: "#fff",
                             cursor: "pointer",
-                            marginBottom: "0.75rem",
+                            marginBottom: "0.85rem",
+                            outline: "none",
                           }}
                           required
                         >
@@ -602,14 +623,16 @@ function OfflineDealForm() {
                           <div
                             style={{
                               background: "#fff",
-                              border: "1.5px solid #000",
-                              padding: "0.85rem",
+                              border: "1px solid rgba(23, 25, 21, 0.1)",
+                              borderRadius: "12px",
+                              padding: "0.85rem 1rem",
                               display: "flex",
                               justifyContent: "space-between",
                               alignItems: "center",
                               flexWrap: "wrap",
                               gap: "0.75rem",
                               fontSize: "0.85rem",
+                              boxShadow: "0 2px 6px rgba(0,0,0,0.03)",
                             }}
                           >
                             <div>
@@ -624,8 +647,9 @@ function OfflineDealForm() {
                               <span
                                 style={{
                                   background: "#FFE66D",
-                                  border: "1.5px solid #000",
-                                  padding: "0.25rem 0.5rem",
+                                  border: "1px solid rgba(23, 25, 21, 0.15)",
+                                  borderRadius: "8px",
+                                  padding: "0.25rem 0.6rem",
                                   fontWeight: 800,
                                 }}
                               >
@@ -634,8 +658,9 @@ function OfflineDealForm() {
                               <span
                                 style={{
                                   background: "#A8E6CF",
-                                  border: "1.5px solid #000",
-                                  padding: "0.25rem 0.5rem",
+                                  border: "1px solid rgba(23, 25, 21, 0.15)",
+                                  borderRadius: "8px",
+                                  padding: "0.25rem 0.6rem",
                                   fontWeight: 800,
                                 }}
                               >
@@ -653,9 +678,11 @@ function OfflineDealForm() {
               {/* STEP 2: CLIENT INFORMATION */}
               <div
                 style={{
-                  border: "2px solid #000",
-                  padding: "1.25rem",
-                  background: "#F8F9FA",
+                  border: "1px solid rgba(23, 25, 21, 0.08)",
+                  borderRadius: "16px",
+                  padding: "1.35rem",
+                  background: "#FAF9F5",
+                  boxShadow: "0 2px 8px -2px rgba(0,0,0,0.02)",
                 }}
               >
                 <div
@@ -725,9 +752,11 @@ function OfflineDealForm() {
               {/* STEP 3: RENTAL SCHEDULE & TIMELINE */}
               <div
                 style={{
-                  border: "2px solid #000",
-                  padding: "1.25rem",
-                  background: "#F8F9FA",
+                  border: "1px solid rgba(23, 25, 21, 0.08)",
+                  borderRadius: "16px",
+                  padding: "1.35rem",
+                  background: "#FAF9F5",
+                  boxShadow: "0 2px 8px -2px rgba(0,0,0,0.02)",
                 }}
               >
                 <div
@@ -768,12 +797,13 @@ function OfflineDealForm() {
                         onClick={() => setPresetDuration(p.days)}
                         style={{
                           background: "#fff",
-                          border: "1.5px solid #000",
-                          padding: "0.2rem 0.5rem",
+                          border: "1px solid rgba(23, 25, 21, 0.15)",
+                          borderRadius: "8px",
+                          padding: "0.25rem 0.6rem",
                           fontWeight: 700,
                           fontSize: "0.75rem",
                           cursor: "pointer",
-                          boxShadow: "1.5px 1.5px 0px #000",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.04)",
                         }}
                       >
                         {p.label}
@@ -826,9 +856,11 @@ function OfflineDealForm() {
               {/* STEP 4: COMMERCIAL TERMS & PAYMENT */}
               <div
                 style={{
-                  border: "2px solid #000",
-                  padding: "1.25rem",
-                  background: "#F8F9FA",
+                  border: "1px solid rgba(23, 25, 21, 0.08)",
+                  borderRadius: "16px",
+                  padding: "1.35rem",
+                  background: "#FAF9F5",
+                  boxShadow: "0 2px 8px -2px rgba(0,0,0,0.02)",
                 }}
               >
                 <div
@@ -942,7 +974,7 @@ function OfflineDealForm() {
                   display: "flex",
                   gap: "1rem",
                   justifyContent: "flex-end",
-                  borderTop: "2px solid #000",
+                  borderTop: "1px solid rgba(23, 25, 21, 0.1)",
                   paddingTop: "1.25rem",
                 }}
               >
@@ -952,9 +984,10 @@ function OfflineDealForm() {
                   style={{
                     padding: "0.75rem 1.5rem",
                     background: "#fff",
-                    color: "#000",
-                    border: "2px solid #000",
-                    boxShadow: "3px 3px 0px #000",
+                    color: "#171915",
+                    border: "1px solid rgba(23, 25, 21, 0.15)",
+                    borderRadius: "12px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
                     fontWeight: 800,
                     cursor: "pointer",
                     textTransform: "uppercase",
@@ -968,9 +1001,10 @@ function OfflineDealForm() {
                   style={{
                     padding: "0.75rem 1.75rem",
                     background: "#FFE66D",
-                    color: "#000",
-                    border: "2px solid #000",
-                    boxShadow: "4px 4px 0px #000",
+                    color: "#171915",
+                    border: "1px solid rgba(23, 25, 21, 0.2)",
+                    borderRadius: "12px",
+                    boxShadow: "0 4px 14px rgba(255, 230, 109, 0.45)",
                     fontWeight: 900,
                     cursor: "pointer",
                     textTransform: "uppercase",
@@ -991,9 +1025,10 @@ function OfflineDealForm() {
           <div
             style={{
               background: "#FFFDF8",
-              border: "3px solid #000",
-              boxShadow: "5px 5px 0px #000",
-              padding: "1.5rem",
+              border: "1px solid rgba(23, 25, 21, 0.1)",
+              borderRadius: "20px",
+              boxShadow: "0 8px 24px -4px rgba(0,0,0,0.06)",
+              padding: "1.75rem",
               position: "sticky",
               top: "1.5rem",
             }}
@@ -1004,8 +1039,8 @@ function OfflineDealForm() {
                 fontSize: "1.1rem",
                 fontWeight: 900,
                 textTransform: "uppercase",
-                borderBottom: "2px solid #000",
-                paddingBottom: "0.5rem",
+                borderBottom: "1px solid rgba(23, 25, 21, 0.1)",
+                paddingBottom: "0.6rem",
               }}
             >
               Deal Summary & Telemetry
@@ -1026,7 +1061,7 @@ function OfflineDealForm() {
                   display: "flex",
                   justifyContent: "space-between",
                   padding: "0.5rem 0",
-                  borderBottom: "1px dashed #CCC",
+                  borderBottom: "1px dashed rgba(23, 25, 21, 0.12)",
                 }}
               >
                 <span>Units to Lock:</span>
@@ -1038,7 +1073,7 @@ function OfflineDealForm() {
                   display: "flex",
                   justifyContent: "space-between",
                   padding: "0.5rem 0",
-                  borderBottom: "1px dashed #CCC",
+                  borderBottom: "1px dashed rgba(23, 25, 21, 0.12)",
                 }}
               >
                 <span>Client Name:</span>
@@ -1050,7 +1085,7 @@ function OfflineDealForm() {
                   display: "flex",
                   justifyContent: "space-between",
                   padding: "0.5rem 0",
-                  borderBottom: "1px dashed #CCC",
+                  borderBottom: "1px dashed rgba(23, 25, 21, 0.12)",
                 }}
               >
                 <span>Rental Duration:</span>
@@ -1062,7 +1097,7 @@ function OfflineDealForm() {
                   display: "flex",
                   justifyContent: "space-between",
                   padding: "0.5rem 0",
-                  borderBottom: "1px dashed #CCC",
+                  borderBottom: "1px dashed rgba(23, 25, 21, 0.12)",
                 }}
               >
                 <span>Agreed Rent:</span>
@@ -1076,7 +1111,7 @@ function OfflineDealForm() {
                   display: "flex",
                   justifyContent: "space-between",
                   padding: "0.5rem 0",
-                  borderBottom: "2px solid #000",
+                  borderBottom: "1px solid rgba(23, 25, 21, 0.15)",
                 }}
               >
                 <span>Security Deposit:</span>
@@ -1086,8 +1121,10 @@ function OfflineDealForm() {
               <div
                 style={{
                   background: "#FFE66D",
-                  border: "2px solid #000",
-                  padding: "0.75rem",
+                  border: "1px solid rgba(23, 25, 21, 0.15)",
+                  borderRadius: "14px",
+                  boxShadow: "0 4px 12px rgba(255, 230, 109, 0.35)",
+                  padding: "0.85rem 1rem",
                   fontWeight: 800,
                   display: "flex",
                   justifyContent: "space-between",
@@ -1104,17 +1141,21 @@ function OfflineDealForm() {
               <div
                 style={{
                   marginTop: "0.5rem",
-                  background: "#D4EDDA",
-                  border: "1.5px solid #000",
-                  padding: "0.75rem",
+                  background: "#ECFDF5",
+                  border: "1px solid rgba(16, 185, 129, 0.25)",
+                  borderRadius: "14px",
+                  padding: "0.85rem 1rem",
                   fontSize: "0.8rem",
                   lineHeight: "1.4",
+                  boxShadow: "0 2px 8px rgba(16, 185, 129, 0.08)",
                 }}
               >
-                <div style={{ fontWeight: 800, marginBottom: "0.25rem", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                <div style={{ fontWeight: 800, marginBottom: "0.25rem", display: "flex", alignItems: "center", gap: "0.35rem", color: "#065F46" }}>
                   <Shield size={14} /> Automated Return Alert
                 </div>
-                Utlio&apos;s background scheduler will monitor this booking and send you a notification when the rental expires so you can inspect the returned asset and immediately repost it.
+                <span style={{ color: "#047857" }}>
+                  Utlio&apos;s background scheduler will monitor this booking and send you a notification when the rental expires so you can inspect the returned asset and immediately repost it.
+                </span>
               </div>
             </div>
           </div>
@@ -1126,19 +1167,23 @@ function OfflineDealForm() {
 
 const labelStyle = {
   display: "block",
-  fontSize: "0.8rem",
+  fontSize: "0.78rem",
   fontWeight: 800,
   textTransform: "uppercase",
   marginBottom: "0.35rem",
   letterSpacing: "0.3px",
+  color: "#374151",
 };
 
 const inputStyle = {
   width: "100%",
   padding: "0.65rem 0.85rem",
-  border: "2px solid #000",
-  fontWeight: 700,
+  border: "1.5px solid rgba(23, 25, 21, 0.15)",
+  borderRadius: "12px",
+  fontWeight: 600,
   fontSize: "0.9rem",
   background: "#fff",
   boxSizing: "border-box",
+  outline: "none",
+  transition: "all 0.15s ease",
 };

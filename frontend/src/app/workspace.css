@@ -19,13 +19,13 @@
   --rose: #ff4757;
   --emerald: #2ed573;
   --sage: #9ca88b;
-  --border-comic: 1.5px solid var(--ink);
-  --border-width: 1.5px;
-  --shadow-sm: 1.5px 1.5px 0 var(--ink);
-  --shadow-md: 2px 2px 0 var(--ink);
-  --shadow-lg: 2.5px 3px 0 var(--ink);
-  --shadow-xl: 3px 4px 0 var(--ink);
-  --shadow-hover: 2.5px 3px 0 var(--ink);
+  --border-comic: 1px solid rgba(30, 30, 30, 0.15);
+  --border-width: 1px;
+  --shadow-sm: 0 2px 6px -1px rgba(23, 25, 21, 0.05);
+  --shadow-md: 0 4px 16px -2px rgba(23, 25, 21, 0.06);
+  --shadow-lg: 0 8px 24px -4px rgba(23, 25, 21, 0.08);
+  --shadow-xl: 0 12px 32px -4px rgba(23, 25, 21, 0.1);
+  --shadow-hover: 0 8px 20px -3px rgba(23, 25, 21, 0.08);
 }
 * {
   box-sizing: border-box;
@@ -251,7 +251,7 @@ ul {
 }
 .panel {
   background: white;
-  border: 1.5px solid var(--ink);
+  border: 1px solid rgba(23, 25, 21, 0.12);
   border-radius: 20px;
   box-shadow: var(--shadow-md);
   padding: 25px;
@@ -934,7 +934,7 @@ ul {
   position: relative;
   display: grid;
   place-items: center;
-  border-bottom: 1.5px solid var(--ink);
+  border-bottom: 1px solid rgba(23, 25, 21, 0.1);
   overflow: hidden;
 }
 .listing-cover > span:not(.badge) {
@@ -3074,15 +3074,15 @@ button.landing-mobile-toggle {
 /* Feature Output Visuals & Chart Containers */
 .feature-chart-panel {
   margin: 1.25rem 0;
-  padding: 1.25rem;
+  padding: 1.35rem;
   background: #faf8f5;
   border-radius: 18px;
-  border: 1.5px solid var(--ink);
-  box-shadow: 2px 2px 0 var(--ink);
+  border: 1px solid rgba(23, 25, 21, 0.12);
+  box-shadow: 0 4px 18px -2px rgba(0, 0, 0, 0.05);
   transition: box-shadow 180ms ease, transform 180ms ease;
 }
 .feature-chart-panel:hover {
-  box-shadow: 3px 4px 0 var(--ink);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.08);
   transform: translateY(-1.5px);
 }
 .feature-chart-header {
@@ -3112,17 +3112,17 @@ button.landing-mobile-toggle {
   gap: 8px;
   padding: 8px 14px;
   background: #fff;
-  border: 1.5px solid var(--ink);
-  border-radius: 10px;
+  border: 1px solid rgba(23, 25, 21, 0.12);
+  border-radius: 12px;
   font-size: 0.85rem;
   font-weight: 750;
   white-space: nowrap;
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: 0 2px 6px -1px rgba(23, 25, 21, 0.04);
   transition: transform 160ms ease, box-shadow 160ms ease;
 }
 .feature-flow-step:hover {
   transform: translateY(-1.5px);
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: 0 4px 12px -2px rgba(23, 25, 21, 0.08);
 }
 .feature-flow-step.active {
   background: var(--yellow);
@@ -3142,11 +3142,11 @@ button.landing-mobile-toggle {
   margin: 14px 0;
 }
 .feature-metric-card {
-  padding: 12px 14px;
+  padding: 14px 16px;
   background: #fff;
-  border: 1.5px solid var(--ink);
-  border-radius: 12px;
-  box-shadow: 2px 2px 0 var(--ink);
+  border: 1px solid rgba(23, 25, 21, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -3154,7 +3154,7 @@ button.landing-mobile-toggle {
 }
 .feature-metric-card:hover {
   transform: translateY(-1.5px);
-  box-shadow: 3px 4px 0 var(--ink);
+  box-shadow: 0 8px 22px -4px rgba(0, 0, 0, 0.07);
 }
 .feature-metric-card span {
   font-size: 0.75rem;
@@ -3174,10 +3174,10 @@ button.landing-mobile-toggle {
 }
 .chart-tooltip-neo {
   background: #fffef8;
-  border: 1.5px solid var(--ink);
-  border-radius: 10px;
+  border: 1px solid rgba(23, 25, 21, 0.12);
+  border-radius: 12px;
   padding: 8px 12px;
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.1);
   font-weight: 750;
   font-size: 0.85rem;
 }

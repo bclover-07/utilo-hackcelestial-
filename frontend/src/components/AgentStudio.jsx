@@ -5,8 +5,9 @@ import { Activity, ArrowUpRight, BookOpen, Bot, CheckCheck, Clock3, Database, Se
 import { api } from "@/lib/api";
 import {
   ResponsiveContainer,
-  BarChart,
+  ComposedChart,
   Bar,
+  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -36,43 +37,169 @@ function AgentExecutionTelemetryChart({ summary }) {
   if (!summary || summary.length === 0) return null;
 
   const chartData = summary.map((g) => ({
-    name: runName(g._id)?.length > 15 ? `${runName(g._id).slice(0, 15)}…` : runName(g._id),
+    name: runName(g._id)?.length > 18 ? `${runName(g._id).slice(0, 18)}…` : runName(g._id),
     complete: g.complete || 0,
     partial: g.partial || 0,
     failed: g.failed || 0,
     avgSec: Number(((g.averageMs || 0) / 1000).toFixed(1)),
   }));
 
+  const totalRuns = summary.reduce((acc, s) => acc + (s.runs || 0), 0);
+
   return (
-    <div className="feature-chart-panel" style={{ background: "#FAF8F5", margin: "16px 0" }}>
-      <div className="feature-chart-header">
+    <div
+      style={{
+        background: "linear-gradient(135deg, #FFFFFF 0%, #FBF9F5 100%)",
+        border: "1px solid rgba(23, 25, 21, 0.12)",
+        borderRadius: "20px",
+        boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.04), 0 2px 8px -2px rgba(0, 0, 0, 0.02)",
+        padding: "1.5rem",
+        margin: "1.25rem 0",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "10px",
+          marginBottom: "1.25rem",
+          paddingBottom: "0.85rem",
+          borderBottom: "1px solid rgba(23, 25, 21, 0.08)",
+        }}
+      >
         <div>
-          <span className="eyebrow" style={{ color: "#7B61A8", marginBottom: 2 }}>TELEMETRY & RELIABILITY MATRIX</span>
-          <h4 className="feature-chart-title">Agent Execution Outcomes & Latency</h4>
+          <span
+            style={{
+              fontSize: "0.72rem",
+              fontWeight: 800,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "#7B61A8",
+              display: "inline-block",
+              marginBottom: 3,
+            }}
+          >
+            TELEMETRY & RELIABILITY MATRIX
+          </span>
+          <h4 style={{ margin: 0, fontSize: "1.15rem", fontWeight: 800, color: "#171915", letterSpacing: "-0.02em" }}>
+            Agent Execution Outcomes & Latency
+          </h4>
         </div>
-        <span className="badge" style={{ background: "#C3B1E140", border: "1.5px solid #171915" }}>
-          {summary.reduce((acc, s) => acc + (s.runs || 0), 0)} Total Executions
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            fontSize: "0.78rem",
+            fontWeight: 700,
+            padding: "5px 12px",
+            borderRadius: "9999px",
+            background: "#F3E8FF",
+            color: "#6B21A8",
+            border: "1px solid #D8B4FE",
+          }}
+        >
+          <Activity size={13} />
+          {totalRuns} Total Execution{totalRuns === 1 ? "" : "s"}
         </span>
       </div>
 
-      <div style={{ width: "100%", height: 210 }}>
-        <ResponsiveContainer>
-          <BarChart data={chartData} barGap={4}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E0CF" />
-            <XAxis dataKey="name" stroke="#171915" tick={{ fontSize: 10, fontWeight: 700 }} />
-            <YAxis stroke="#171915" tick={{ fontSize: 10 }} />
+      <div style={{ width: "100%", height: 230 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={chartData} margin={{ top: 10, right: 20, left: -10, bottom: 5 }} barGap={6}>
+            <defs>
+              <linearGradient id="completeGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#34D399" />
+                <stop offset="100%" stopColor="#059669" />
+              </linearGradient>
+              <linearGradient id="partialGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#FBBF24" />
+                <stop offset="100%" stopColor="#D97706" />
+              </linearGradient>
+              <linearGradient id="failedGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#F87171" />
+                <stop offset="100%" stopColor="#DC2626" />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ECE6D8" />
+            <XAxis
+              dataKey="name"
+              stroke="#64748B"
+              tickLine={false}
+              tick={{ fontSize: 11, fontWeight: 700, fill: "#171915" }}
+            />
+            <YAxis
+              yAxisId="runs"
+              stroke="#64748B"
+              tickLine={false}
+              tick={{ fontSize: 10, fill: "#64748B" }}
+              allowDecimals={false}
+            />
+            <YAxis
+              yAxisId="latency"
+              orientation="right"
+              stroke="#8B5CF6"
+              tickLine={false}
+              tick={{ fontSize: 10, fill: "#7C3AED" }}
+              tickFormatter={(v) => `${v}s`}
+            />
             <Tooltip
               formatter={(val, name) => [
                 name === "avgSec" ? `${val}s avg latency` : `${val} runs`,
                 name === "complete" ? "Complete" : name === "partial" ? "Partial" : name === "failed" ? "Failed" : "Avg Latency"
               ]}
-              contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, fontWeight: 700 }}
+              contentStyle={{
+                background: "#FFFFFF",
+                border: "1px solid rgba(0,0,0,0.08)",
+                borderRadius: 12,
+                boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                fontWeight: 700,
+                fontSize: "0.82rem",
+              }}
             />
-            <Legend wrapperStyle={{ fontSize: 11, fontWeight: 700, paddingTop: 4 }} />
-            <Bar dataKey="complete" name="Complete" fill="#2ed573" stroke="#171915" strokeWidth={1} radius={[4, 4, 0, 0]} stackId="runs" />
-            <Bar dataKey="partial" name="Partial" fill="#ffd13b" stroke="#171915" strokeWidth={1} radius={[4, 4, 0, 0]} stackId="runs" />
-            <Bar dataKey="failed" name="Failed" fill="#ff4757" stroke="#171915" strokeWidth={1} radius={[4, 4, 0, 0]} stackId="runs" />
-          </BarChart>
+            <Legend
+              wrapperStyle={{ fontSize: 11, fontWeight: 700, paddingTop: 8 }}
+            />
+            <Bar
+              yAxisId="runs"
+              dataKey="complete"
+              name="Complete"
+              fill="url(#completeGrad)"
+              maxBarSize={42}
+              radius={[6, 6, 0, 0]}
+              stackId="runs"
+            />
+            <Bar
+              yAxisId="runs"
+              dataKey="partial"
+              name="Partial"
+              fill="url(#partialGrad)"
+              maxBarSize={42}
+              radius={[6, 6, 0, 0]}
+              stackId="runs"
+            />
+            <Bar
+              yAxisId="runs"
+              dataKey="failed"
+              name="Failed"
+              fill="url(#failedGrad)"
+              maxBarSize={42}
+              radius={[6, 6, 0, 0]}
+              stackId="runs"
+            />
+            <Line
+              yAxisId="latency"
+              type="monotone"
+              dataKey="avgSec"
+              name="Avg Latency (s)"
+              stroke="#8B5CF6"
+              strokeWidth={2.5}
+              dot={{ r: 4, fill: "#8B5CF6", stroke: "#FFFFFF", strokeWidth: 2 }}
+              activeDot={{ r: 6 }}
+            />
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </div>
@@ -383,14 +510,113 @@ export default function AgentStudio({ admin = false }) {
               {data.summary?.length > 0 && <AgentExecutionTelemetryChart summary={data.summary} />}
 
               {data.summary?.length > 0 && (
-                <div className="run-summary">
-                  {data.summary.map((group) => (
-                    <div key={group._id}>
-                      <strong>{runName(group._id)}</strong>
-                      <span>{group.runs} runs · {group.complete} complete · {group.partial} partial · {group.failed} failed</span>
-                      <small><Clock3 size={12} /> {(group.averageMs / 1000).toFixed(1)}s average elapsed</small>
-                    </div>
-                  ))}
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                    gap: "14px",
+                    margin: "1.25rem 0",
+                  }}
+                >
+                  {data.summary.map((group) => {
+                    const isPerfect = group.failed === 0;
+                    return (
+                      <div
+                        key={group._id}
+                        style={{
+                          background: "#FFFFFF",
+                          border: "1px solid rgba(23, 25, 21, 0.1)",
+                          borderRadius: "16px",
+                          padding: "1.25rem",
+                          boxShadow: "0 4px 16px -2px rgba(0, 0, 0, 0.04)",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "12px",
+                        }}
+                      >
+                        {/* Header: Agent Name & Reliability Badge */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <div
+                              style={{
+                                width: "36px",
+                                height: "36px",
+                                borderRadius: "10px",
+                                background: "#EDE9FE",
+                                color: "#6D28D9",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexShrink: 0,
+                              }}
+                            >
+                              <Bot size={18} />
+                            </div>
+                            <div>
+                              <strong style={{ fontSize: "1rem", fontWeight: 800, color: "#171915", display: "block" }}>
+                                {runName(group._id)}
+                              </strong>
+                              <span style={{ fontSize: "0.72rem", color: "#64748B", fontWeight: 500 }}>
+                                Observed Telemetry Pipeline
+                              </span>
+                            </div>
+                          </div>
+
+                          <span
+                            style={{
+                              fontSize: "0.72rem",
+                              fontWeight: 800,
+                              padding: "4px 10px",
+                              borderRadius: "9999px",
+                              background: isPerfect ? "#DCFCE7" : "#FEE2E2",
+                              color: isPerfect ? "#166534" : "#991B1B",
+                              border: isPerfect ? "1px solid #86EFAC" : "1px solid #FCA5A5",
+                            }}
+                          >
+                            {isPerfect ? "✓ 100% Reliable" : `${group.failed} Failed`}
+                          </span>
+                        </div>
+
+                        {/* Perfectly Aligned Metrics Row */}
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(5, 1fr)",
+                            gap: "6px",
+                            paddingTop: "10px",
+                            borderTop: "1px solid rgba(0,0,0,0.06)",
+                          }}
+                        >
+                          <div style={{ padding: "6px 4px", background: "#F8FAFC", borderRadius: "10px", textAlign: "center" }}>
+                            <div style={{ fontSize: "0.64rem", fontWeight: 700, color: "#64748B", textTransform: "uppercase" }}>Runs</div>
+                            <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "#171915", marginTop: "2px" }}>{group.runs}</div>
+                          </div>
+
+                          <div style={{ padding: "6px 4px", background: "#F0FDF4", borderRadius: "10px", textAlign: "center" }}>
+                            <div style={{ fontSize: "0.64rem", fontWeight: 700, color: "#166534", textTransform: "uppercase" }}>Success</div>
+                            <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "#16A34A", marginTop: "2px" }}>{group.complete}</div>
+                          </div>
+
+                          <div style={{ padding: "6px 4px", background: "#FFFBEB", borderRadius: "10px", textAlign: "center" }}>
+                            <div style={{ fontSize: "0.64rem", fontWeight: 700, color: "#92400E", textTransform: "uppercase" }}>Partial</div>
+                            <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "#D97706", marginTop: "2px" }}>{group.partial}</div>
+                          </div>
+
+                          <div style={{ padding: "6px 4px", background: group.failed > 0 ? "#FEF2F2" : "#F8FAFC", borderRadius: "10px", textAlign: "center" }}>
+                            <div style={{ fontSize: "0.64rem", fontWeight: 700, color: group.failed > 0 ? "#991B1B" : "#64748B", textTransform: "uppercase" }}>Failed</div>
+                            <div style={{ fontSize: "1.05rem", fontWeight: 800, color: group.failed > 0 ? "#DC2626" : "#94A3B8", marginTop: "2px" }}>{group.failed}</div>
+                          </div>
+
+                          <div style={{ padding: "6px 4px", background: "#FAF5FF", borderRadius: "10px", textAlign: "center" }}>
+                            <div style={{ fontSize: "0.64rem", fontWeight: 700, color: "#6B21A8", textTransform: "uppercase" }}>Avg Latency</div>
+                            <div style={{ fontSize: "0.92rem", fontWeight: 800, color: "#7C3AED", marginTop: "4px", display: "flex", alignItems: "center", justifyContent: "center", gap: "2px" }}>
+                              <Clock3 size={11} /> {(group.averageMs / 1000).toFixed(1)}s
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 

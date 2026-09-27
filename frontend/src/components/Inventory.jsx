@@ -65,10 +65,10 @@ function FleetInventoryAnalytics({ listings }) {
           <h3 className="feature-chart-title">Resource Inventory Fleet Telemetry</h3>
         </div>
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-          <span className="badge" style={{ background: "#4ECDC440", border: "1.5px solid #171915" }}>
+          <span className="badge" style={{ background: "rgba(78, 205, 196, 0.18)", color: "#0f766e", border: "1px solid rgba(78, 205, 196, 0.35)", borderRadius: "10px", fontWeight: 700 }}>
             {listings.length} Listed Assets ({totalUnits} Units)
           </span>
-          <span className="badge" style={{ background: "#FFE66D", border: "1.5px solid #171915" }}>
+          <span className="badge" style={{ background: "rgba(255, 230, 109, 0.3)", color: "#854d0e", border: "1px solid rgba(245, 158, 11, 0.3)", borderRadius: "10px", fontWeight: 700 }}>
             Fleet Capital Value: {money(totalValue)}
           </span>
         </div>
@@ -79,13 +79,13 @@ function FleetInventoryAnalytics({ listings }) {
           <ResponsiveContainer>
             <BarChart data={catData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E0CF" />
-              <XAxis dataKey="name" stroke="#171915" tick={{ fontSize: 10, fontWeight: 700 }} />
-              <YAxis stroke="#171915" tick={{ fontSize: 10 }} />
+              <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 10, fontWeight: 700 }} />
+              <YAxis stroke="#64748b" tick={{ fontSize: 10 }} />
               <Tooltip
                 formatter={(val) => [`${val} Units`, "Stock Capacity"]}
-                contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, boxShadow: "2px 2px 0 #171915", fontWeight: 700 }}
+                contentStyle={{ background: "#ffffff", border: "1px solid rgba(23, 25, 21, 0.12)", borderRadius: 12, boxShadow: "0 6px 20px -3px rgba(0,0,0,0.1)", fontWeight: 700 }}
               />
-              <Bar dataKey="units" name="Fleet Units" fill="#4ECDC4" stroke="#171915" strokeWidth={1.5} radius={[4, 4, 0, 0]}>
+              <Bar dataKey="units" name="Fleet Units" fill="#4ECDC4" radius={[6, 6, 0, 0]}>
                 {catData.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={FLEET_COLORS[index % FLEET_COLORS.length]} />
                 ))}
@@ -95,23 +95,23 @@ function FleetInventoryAnalytics({ listings }) {
         </div>
 
         <div className="feature-metrics-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
-          <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
-            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#2ed573", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Active Listings</span>
+          <div className="feature-metric-card" style={{ border: "1px solid rgba(23, 25, 21, 0.1)", borderRadius: "16px", boxShadow: "0 4px 14px -2px rgba(23, 25, 21, 0.05)" }}>
+            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#2ed573", display: "inline-block", marginRight: 6 }} />Active Listings</span>
             <strong>{activeCount} live</strong>
             <small>Open for RFQ match</small>
           </div>
-          <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
-            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ffd13b", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Paused Assets</span>
+          <div className="feature-metric-card" style={{ border: "1px solid rgba(23, 25, 21, 0.1)", borderRadius: "16px", boxShadow: "0 4px 14px -2px rgba(23, 25, 21, 0.05)" }}>
+            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ffd13b", display: "inline-block", marginRight: 6 }} />Paused Assets</span>
             <strong>{pausedCount} paused</strong>
             <small>Temporarily withheld</small>
           </div>
-          <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
-            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#60c5f1", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Total Units</span>
+          <div className="feature-metric-card" style={{ border: "1px solid rgba(23, 25, 21, 0.1)", borderRadius: "16px", boxShadow: "0 4px 14px -2px rgba(23, 25, 21, 0.05)" }}>
+            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#60c5f1", display: "inline-block", marginRight: 6 }} />Total Units</span>
             <strong>{totalUnits} units</strong>
             <small>Across {Object.keys(catMap).length} categories</small>
           </div>
-          <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
-            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff6b6b", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Avg Asset Yield</span>
+          <div className="feature-metric-card" style={{ border: "1px solid rgba(23, 25, 21, 0.1)", borderRadius: "16px", boxShadow: "0 4px 14px -2px rgba(23, 25, 21, 0.05)" }}>
+            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff6b6b", display: "inline-block", marginRight: 6 }} />Avg Asset Yield</span>
             <strong>{money(Math.round(totalValue / (listings.length || 1)))}</strong>
             <small>Per active listing</small>
           </div>
@@ -273,19 +273,31 @@ export function Listings() {
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
           <Link
             className="button"
-            style={{ background: "#FFE66D", color: "#000", fontWeight: 800, border: "2px solid #000" }}
+            style={{
+              background: "#FFE66D",
+              color: "#171915",
+              fontWeight: 800,
+              border: "1px solid rgba(23, 25, 21, 0.2)",
+              borderRadius: "12px",
+              boxShadow: "0 4px 12px rgba(255, 230, 109, 0.4)",
+            }}
             href="/dashboard/inventory/offline-deal"
           >
             ⚡ Record offline deal
           </Link>
           <Link
             className="button quiet"
-            style={{ border: "2px solid #000", fontWeight: 700 }}
+            style={{
+              border: "1px solid rgba(23, 25, 21, 0.15)",
+              borderRadius: "12px",
+              fontWeight: 700,
+              boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
+            }}
             href="/dashboard/inventory"
           >
             📦 Fleet Hub
           </Link>
-          <Link className="button" href="/dashboard/listings/create">
+          <Link className="button" style={{ borderRadius: "12px" }} href="/dashboard/listings/create">
             + List a resource
           </Link>
         </div>
@@ -309,11 +321,13 @@ export function Listings() {
                     className="button"
                     style={{
                       background: "#FFE66D",
-                      color: "#000",
+                      color: "#171915",
                       fontWeight: 800,
-                      border: "1.5px solid #000",
+                      border: "1px solid rgba(23, 25, 21, 0.2)",
+                      borderRadius: "8px",
+                      boxShadow: "0 2px 6px rgba(255, 230, 109, 0.3)",
                       fontSize: "0.8rem",
-                      padding: "0.3rem 0.6rem",
+                      padding: "0.3rem 0.65rem",
                     }}
                     href={`/dashboard/inventory/offline-deal?listingId=${l._id}`}
                   >
@@ -838,13 +852,13 @@ function AvailabilityOccupancyTimeline({ blocks }) {
   }));
 
   return (
-    <div className="feature-chart-panel" style={{ background: "#FAF8F5", margin: "14px 0" }}>
+    <div className="feature-chart-panel" style={{ background: "#FAF8F5", margin: "14px 0", border: "1px solid rgba(23, 25, 21, 0.1)", borderRadius: "18px", boxShadow: "0 4px 16px -2px rgba(23, 25, 21, 0.05)" }}>
       <div className="feature-chart-header">
         <div>
           <span className="eyebrow" style={{ color: "#7B61A8", marginBottom: 2 }}>OCCUPANCY DENSITY</span>
           <h4 className="feature-chart-title">Reserved Units by Block Event</h4>
         </div>
-        <span className="badge" style={{ background: "#FFE66D", border: "1.5px solid #171915" }}>
+        <span className="badge" style={{ background: "rgba(255, 230, 109, 0.35)", color: "#854d0e", border: "1px solid rgba(245, 158, 11, 0.35)", borderRadius: "10px", fontWeight: 700 }}>
           {blocks.length} Active Blocks
         </span>
       </div>
@@ -852,13 +866,13 @@ function AvailabilityOccupancyTimeline({ blocks }) {
         <ResponsiveContainer>
           <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E0CF" />
-            <XAxis dataKey="name" stroke="#171915" tick={{ fontSize: 10, fontWeight: 700 }} />
-            <YAxis stroke="#171915" tick={{ fontSize: 10 }} />
+            <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 10, fontWeight: 700 }} />
+            <YAxis stroke="#64748b" tick={{ fontSize: 10 }} />
             <Tooltip
               formatter={(val, name, item) => [`${val} Units (${item.payload.type})`, "Reserved Volume"]}
-              contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, boxShadow: "2px 2px 0 #171915", fontWeight: 700 }}
+              contentStyle={{ background: "#ffffff", border: "1px solid rgba(23, 25, 21, 0.12)", borderRadius: 12, boxShadow: "0 6px 20px -3px rgba(0,0,0,0.1)", fontWeight: 700 }}
             />
-            <Bar dataKey="quantity" fill="#FF6B6B" stroke="#171915" strokeWidth={1.5} radius={[4, 4, 0, 0]} />
+            <Bar dataKey="quantity" fill="#f43f5e" radius={[6, 6, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -913,17 +927,17 @@ function AvailabilityDetail({ id, listing }) {
 
   return (
     <div className="split-layout">
-      <section className="panel" style={{ flex: 2, background: '#fff', border: '2px solid #171915' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h2 style={{ margin: 0 }}>Calendar</h2>
+      <section className="panel" style={{ flex: 2, background: '#fff', border: '1px solid rgba(23, 25, 21, 0.12)', borderRadius: '20px', boxShadow: '0 4px 20px -2px rgba(23, 25, 21, 0.05)', padding: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+          <h2 style={{ margin: 0, fontSize: '1.35rem' }}>Calendar & Bookings</h2>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <button className="quiet" onClick={() => setCurrentDate(new Date(year, month - 1, 1))}>←</button>
-            <strong style={{ minWidth: '150px', textAlign: 'center', fontSize: '1.1rem' }}>{currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</strong>
+            <strong style={{ minWidth: '150px', textAlign: 'center', fontSize: '1.05rem', fontWeight: 800 }}>{currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</strong>
             <button className="quiet" onClick={() => setCurrentDate(new Date(year, month + 1, 1))}>→</button>
           </div>
         </div>
         
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', textAlign: 'center', fontWeight: 800, paddingBottom: '8px', borderBottom: '2px solid #171915' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', textAlign: 'center', fontWeight: 800, paddingBottom: '10px', borderBottom: '1px solid rgba(23, 25, 21, 0.1)', color: '#64748b', fontSize: '0.85rem' }}>
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <div key={d}>{d}</div>)}
         </div>
         
@@ -933,7 +947,7 @@ function AvailabilityDetail({ id, listing }) {
               {data && data.length > 0 && (
                 <AvailabilityOccupancyTimeline blocks={data} />
               )}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', marginTop: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', marginTop: '14px' }}>
                 {days.map((dateItem, i) => {
                   if (!dateItem) return <div key={`empty-${i}`} style={{ padding: '20px', background: 'transparent' }} />
                   const dayBlocks = getBlocksForDay(dateItem);
@@ -949,28 +963,28 @@ function AvailabilityDetail({ id, listing }) {
                       key={i} 
                       onClick={() => setSelectedDate(dateItem)}
                       style={{ 
-                        padding: '4px',
-                        minHeight: '65px',
-                        background: isSelected ? '#FFE66D' : (isFull ? '#FF6B6B' : (isPartial ? '#FFB347' : '#F9F9F9')),
-                        border: isSelected ? '2px solid #171915' : '1px solid #ddd',
-                        borderRadius: '6px',
+                        padding: '8px 4px',
+                        minHeight: '72px',
+                        background: isSelected ? 'linear-gradient(135deg, #fffbeb, #fef3c7)' : (isFull ? '#fee2e2' : (isPartial ? '#ffedd5' : '#f8fafc')),
+                        border: isSelected ? '1.5px solid #f59e0b' : '1px solid rgba(23, 25, 21, 0.08)',
+                        borderRadius: '14px',
                         cursor: 'pointer',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        transition: 'transform 0.1s ease',
-                        transform: isSelected ? 'scale(1.03)' : 'none',
+                        transition: 'all 0.15s ease',
+                        transform: isSelected ? 'scale(1.02)' : 'none',
                         position: 'relative',
-                        boxShadow: isSelected ? '2px 2px 0 #171915' : 'none'
+                        boxShadow: isSelected ? '0 4px 14px -2px rgba(245, 158, 11, 0.25)' : 'none'
                       }}
                     >
-                      <span style={{ fontSize: '1rem', fontWeight: 800, color: isFull ? '#fff' : '#171915' }}>{dateItem.getDate()}</span>
+                      <span style={{ fontSize: '0.95rem', fontWeight: 800, color: isFull ? '#991b1b' : (isPartial ? '#9a3412' : '#1e293b') }}>{dateItem.getDate()}</span>
                       {dayBlocks.length > 0 ? (
-                        <span style={{ fontSize: '0.65rem', marginTop: 'auto', background: isFull ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)', color: isFull ? '#fff' : '#171915', padding: '2px 4px', borderRadius: '4px', fontWeight: 700 }}>
+                        <span style={{ fontSize: '0.65rem', marginTop: 'auto', background: isFull ? 'rgba(239, 68, 68, 0.15)' : 'rgba(249, 115, 22, 0.15)', color: isFull ? '#b91c1c' : '#c2410c', padding: '2px 5px', borderRadius: '6px', fontWeight: 700 }}>
                           {bookedQuantity}/{totalQuantity} booked
                         </span>
                       ) : (
-                         <span style={{ fontSize: '0.65rem', marginTop: 'auto', color: '#888', fontWeight: 600 }}>Available</span>
+                         <span style={{ fontSize: '0.65rem', marginTop: 'auto', color: '#64748b', fontWeight: 600 }}>Available</span>
                       )}
                     </div>
                   );
@@ -984,8 +998,8 @@ function AvailabilityDetail({ id, listing }) {
       <section className="stack" style={{ flex: 1 }}>
         {selectedDate ? (
           <>
-            <div className="panel" style={{ background: '#A8E6CF', border: '2px solid #171915', boxShadow: '4px 4px 0 #171915' }}>
-              <h3 style={{ margin: '0 0 12px 0' }}>{selectedDate.toDateString()}</h3>
+            <div className="panel" style={{ background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', border: '1px solid rgba(34, 197, 94, 0.2)', borderRadius: '18px', boxShadow: '0 4px 16px -2px rgba(34, 197, 94, 0.1)' }}>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '1.15rem' }}>{selectedDate.toDateString()}</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.9rem' }}>
                 <p style={{ margin: 0 }}><strong>Inventory:</strong> {listing?.quantity || 1} {listing?.unit || 'units'}</p>
                 <p style={{ margin: 0 }}><strong>Price:</strong> {money(listing?.price)} / {listing?.unit}</p>
@@ -995,7 +1009,7 @@ function AvailabilityDetail({ id, listing }) {
             </div>
             {selectedBlocks.length > 0 ? (
               selectedBlocks.map(b => (
-                <article className="panel" key={b._id} style={{ border: '2px solid #171915' }}>
+                <article className="panel" key={b._id} style={{ border: '1px solid rgba(23, 25, 21, 0.12)', borderRadius: '18px', boxShadow: '0 4px 14px -2px rgba(23, 25, 21, 0.04)' }}>
                   <Badge>{b.booking ? `Confirmed Booking` : "Owner Block"}</Badge>
                   <h3 style={{ margin: '8px 0' }}>{b.reason}</h3>
                   {b.booking?.seeker && (
@@ -1025,7 +1039,7 @@ function AvailabilityDetail({ id, listing }) {
               <Empty title="Fully Available" text={`No bookings or blocks for this date. You have all ${listing?.quantity} units free.`} />
             )}
 
-            <div className="panel" style={{ border: '2px solid #171915' }}>
+            <div className="panel" style={{ border: '1px solid rgba(23, 25, 21, 0.12)', borderRadius: '18px', boxShadow: '0 4px 14px -2px rgba(23, 25, 21, 0.04)' }}>
               <h4 style={{ margin: '0 0 12px 0' }}>Add Manual Block</h4>
               <ActionForm
                 label="Block Dates"

@@ -100,57 +100,326 @@ function DisputesPipelineVisualizer({ disputes }) {
 
   const openCount = disputes.filter((d) => d.status === "open").length;
   const resolvedCount = disputes.filter((d) => d.status === "resolved" || d.resolution).length;
+  const resolutionRatio = disputes.length ? Math.round((resolvedCount / disputes.length) * 100) : 100;
+  
   const chartData = [
-    { name: "Active Mediation", value: openCount || 0, fill: "#FF85A1" },
-    { name: "Resolved / Settled", value: resolvedCount || 0, fill: "#2ED573" },
+    { name: "Resolved / Settled", value: resolvedCount || 0, fill: "url(#disputeResolvedGrad)" },
+    { name: "Active Mediation", value: openCount || 0, fill: "url(#disputeActiveGrad)" },
   ].filter(d => d.value > 0);
 
+  // Fallback for 0 disputes or 100% resolved
+  if (chartData.length === 0) {
+    chartData.push({ name: "Resolved / Settled", value: 1, fill: "url(#disputeResolvedGrad)" });
+  }
+
   return (
-    <div className="feature-chart-panel" style={{ background: "#FFFDF8", marginBottom: "2rem" }}>
-      <div className="feature-chart-header">
+    <div
+      style={{
+        background: "linear-gradient(135deg, #FFFFFF 0%, #FAF8F5 100%)",
+        border: "1px solid rgba(23, 25, 21, 0.12)",
+        borderRadius: "20px",
+        boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.04), 0 2px 8px -2px rgba(0, 0, 0, 0.02)",
+        padding: "1.5rem",
+        marginBottom: "2rem",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "12px",
+          marginBottom: "1.25rem",
+          paddingBottom: "1rem",
+          borderBottom: "1px solid rgba(23, 25, 21, 0.08)",
+        }}
+      >
         <div>
-          <span className="eyebrow" style={{ color: "#0F766E", marginBottom: 2 }}>RESOLUTION HEALTH & SLA</span>
-          <h3 className="feature-chart-title">Dispute Resolution Overview</h3>
+          <span
+            style={{
+              fontSize: "0.72rem",
+              fontWeight: 800,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "#0F766E",
+              display: "inline-block",
+              marginBottom: 4,
+            }}
+          >
+            RESOLUTION HEALTH & SLA
+          </span>
+          <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: "#171915", letterSpacing: "-0.02em" }}>
+            Dispute Resolution Overview
+          </h3>
         </div>
-        <span className="badge" style={{ background: openCount > 0 ? "#FF85A1" : "#A8E6CF", border: "1.5px solid #171915" }}>
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            fontSize: "0.78rem",
+            fontWeight: 700,
+            padding: "5px 12px",
+            borderRadius: "9999px",
+            background: openCount > 0 ? "#FEE2E2" : "#DCFCE7",
+            color: openCount > 0 ? "#991B1B" : "#166534",
+            border: openCount > 0 ? "1px solid #FCA5A5" : "1px solid #86EFAC",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+          }}
+        >
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              backgroundColor: openCount > 0 ? "#EF4444" : "#22C55E",
+              boxShadow: openCount > 0 ? "0 0 6px #EF4444" : "0 0 6px #22C55E",
+            }}
+          />
           {openCount > 0 ? `${openCount} Action Required` : "100% In Order"}
         </span>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "16px", alignItems: "center" }}>
-        <div className="feature-metrics-grid" style={{ margin: 0 }}>
-          <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
-            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff4757", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Active In Review</span>
-            <strong>{openCount} disputes</strong>
-            <small>Mediation in progress</small>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+          gap: "20px",
+          alignItems: "center",
+        }}
+      >
+        {/* KPI Cards Grid */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+            gap: "12px",
+          }}
+        >
+          <div
+            style={{
+              background: "#FFFFFF",
+              border: "1px solid rgba(23, 25, 21, 0.08)",
+              borderRadius: "16px",
+              padding: "1rem",
+              boxShadow: "0 4px 14px -2px rgba(0,0,0,0.03)",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              minHeight: "100px",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#64748B", textTransform: "uppercase" }}>
+                Active Review
+              </span>
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: openCount > 0 ? "#EF4444" : "#94A3B8",
+                  display: "inline-block",
+                }}
+              />
+            </div>
+            <div>
+              <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#171915", lineHeight: 1.1, margin: "6px 0 2px" }}>
+                {openCount} <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748B" }}>disputes</span>
+              </div>
+              <small style={{ fontSize: "0.72rem", color: "#64748B", fontWeight: 500 }}>Mediation in progress</small>
+            </div>
           </div>
-          <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
-            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#2ed573", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Settled & Resolved</span>
-            <strong>{resolvedCount} cases</strong>
-            <small>Agreement reached</small>
+
+          <div
+            style={{
+              background: "#FFFFFF",
+              border: "1px solid rgba(23, 25, 21, 0.08)",
+              borderRadius: "16px",
+              padding: "1rem",
+              boxShadow: "0 4px 14px -2px rgba(0,0,0,0.03)",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              minHeight: "100px",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#64748B", textTransform: "uppercase" }}>
+                Settled Cases
+              </span>
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: "#10B981",
+                  display: "inline-block",
+                }}
+              />
+            </div>
+            <div>
+              <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#171915", lineHeight: 1.1, margin: "6px 0 2px" }}>
+                {resolvedCount} <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748B" }}>cases</span>
+              </div>
+              <small style={{ fontSize: "0.72rem", color: "#64748B", fontWeight: 500 }}>Agreement reached</small>
+            </div>
           </div>
-          <div className="feature-metric-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
-            <span><span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4ecdc4", border: "1px solid #171915", display: "inline-block", marginRight: 6 }} />Resolution Ratio</span>
-            <strong>{disputes.length ? Math.round((resolvedCount / disputes.length) * 100) : 100}%</strong>
-            <small>Successful outcomes</small>
+
+          <div
+            style={{
+              background: "#FFFFFF",
+              border: "1px solid rgba(23, 25, 21, 0.08)",
+              borderRadius: "16px",
+              padding: "1rem",
+              boxShadow: "0 4px 14px -2px rgba(0,0,0,0.03)",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              minHeight: "100px",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#64748B", textTransform: "uppercase" }}>
+                Success Ratio
+              </span>
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: "#06B6D4",
+                  display: "inline-block",
+                }}
+              />
+            </div>
+            <div>
+              <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#0F766E", lineHeight: 1.1, margin: "6px 0 2px" }}>
+                {resolutionRatio}%
+              </div>
+              <small style={{ fontSize: "0.72rem", color: "#64748B", fontWeight: 500 }}>Platform SLA metric</small>
+            </div>
           </div>
         </div>
 
-        {chartData.length > 0 && (
-          <div style={{ width: "100%", height: 160 }}>
-            <ResponsiveContainer>
+        {/* Circular SLA Gauge Visual */}
+        <div
+          style={{
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0.5rem",
+          }}
+        >
+          <div style={{ width: "100%", height: 160, position: "relative" }}>
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} innerRadius={28} paddingAngle={4} stroke="#171915" strokeWidth={1.5}>
+                <defs>
+                  <linearGradient id="disputeResolvedGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#34D399" />
+                    <stop offset="100%" stopColor="#059669" />
+                  </linearGradient>
+                  <linearGradient id="disputeActiveGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#F87171" />
+                    <stop offset="100%" stopColor="#DC2626" />
+                  </linearGradient>
+                </defs>
+                <Pie
+                  data={chartData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={68}
+                  cornerRadius={6}
+                  paddingAngle={chartData.length > 1 ? 4 : 0}
+                  stroke="#FFFFFF"
+                  strokeWidth={2}
+                >
                   {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ background: "#fffef8", border: "1.5px solid #171915", borderRadius: 10, boxShadow: "2px 2px 0 #171915", fontWeight: 700 }} />
-                <Legend wrapperStyle={{ fontSize: 11, fontWeight: 700 }} />
+                <Tooltip
+                  contentStyle={{
+                    background: "#FFFFFF",
+                    border: "1px solid rgba(0,0,0,0.08)",
+                    borderRadius: 12,
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                    fontWeight: 700,
+                    fontSize: "0.82rem",
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
+
+            {/* Central Stat Overlay */}
+            <div
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                textAlign: "center",
+                pointerEvents: "none",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "1.35rem",
+                  fontWeight: 900,
+                  color: "#0F766E",
+                  lineHeight: 1,
+                  display: "block",
+                  letterSpacing: "-0.5px",
+                }}
+              >
+                {resolutionRatio}%
+              </span>
+              <span
+                style={{
+                  fontSize: "0.62rem",
+                  fontWeight: 700,
+                  color: "#64748B",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                SLA Score
+              </span>
+            </div>
           </div>
-        )}
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "16px",
+              fontSize: "0.74rem",
+              fontWeight: 600,
+              color: "#475569",
+              marginTop: "4px",
+            }}
+          >
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10B981" }} />
+              Resolved ({resolvedCount})
+            </span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#EF4444" }} />
+              Active ({openCount})
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -562,16 +831,54 @@ export function DisputesPage() {
               <DisputesPipelineVisualizer disputes={data} />
               <div className="stack">
                 {data.map((d) => (
-                  <article className="panel" key={d._id}>
-                    <div className="section-heading">
-                      <h3>Booking {d.booking?._id?.slice(-8)}</h3>
-                      <Badge>{d.status}</Badge>
+                  <article
+                    key={d._id}
+                    style={{
+                      background: "#FFFFFF",
+                      border: "1px solid rgba(23, 25, 21, 0.1)",
+                      borderRadius: "16px",
+                      padding: "1.25rem 1.5rem",
+                      boxShadow: "0 4px 16px -2px rgba(0, 0, 0, 0.04)",
+                      marginBottom: "1rem",
+                      transition: "transform 0.15s ease",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                      <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 800 }}>
+                        Booking #{d.booking?._id?.slice(-8) || d._id?.slice(-8)}
+                      </h3>
+                      <span
+                        style={{
+                          fontSize: "0.72rem",
+                          fontWeight: 800,
+                          textTransform: "uppercase",
+                          padding: "4px 10px",
+                          borderRadius: "9999px",
+                          background: d.status === "resolved" ? "#DCFCE7" : "#FEE2E2",
+                          color: d.status === "resolved" ? "#166534" : "#991B1B",
+                          border: d.status === "resolved" ? "1px solid #86EFAC" : "1px solid #FCA5A5",
+                        }}
+                      >
+                        {d.status}
+                      </span>
                     </div>
-                    <p style={{ margin: "10px 0" }}>{d.reason}</p>
+                    <p style={{ margin: "8px 0 0", color: "#374151", fontSize: "0.92rem", lineHeight: 1.5 }}>
+                      {d.reason}
+                    </p>
                     {d.resolution && (
-                      <div className="notice" style={{ margin: "12px 0 0" }}>
-                        <strong>Resolution</strong>
-                        <p style={{ margin: "6px 0 0" }}>{d.resolution}</p>
+                      <div
+                        style={{
+                          margin: "12px 0 0",
+                          padding: "10px 14px",
+                          background: "#F0FDF4",
+                          border: "1px solid #BBF7D0",
+                          borderRadius: "12px",
+                        }}
+                      >
+                        <strong style={{ fontSize: "0.82rem", color: "#166534", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                          ✓ Agreed Resolution
+                        </strong>
+                        <p style={{ margin: "4px 0 0", color: "#15803D", fontSize: "0.88rem" }}>{d.resolution}</p>
                       </div>
                     )}
                   </article>

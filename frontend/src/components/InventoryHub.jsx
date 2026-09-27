@@ -89,8 +89,9 @@ export function InventoryHub() {
             backgroundColor: toast.type === "error" ? "#FF6B6B" : toast.type === "info" ? "#4ECDC4" : "#FFE66D",
             color: "#000",
             padding: "0.85rem 1.25rem",
-            border: "2px solid #000",
-            boxShadow: "4px 4px 0px #000",
+            borderRadius: "14px",
+            border: "1px solid rgba(23, 25, 21, 0.12)",
+            boxShadow: "0 10px 25px -5px rgba(0,0,0,0.12)",
             fontWeight: 700,
             display: "flex",
             alignItems: "center",
@@ -115,52 +116,54 @@ export function InventoryHub() {
           justifyContent: "space-between",
           alignItems: "flex-start",
           flexWrap: "wrap",
-          gap: "1rem",
+          gap: "1.25rem",
           marginBottom: "1.5rem",
           paddingBottom: "1.25rem",
-          borderBottom: "3px solid #000",
+          borderBottom: "1px solid rgba(23, 25, 21, 0.1)",
         }}
       >
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.25rem" }}>
-            <h1 style={{ fontSize: "1.85rem", fontWeight: 900, textTransform: "uppercase", margin: 0, letterSpacing: "-0.5px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.35rem", flexWrap: "wrap" }}>
+            <h1 style={{ fontSize: "1.75rem", fontWeight: 900, textTransform: "uppercase", margin: 0, letterSpacing: "-0.5px", color: "#171915" }}>
               📦 Inventory & Fleet Hub
             </h1>
             <span
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "0.35rem",
-                fontSize: "0.75rem",
+                gap: "0.4rem",
+                fontSize: "0.72rem",
                 fontWeight: 700,
-                padding: "0.25rem 0.6rem",
-                backgroundColor: isConnected ? "#D4EDDA" : "#FFF3CD",
-                color: isConnected ? "#155724" : "#856404",
-                border: "1.5px solid #000",
-                boxShadow: "2px 2px 0px #000",
+                padding: "0.3rem 0.75rem",
+                backgroundColor: isConnected ? "#DCFCE7" : "#FEF3C7",
+                color: isConnected ? "#166534" : "#92400E",
+                borderRadius: "9999px",
+                border: isConnected ? "1px solid #86EFAC" : "1px solid #FDE68A",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
                 textTransform: "uppercase",
+                letterSpacing: "0.04em",
               }}
             >
               <span
                 style={{
-                  width: "8px",
-                  height: "8px",
+                  width: "7px",
+                  height: "7px",
                   borderRadius: "50%",
-                  backgroundColor: isConnected ? "#28A745" : "#FFC107",
+                  backgroundColor: isConnected ? "#22C55E" : "#EAB308",
                   display: "inline-block",
-                  boxShadow: isConnected ? "0 0 6px #28A745" : "none",
+                  boxShadow: isConnected ? "0 0 6px #22C55E" : "none",
                 }}
               />
               {isConnected ? "Live Socket Sync" : "Syncing…"}
             </span>
           </div>
-          <p style={{ margin: 0, color: "#555", fontSize: "0.95rem", fontWeight: 500 }}>
+          <p style={{ margin: 0, color: "#64748B", fontSize: "0.92rem", fontWeight: 500, maxWidth: "750px", lineHeight: 1.45 }}>
             Unified command center: track offline & online rentals, monitor active leases, get return expiry alerts, and instantly repost freed assets.
           </p>
         </div>
 
         {/* Global Hub Actions */}
-        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
           <button
             onClick={() => dashboard.reload()}
             title="Refresh inventory state from database"
@@ -168,15 +171,19 @@ export function InventoryHub() {
               display: "flex",
               alignItems: "center",
               gap: "0.4rem",
-              padding: "0.55rem 0.85rem",
-              background: "#fff",
-              border: "2px solid #000",
-              boxShadow: "3px 3px 0px #000",
+              padding: "0.55rem 0.95rem",
+              background: "#FFFFFF",
+              color: "#171915",
+              border: "1px solid rgba(23, 25, 21, 0.15)",
+              borderRadius: "12px",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
               fontWeight: 700,
+              fontSize: "0.82rem",
               cursor: "pointer",
+              transition: "all 0.15s ease",
             }}
           >
-            <RefreshCw size={15} className={dashboard.loading ? "animate-spin" : ""} />
+            <RefreshCw size={14} className={dashboard.loading ? "animate-spin" : ""} />
             Sync
           </button>
 
@@ -185,19 +192,22 @@ export function InventoryHub() {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "0.5rem",
+              gap: "0.45rem",
               padding: "0.55rem 1rem",
               background: "#FFE66D",
-              color: "#000",
-              border: "2px solid #000",
-              boxShadow: "3px 3px 0px #000",
+              color: "#171915",
+              border: "1px solid rgba(23, 25, 21, 0.2)",
+              borderRadius: "12px",
+              boxShadow: "0 2px 8px rgba(255, 230, 109, 0.4)",
               fontWeight: 800,
               textDecoration: "none",
               textTransform: "uppercase",
-              fontSize: "0.85rem",
+              fontSize: "0.8rem",
+              letterSpacing: "0.02em",
+              transition: "transform 0.15s ease",
             }}
           >
-            <Zap size={16} />
+            <Zap size={15} />
             + Record Offline Deal
           </Link>
 
@@ -206,19 +216,22 @@ export function InventoryHub() {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "0.5rem",
+              gap: "0.45rem",
               padding: "0.55rem 1rem",
-              background: "#4ECDC4",
-              color: "#000",
-              border: "2px solid #000",
-              boxShadow: "3px 3px 0px #000",
+              background: "#10B981",
+              color: "#FFFFFF",
+              border: "none",
+              borderRadius: "12px",
+              boxShadow: "0 2px 10px rgba(16, 185, 129, 0.3)",
               fontWeight: 800,
               cursor: "pointer",
               textTransform: "uppercase",
-              fontSize: "0.85rem",
+              fontSize: "0.8rem",
+              letterSpacing: "0.02em",
+              transition: "transform 0.15s ease",
             }}
           >
-            <Plus size={16} />
+            <Plus size={15} />
             + Store New Asset
           </button>
         </div>
@@ -228,15 +241,76 @@ export function InventoryHub() {
       <State resource={dashboard}>
         {(data) => {
           const { stats, listings, expiringBookings, overdueBookings, offlineDeals, recentActivity } = data;
+          const occupancyRate = stats.occupancyRate || 0;
 
           return (
             <>
+              {/* Fleet Occupancy & Velocity Telemetry Strip */}
+              <div
+                style={{
+                  background: "linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%)",
+                  border: "1px solid rgba(23, 25, 21, 0.1)",
+                  borderRadius: "18px",
+                  padding: "1rem 1.25rem",
+                  boxShadow: "0 4px 18px -2px rgba(0, 0, 0, 0.03)",
+                  marginBottom: "1.25rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: "1rem",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div
+                    style={{
+                      width: "38px",
+                      height: "38px",
+                      borderRadius: "12px",
+                      background: "#EDE9FE",
+                      color: "#7C3AED",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <TrendingUp size={20} />
+                  </div>
+                  <div>
+                    <span style={{ fontSize: "0.7rem", fontWeight: 800, color: "#64748B", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                      Fleet Occupancy Equilibrium
+                    </span>
+                    <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "#171915" }}>
+                      {occupancyRate}% Fleet Deployed · <span style={{ color: "#10B981" }}>{stats.unitsAvailable} Available</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ flex: 1, minWidth: "220px", maxWidth: "420px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", fontWeight: 700, color: "#64748B", marginBottom: "4px" }}>
+                    <span>{stats.unitsOnRent} on rent</span>
+                    <span>{stats.totalUnits} total units</span>
+                  </div>
+                  <div style={{ width: "100%", height: "8px", background: "#E2E8F0", borderRadius: "9999px", overflow: "hidden" }}>
+                    <div
+                      style={{
+                        width: `${Math.min(100, Math.max(0, occupancyRate))}%`,
+                        height: "100%",
+                        background: "linear-gradient(90deg, #10B981 0%, #06B6D4 100%)",
+                        borderRadius: "9999px",
+                        transition: "width 0.5s ease",
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* Metrics Grid */}
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                  gap: "1rem",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(175px, 1fr))",
+                  gap: "12px",
                   marginBottom: "1.75rem",
                 }}
               >
@@ -245,42 +319,42 @@ export function InventoryHub() {
                   value={stats.totalUnits}
                   sub={`${stats.totalListings} unique assets`}
                   bg="#FFFFFF"
-                  icon={<Warehouse size={20} />}
+                  icon={<Warehouse size={18} />}
                 />
                 <MetricCard
                   label="Units On Rent"
                   value={stats.unitsOnRent}
                   sub={`${stats.occupancyRate}% occupancy`}
                   bg="#FFE66D"
-                  icon={<Clock size={20} />}
+                  icon={<Clock size={18} />}
                 />
                 <MetricCard
                   label="Units Available"
                   value={stats.unitsAvailable}
-                  sub="Ready for booking / deal"
+                  sub="Ready for deal"
                   bg="#A8E6CF"
-                  icon={<CheckCircle2 size={20} />}
+                  icon={<CheckCircle2 size={18} />}
                 />
                 <MetricCard
                   label="Active Rental Rev."
                   value={money(stats.activeRentalRevenue)}
-                  sub="Current active leases"
+                  sub="Active leases"
                   bg="#C3B1E1"
-                  icon={<DollarSign size={20} />}
+                  icon={<DollarSign size={18} />}
                 />
                 <MetricCard
-                  label="Offline Deals Active"
+                  label="Offline Deals"
                   value={stats.offlineDealsCount || 0}
-                  sub="Out-of-app rentals"
+                  sub="Direct rentals"
                   bg="#89CFF0"
-                  icon={<Zap size={20} />}
+                  icon={<Zap size={18} />}
                 />
                 <MetricCard
                   label="Overdue Returns"
                   value={stats.overdueCount || 0}
                   sub={stats.overdueCount > 0 ? "Requires action!" : "Fleet on schedule"}
                   bg={stats.overdueCount > 0 ? "#FF6B6B" : "#F0F0F0"}
-                  icon={<AlertTriangle size={20} />}
+                  icon={<AlertTriangle size={18} />}
                   highlight={stats.overdueCount > 0}
                 />
               </div>
@@ -289,16 +363,17 @@ export function InventoryHub() {
               {(overdueBookings?.length > 0 || expiringBookings?.length > 0) && (
                 <div
                   style={{
-                    backgroundColor: overdueBookings?.length > 0 ? "#FFF0F0" : "#FFFBEA",
-                    border: `3px solid ${overdueBookings?.length > 0 ? "#FF4D4D" : "#FFC107"}`,
-                    boxShadow: "5px 5px 0px #000",
+                    backgroundColor: overdueBookings?.length > 0 ? "#FFF1F2" : "#FFFBEB",
+                    border: `1px solid ${overdueBookings?.length > 0 ? "#FCA5A5" : "#FDE68A"}`,
+                    borderRadius: "18px",
+                    boxShadow: "0 6px 20px -3px rgba(0, 0, 0, 0.05)",
                     padding: "1.25rem",
                     marginBottom: "1.75rem",
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.75rem" }}>
-                    <AlertTriangle size={22} color={overdueBookings?.length > 0 ? "#D90429" : "#B7791F"} />
-                    <h3 style={{ margin: 0, fontWeight: 900, textTransform: "uppercase", fontSize: "1.1rem" }}>
+                    <AlertTriangle size={20} color={overdueBookings?.length > 0 ? "#DC2626" : "#D97706"} />
+                    <h3 style={{ margin: 0, fontWeight: 900, textTransform: "uppercase", fontSize: "1.05rem", color: "#171915" }}>
                       {overdueBookings?.length > 0
                         ? `⚠️ Urgent: ${overdueBookings.length} Rental(s) Overdue for Return`
                         : `⏰ Reminders: ${expiringBookings.length} Rental(s) Ending Within 48 Hours`}
@@ -326,12 +401,14 @@ export function InventoryHub() {
                 </div>
               )}
 
-              {/* Navigation Tabs */}
+              {/* Navigation Tabs - Modern Segmented Control */}
               <div
                 style={{
                   display: "flex",
                   gap: "0.5rem",
-                  borderBottom: "2px solid #000",
+                  flexWrap: "wrap",
+                  paddingBottom: "1rem",
+                  borderBottom: "1px solid rgba(23, 25, 21, 0.08)",
                   marginBottom: "1.5rem",
                 }}
               >
@@ -339,25 +416,25 @@ export function InventoryHub() {
                   active={activeTab === "fleet"}
                   onClick={() => setActiveTab("fleet")}
                   label={`All Fleet Assets (${listings.length})`}
-                  icon={<Boxes size={16} />}
+                  icon={<Boxes size={15} />}
                 />
                 <TabButton
                   active={activeTab === "rentals"}
                   onClick={() => setActiveTab("rentals")}
                   label={`Active Leases & Returns (${(overdueBookings?.length || 0) + (expiringBookings?.length || 0)})`}
-                  icon={<Clock size={16} />}
+                  icon={<Clock size={15} />}
                 />
                 <TabButton
                   active={activeTab === "offline"}
                   onClick={() => setActiveTab("offline")}
                   label={`Offline Deals Log (${offlineDeals?.length || 0})`}
-                  icon={<Zap size={16} />}
+                  icon={<Zap size={15} />}
                 />
                 <TabButton
                   active={activeTab === "activity"}
                   onClick={() => setActiveTab("activity")}
                   label={`Activity & Audit (${recentActivity?.length || 0})`}
-                  icon={<History size={16} />}
+                  icon={<History size={15} />}
                 />
               </div>
 
@@ -494,31 +571,108 @@ export function InventoryHub() {
 // -------------------------------------------------------------
 
 function MetricCard({ label, value, sub, bg, icon, highlight }) {
+  const accentColor = highlight
+    ? "#DC2626"
+    : bg === "#FFE66D"
+    ? "#D97706"
+    : bg === "#A8E6CF"
+    ? "#16A34A"
+    : bg === "#C3B1E1"
+    ? "#7C3AED"
+    : bg === "#89CFF0"
+    ? "#0284C7"
+    : "#0F766E";
+
+  const iconBg = highlight
+    ? "#FEE2E2"
+    : bg === "#FFE66D"
+    ? "#FEF3C7"
+    : bg === "#A8E6CF"
+    ? "#DCFCE7"
+    : bg === "#C3B1E1"
+    ? "#EDE9FE"
+    : bg === "#89CFF0"
+    ? "#E0F2FE"
+    : "#F1F5F9";
+
   return (
     <div
       style={{
-        backgroundColor: bg,
-        border: "2px solid #000",
-        boxShadow: "3px 3px 0px #000",
-        padding: "1rem",
+        background: "#FFFFFF",
+        border: highlight ? "1px solid #FCA5A5" : "1px solid rgba(23, 25, 21, 0.1)",
+        borderRadius: "18px",
+        boxShadow: "0 4px 18px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02)",
+        padding: "1.1rem",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        minHeight: "105px",
+        minHeight: "115px",
         position: "relative",
+        overflow: "hidden",
+        transition: "transform 0.18s ease, box-shadow 0.18s ease",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <span style={{ fontSize: "0.8rem", fontWeight: 800, textTransform: "uppercase", color: "#333" }}>
+      {/* Top Accent Strip */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "3px",
+          background: accentColor,
+        }}
+      />
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span
+          style={{
+            fontSize: "0.72rem",
+            fontWeight: 800,
+            textTransform: "uppercase",
+            color: "#64748B",
+            letterSpacing: "0.04em",
+          }}
+        >
           {label}
         </span>
-        <span style={{ opacity: 0.8 }}>{icon}</span>
+        <div
+          style={{
+            width: "34px",
+            height: "34px",
+            borderRadius: "10px",
+            background: iconBg,
+            color: accentColor,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          {icon}
+        </div>
       </div>
-      <div>
-        <div style={{ fontSize: "1.75rem", fontWeight: 900, lineHeight: 1.1, margin: "0.35rem 0 0.2rem 0" }}>
+
+      <div style={{ marginTop: "0.5rem" }}>
+        <div
+          style={{
+            fontSize: "1.65rem",
+            fontWeight: 900,
+            lineHeight: 1.1,
+            color: highlight ? "#DC2626" : "#171915",
+            letterSpacing: "-0.5px",
+          }}
+        >
           {value}
         </div>
-        <div style={{ fontSize: "0.75rem", fontWeight: 600, color: highlight ? "#900" : "#666" }}>
+        <div
+          style={{
+            fontSize: "0.74rem",
+            fontWeight: 600,
+            color: highlight ? "#DC2626" : "#64748B",
+            marginTop: "3px",
+          }}
+        >
           {sub}
         </div>
       </div>
@@ -533,19 +687,19 @@ function TabButton({ active, onClick, label, icon }) {
       style={{
         display: "flex",
         alignItems: "center",
-        gap: "0.4rem",
-        padding: "0.65rem 1.1rem",
-        background: active ? "#000" : "#FFF",
-        color: active ? "#FFF" : "#000",
-        borderTop: "2px solid #000",
-        borderLeft: "2px solid #000",
-        borderRight: "2px solid #000",
-        borderBottom: active ? "none" : "2px solid #000",
-        fontWeight: 800,
-        fontSize: "0.85rem",
+        gap: "0.45rem",
+        padding: "0.55rem 1.1rem",
+        background: active ? "#171915" : "#FFFFFF",
+        color: active ? "#FFFFFF" : "#475569",
+        borderRadius: "12px",
+        border: active ? "1px solid #171915" : "1px solid rgba(23, 25, 21, 0.12)",
+        boxShadow: active ? "0 2px 8px rgba(0,0,0,0.12)" : "0 1px 3px rgba(0,0,0,0.02)",
+        fontWeight: 700,
+        fontSize: "0.82rem",
         cursor: "pointer",
         textTransform: "uppercase",
-        letterSpacing: "0.3px",
+        letterSpacing: "0.03em",
+        transition: "all 0.15s ease",
       }}
     >
       {icon}
@@ -575,31 +729,33 @@ function ExpiryActionRow({ booking, isOverdue, onCheckIn }) {
         alignItems: "center",
         flexWrap: "wrap",
         gap: "0.75rem",
-        backgroundColor: "#FFF",
-        border: "2px solid #000",
-        padding: "0.75rem 1rem",
-        boxShadow: "2px 2px 0px #000",
+        backgroundColor: "#FFFFFF",
+        border: "1px solid rgba(23, 25, 21, 0.1)",
+        borderRadius: "14px",
+        padding: "0.85rem 1.15rem",
+        boxShadow: "0 2px 10px rgba(0, 0, 0, 0.03)",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
         <span
           style={{
             fontSize: "0.7rem",
-            fontWeight: 900,
+            fontWeight: 800,
             textTransform: "uppercase",
-            padding: "0.2rem 0.5rem",
-            border: "1px solid #000",
-            backgroundColor: isOverdue ? "#FF6B6B" : "#FFE66D",
-            color: "#000",
+            padding: "0.25rem 0.65rem",
+            borderRadius: "9999px",
+            backgroundColor: isOverdue ? "#FEE2E2" : "#FEF3C7",
+            color: isOverdue ? "#991B1B" : "#92400E",
+            border: isOverdue ? "1px solid #FCA5A5" : "1px solid #FDE68A",
           }}
         >
           {isOverdue ? `Overdue (${Math.abs(hoursRemaining)}h ago)` : `Due in ${hoursRemaining}h`}
         </span>
 
         <div>
-          <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>
+          <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "#171915" }}>
             {listingTitle}
-            <span style={{ fontWeight: 600, color: "#666", fontSize: "0.85rem", marginLeft: "0.5rem" }}>
+            <span style={{ fontWeight: 600, color: "#64748B", fontSize: "0.85rem", marginLeft: "0.5rem" }}>
               ({booking.quantity || 1} unit{booking.quantity > 1 ? "s" : ""})
             </span>
             {booking.isOfflineDeal && (
@@ -608,9 +764,11 @@ function ExpiryActionRow({ booking, isOverdue, onCheckIn }) {
                   marginLeft: "0.5rem",
                   fontSize: "0.68rem",
                   fontWeight: 800,
-                  backgroundColor: "#89CFF0",
-                  padding: "0.15rem 0.4rem",
-                  border: "1px solid #000",
+                  backgroundColor: "#E0F2FE",
+                  color: "#0369A1",
+                  padding: "0.15rem 0.5rem",
+                  borderRadius: "9999px",
+                  border: "1px solid #BAE6FD",
                   textTransform: "uppercase",
                 }}
               >
@@ -618,8 +776,8 @@ function ExpiryActionRow({ booking, isOverdue, onCheckIn }) {
               </span>
             )}
           </div>
-          <div style={{ fontSize: "0.8rem", color: "#555", display: "flex", gap: "1rem", marginTop: "0.2rem" }}>
-            <span>Client: <strong>{clientName}</strong></span>
+          <div style={{ fontSize: "0.8rem", color: "#64748B", display: "flex", gap: "1rem", marginTop: "0.2rem", flexWrap: "wrap" }}>
+            <span>Client: <strong style={{ color: "#171915" }}>{clientName}</strong></span>
             {clientPhone && (
               <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
                 <Phone size={12} /> {clientPhone}
@@ -636,14 +794,15 @@ function ExpiryActionRow({ booking, isOverdue, onCheckIn }) {
           display: "flex",
           alignItems: "center",
           gap: "0.4rem",
-          padding: "0.45rem 0.85rem",
-          backgroundColor: "#4ECDC4",
-          color: "#000",
-          border: "2px solid #000",
-          boxShadow: "2px 2px 0px #000",
+          padding: "0.5rem 0.95rem",
+          backgroundColor: "#10B981",
+          color: "#FFFFFF",
+          border: "none",
+          borderRadius: "10px",
+          boxShadow: "0 2px 8px rgba(16, 185, 129, 0.3)",
           fontWeight: 800,
           cursor: "pointer",
-          fontSize: "0.8rem",
+          fontSize: "0.78rem",
           textTransform: "uppercase",
         }}
       >
@@ -701,13 +860,15 @@ function FleetView({
           gap: "0.75rem",
           flexWrap: "wrap",
           marginBottom: "1.25rem",
-          backgroundColor: "#F9F9F9",
-          padding: "0.85rem",
-          border: "2px solid #000",
+          backgroundColor: "#FFFFFF",
+          padding: "0.85rem 1rem",
+          border: "1px solid rgba(23, 25, 21, 0.1)",
+          borderRadius: "16px",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.02)",
         }}
       >
         <div style={{ flex: 1, minWidth: "220px", position: "relative" }}>
-          <Search size={16} style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "#666" }} />
+          <Search size={16} style={{ position: "absolute", left: "0.85rem", top: "50%", transform: "translateY(-50%)", color: "#64748B" }} />
           <input
             type="text"
             placeholder="Search by asset title, space or equipment..."
@@ -715,10 +876,12 @@ function FleetView({
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{
               width: "100%",
-              padding: "0.55rem 0.75rem 0.55rem 2.25rem",
-              border: "2px solid #000",
+              padding: "0.55rem 0.85rem 0.55rem 2.4rem",
+              border: "1px solid rgba(23, 25, 21, 0.15)",
+              borderRadius: "10px",
               fontWeight: 600,
               fontSize: "0.85rem",
+              outline: "none",
             }}
           />
         </div>
@@ -727,11 +890,13 @@ function FleetView({
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
           style={{
-            padding: "0.55rem 0.75rem",
-            border: "2px solid #000",
+            padding: "0.55rem 0.85rem",
+            border: "1px solid rgba(23, 25, 21, 0.15)",
+            borderRadius: "10px",
             fontWeight: 700,
-            fontSize: "0.85rem",
+            fontSize: "0.82rem",
             backgroundColor: "#FFF",
+            cursor: "pointer",
           }}
         >
           <option value="all">All Categories</option>
@@ -744,11 +909,13 @@ function FleetView({
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           style={{
-            padding: "0.55rem 0.75rem",
-            border: "2px solid #000",
+            padding: "0.55rem 0.85rem",
+            border: "1px solid rgba(23, 25, 21, 0.15)",
+            borderRadius: "10px",
             fontWeight: 700,
-            fontSize: "0.85rem",
+            fontSize: "0.82rem",
             backgroundColor: "#FFF",
+            cursor: "pointer",
           }}
         >
           <option value="all">All Statuses</option>
@@ -794,12 +961,14 @@ function FleetItemCard({ listing, onRecordOfflineDeal, onViewHistory, onToggleSt
     <div
       style={{
         backgroundColor: "#FFFFFF",
-        border: "2px solid #000",
-        boxShadow: "3px 3px 0px #000",
-        padding: "1rem 1.25rem",
+        border: "1px solid rgba(23, 25, 21, 0.1)",
+        borderRadius: "18px",
+        boxShadow: "0 4px 18px -2px rgba(0, 0, 0, 0.04)",
+        padding: "1.25rem",
         display: "flex",
         flexDirection: "column",
-        gap: "0.85rem",
+        gap: "1rem",
+        transition: "transform 0.15s ease, box-shadow 0.15s ease",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
@@ -807,10 +976,11 @@ function FleetItemCard({ listing, onRecordOfflineDeal, onViewHistory, onToggleSt
         <div style={{ display: "flex", gap: "1rem", alignItems: "flex-start" }}>
           <div
             style={{
-              width: "68px",
-              height: "68px",
-              border: "2px solid #000",
-              backgroundColor: "#F0F0F0",
+              width: "72px",
+              height: "72px",
+              border: "1px solid rgba(23, 25, 21, 0.1)",
+              borderRadius: "14px",
+              backgroundColor: "#F8FAFC",
               position: "relative",
               flexShrink: 0,
               overflow: "hidden",
@@ -824,22 +994,24 @@ function FleetItemCard({ listing, onRecordOfflineDeal, onViewHistory, onToggleSt
               />
             ) : (
               <div style={{ display: "flex", height: "100%", alignItems: "center", justifyContent: "center" }}>
-                <Boxes size={28} color="#888" />
+                <Boxes size={28} color="#94A3B8" />
               </div>
             )}
           </div>
 
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-              <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 900 }}>{listing.title}</h3>
+              <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 800, color: "#171915" }}>{listing.title}</h3>
               <span
                 style={{
                   fontSize: "0.68rem",
                   fontWeight: 800,
                   textTransform: "uppercase",
-                  padding: "0.15rem 0.45rem",
-                  border: "1px solid #000",
-                  backgroundColor: "#F0F0F0",
+                  padding: "0.2rem 0.55rem",
+                  borderRadius: "9999px",
+                  border: "1px solid #E2E8F0",
+                  backgroundColor: "#F1F5F9",
+                  color: "#475569",
                 }}
               >
                 {listing.category?.replaceAll("_", " ")}
@@ -851,10 +1023,11 @@ function FleetItemCard({ listing, onRecordOfflineDeal, onViewHistory, onToggleSt
                     fontSize: "0.68rem",
                     fontWeight: 800,
                     textTransform: "uppercase",
-                    padding: "0.15rem 0.45rem",
-                    border: "1px solid #000",
-                    backgroundColor: "#FFE66D",
-                    color: "#000",
+                    padding: "0.2rem 0.55rem",
+                    borderRadius: "9999px",
+                    border: "1px solid #FDE68A",
+                    backgroundColor: "#FEF3C7",
+                    color: "#92400E",
                   }}
                 >
                   Stored (Offline)
@@ -865,10 +1038,11 @@ function FleetItemCard({ listing, onRecordOfflineDeal, onViewHistory, onToggleSt
                     fontSize: "0.68rem",
                     fontWeight: 800,
                     textTransform: "uppercase",
-                    padding: "0.15rem 0.45rem",
-                    border: "1px solid #000",
-                    backgroundColor: "#A8E6CF",
-                    color: "#000",
+                    padding: "0.2rem 0.55rem",
+                    borderRadius: "9999px",
+                    border: "1px solid #86EFAC",
+                    backgroundColor: "#DCFCE7",
+                    color: "#166534",
                   }}
                 >
                   Live on Marketplace
@@ -881,10 +1055,11 @@ function FleetItemCard({ listing, onRecordOfflineDeal, onViewHistory, onToggleSt
                     fontSize: "0.68rem",
                     fontWeight: 800,
                     textTransform: "uppercase",
-                    padding: "0.15rem 0.45rem",
-                    border: "1px solid #000",
-                    backgroundColor: "#C3B1E1",
-                    color: "#000",
+                    padding: "0.2rem 0.55rem",
+                    borderRadius: "9999px",
+                    border: "1px solid #D8B4FE",
+                    backgroundColor: "#F3E8FF",
+                    color: "#6B21A8",
                   }}
                 >
                   {onRent} on rent
@@ -892,30 +1067,31 @@ function FleetItemCard({ listing, onRecordOfflineDeal, onViewHistory, onToggleSt
               )}
             </div>
 
-            <div style={{ fontSize: "0.85rem", color: "#555", marginTop: "0.25rem", display: "flex", gap: "1.25rem" }}>
-              <span>Base Rate: <strong>{money(listing.price)}</strong> / {listing.unit || "day"}</span>
-              {listing.deposit > 0 && <span>Deposit: <strong>{money(listing.deposit)}</strong></span>}
-              {listing.city && <span>Location: <strong>{listing.city}</strong></span>}
+            <div style={{ fontSize: "0.85rem", color: "#64748B", marginTop: "0.35rem", display: "flex", gap: "1.25rem", flexWrap: "wrap" }}>
+              <span>Base Rate: <strong style={{ color: "#171915" }}>{money(listing.price)}</strong> / {listing.unit || "day"}</span>
+              {listing.deposit > 0 && <span>Deposit: <strong style={{ color: "#171915" }}>{money(listing.deposit)}</strong></span>}
+              {listing.city && <span>Location: <strong style={{ color: "#171915" }}>{listing.city}</strong></span>}
             </div>
           </div>
         </div>
 
         {/* Right: Quantity & Occupancy Indicator */}
         <div style={{ minWidth: "160px", textAlign: "right" }}>
-          <div style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", color: "#666" }}>
+          <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "#64748B" }}>
             Fleet Stock
           </div>
-          <div style={{ fontSize: "1.25rem", fontWeight: 900 }}>
-            <span style={{ color: available > 0 ? "#00875A" : "#D90429" }}>{available} Available</span>
-            <span style={{ color: "#888", fontSize: "0.95rem" }}> / {totalQty} total</span>
+          <div style={{ fontSize: "1.2rem", fontWeight: 900, marginTop: "2px" }}>
+            <span style={{ color: available > 0 ? "#16A34A" : "#DC2626" }}>{available} Available</span>
+            <span style={{ color: "#94A3B8", fontSize: "0.9rem" }}> / {totalQty} total</span>
           </div>
           {/* Mini progress bar */}
-          <div style={{ width: "100%", height: "6px", backgroundColor: "#E0E0E0", border: "1px solid #000", marginTop: "0.25rem" }}>
+          <div style={{ width: "100%", height: "6px", backgroundColor: "#F1F5F9", borderRadius: "9999px", marginTop: "0.35rem", overflow: "hidden" }}>
             <div
               style={{
                 width: `${occupancyPct}%`,
                 height: "100%",
-                backgroundColor: occupancyPct > 80 ? "#FF6B6B" : "#4ECDC4",
+                backgroundColor: occupancyPct > 80 ? "#EF4444" : "#10B981",
+                borderRadius: "9999px",
               }}
             />
           </div>
@@ -930,8 +1106,8 @@ function FleetItemCard({ listing, onRecordOfflineDeal, onViewHistory, onToggleSt
           alignItems: "center",
           flexWrap: "wrap",
           gap: "0.5rem",
-          paddingTop: "0.75rem",
-          borderTop: "1px solid #DDD",
+          paddingTop: "0.85rem",
+          borderTop: "1px solid rgba(23, 25, 21, 0.06)",
         }}
       >
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
@@ -943,18 +1119,19 @@ function FleetItemCard({ listing, onRecordOfflineDeal, onViewHistory, onToggleSt
               display: "flex",
               alignItems: "center",
               gap: "0.35rem",
-              padding: "0.45rem 0.8rem",
-              backgroundColor: available > 0 ? "#FFE66D" : "#E0E0E0",
-              color: available > 0 ? "#000" : "#888",
-              border: "1.5px solid #000",
-              boxShadow: available > 0 ? "2px 2px 0px #000" : "none",
+              padding: "0.45rem 0.85rem",
+              backgroundColor: available > 0 ? "#FFE66D" : "#F1F5F9",
+              color: available > 0 ? "#171915" : "#94A3B8",
+              border: "1px solid rgba(23, 25, 21, 0.15)",
+              borderRadius: "10px",
+              boxShadow: available > 0 ? "0 2px 6px rgba(255, 230, 109, 0.3)" : "none",
               fontWeight: 800,
               fontSize: "0.75rem",
               cursor: available > 0 ? "pointer" : "not-allowed",
               textTransform: "uppercase",
             }}
           >
-            <Zap size={14} />
+            <Zap size={13} />
             Record Offline Rental
           </button>
 
@@ -966,11 +1143,12 @@ function FleetItemCard({ listing, onRecordOfflineDeal, onViewHistory, onToggleSt
                 display: "flex",
                 alignItems: "center",
                 gap: "0.35rem",
-                padding: "0.45rem 0.8rem",
-                backgroundColor: "#4ECDC4",
-                color: "#000",
-                border: "1.5px solid #000",
-                boxShadow: "2px 2px 0px #000",
+                padding: "0.45rem 0.85rem",
+                backgroundColor: "#10B981",
+                color: "#FFFFFF",
+                border: "none",
+                borderRadius: "10px",
+                boxShadow: "0 2px 6px rgba(16, 185, 129, 0.3)",
                 fontWeight: 800,
                 fontSize: "0.75rem",
                 cursor: "pointer",
@@ -987,10 +1165,11 @@ function FleetItemCard({ listing, onRecordOfflineDeal, onViewHistory, onToggleSt
                 display: "flex",
                 alignItems: "center",
                 gap: "0.35rem",
-                padding: "0.45rem 0.8rem",
-                backgroundColor: "#FFF",
-                color: "#000",
-                border: "1.5px solid #000",
+                padding: "0.45rem 0.85rem",
+                backgroundColor: "#FFFFFF",
+                color: "#475569",
+                border: "1px solid rgba(23, 25, 21, 0.12)",
+                borderRadius: "10px",
                 fontWeight: 700,
                 fontSize: "0.75rem",
                 cursor: "pointer",
@@ -1007,17 +1186,18 @@ function FleetItemCard({ listing, onRecordOfflineDeal, onViewHistory, onToggleSt
               display: "flex",
               alignItems: "center",
               gap: "0.35rem",
-              padding: "0.45rem 0.8rem",
-              backgroundColor: "#FFF",
-              color: "#000",
-              border: "1.5px solid #000",
-              boxShadow: "2px 2px 0px #000",
+              padding: "0.45rem 0.85rem",
+              backgroundColor: "#FFFFFF",
+              color: "#171915",
+              border: "1px solid rgba(23, 25, 21, 0.12)",
+              borderRadius: "10px",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
               fontWeight: 700,
               fontSize: "0.75rem",
               cursor: "pointer",
             }}
           >
-            <History size={14} />
+            <History size={13} />
             History & Leases ({listing.activeBookings?.length || 0} active)
           </button>
         </div>
@@ -1028,7 +1208,7 @@ function FleetItemCard({ listing, onRecordOfflineDeal, onViewHistory, onToggleSt
             fontSize: "0.75rem",
             fontWeight: 800,
             textDecoration: "underline",
-            color: "#000",
+            color: "#0F766E",
           }}
         >
           Edit Listing Specs ↗
@@ -1094,11 +1274,12 @@ function OfflineDealsView({ offlineDeals, onRecordNew, onCheckIn }) {
               display: "flex",
               alignItems: "center",
               gap: "0.4rem",
-              padding: "0.5rem 0.9rem",
+              padding: "0.5rem 0.95rem",
               backgroundColor: "#FFF",
-              color: "#000",
-              border: "2px solid #000",
-              boxShadow: "3px 3px 0px #000",
+              color: "#171915",
+              border: "1px solid rgba(23, 25, 21, 0.15)",
+              borderRadius: "12px",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
               fontWeight: 800,
               cursor: "pointer",
               fontSize: "0.8rem",
@@ -1114,11 +1295,12 @@ function OfflineDealsView({ offlineDeals, onRecordNew, onCheckIn }) {
               display: "flex",
               alignItems: "center",
               gap: "0.4rem",
-              padding: "0.5rem 0.9rem",
+              padding: "0.5rem 0.95rem",
               backgroundColor: "#FFE66D",
-              color: "#000",
-              border: "2px solid #000",
-              boxShadow: "3px 3px 0px #000",
+              color: "#171915",
+              border: "1px solid rgba(23, 25, 21, 0.2)",
+              borderRadius: "12px",
+              boxShadow: "0 4px 12px rgba(255, 230, 109, 0.4)",
               fontWeight: 800,
               textDecoration: "none",
               fontSize: "0.8rem",
@@ -1147,9 +1329,10 @@ function OfflineDealsView({ offlineDeals, onRecordNew, onCheckIn }) {
                 key={deal._id}
                 style={{
                   backgroundColor: "#FFF",
-                  border: "2px solid #000",
-                  boxShadow: "3px 3px 0px #000",
-                  padding: "1rem 1.25rem",
+                  border: "1px solid rgba(23, 25, 21, 0.1)",
+                  borderRadius: "16px",
+                  boxShadow: "0 4px 18px -2px rgba(0,0,0,0.04)",
+                  padding: "1.1rem 1.35rem",
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
@@ -1164,8 +1347,9 @@ function OfflineDealsView({ offlineDeals, onRecordNew, onCheckIn }) {
                         fontSize: "0.7rem",
                         fontWeight: 900,
                         backgroundColor: "#89CFF0",
-                        padding: "0.15rem 0.5rem",
-                        border: "1px solid #000",
+                        padding: "0.2rem 0.55rem",
+                        borderRadius: "8px",
+                        border: "1px solid rgba(23, 25, 21, 0.12)",
                         textTransform: "uppercase",
                       }}
                     >
@@ -1203,14 +1387,15 @@ function OfflineDealsView({ offlineDeals, onRecordNew, onCheckIn }) {
                     display: "flex",
                     alignItems: "center",
                     gap: "0.4rem",
-                    padding: "0.5rem 0.9rem",
-                    backgroundColor: isOverdue ? "#FF6B6B" : "#4ECDC4",
-                    color: "#000",
-                    border: "2px solid #000",
-                    boxShadow: "2px 2px 0px #000",
+                    padding: "0.55rem 1rem",
+                    backgroundColor: isOverdue ? "#FEE2E2" : "#DCFCE7",
+                    color: isOverdue ? "#991B1B" : "#166534",
+                    border: isOverdue ? "1px solid #FCA5A5" : "1px solid #86EFAC",
+                    borderRadius: "12px",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
                     fontWeight: 800,
                     cursor: "pointer",
-                    fontSize: "0.8rem",
+                    fontSize: "0.82rem",
                     textTransform: "uppercase",
                   }}
                 >
@@ -1242,8 +1427,10 @@ function ActivityView({ activity }) {
           key={item._id}
           style={{
             backgroundColor: "#FFF",
-            border: "2px solid #000",
-            padding: "0.85rem 1rem",
+            border: "1px solid rgba(23, 25, 21, 0.08)",
+            borderRadius: "14px",
+            boxShadow: "0 2px 8px -2px rgba(0,0,0,0.03)",
+            padding: "0.95rem 1.15rem",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -1823,9 +2010,10 @@ function ReturnAndRepostModal({ booking, onClose, onSuccess }) {
 
           <div
             style={{
-              backgroundColor: "#FFE66D",
-              border: "2px solid #000",
-              padding: "0.85rem",
+              backgroundColor: "#FFF9D2",
+              border: "1px solid rgba(23, 25, 21, 0.12)",
+              borderRadius: "14px",
+              padding: "0.95rem 1.15rem",
               display: "flex",
               alignItems: "center",
               gap: "0.75rem",
@@ -1934,9 +2122,11 @@ function ListingHistoryModal({ historyData, loading, onClose, onCheckIn }) {
                   <div
                     key={r._id}
                     style={{
-                      border: "1.5px solid #000",
-                      padding: "0.75rem",
-                      backgroundColor: r.status === "in_progress" ? "#FFFBEA" : "#FFF",
+                      border: "1px solid rgba(23, 25, 21, 0.08)",
+                      borderRadius: "14px",
+                      padding: "0.85rem 1rem",
+                      backgroundColor: r.status === "in_progress" ? "#FFFBEA" : "#FAFAFA",
+                      boxShadow: "0 2px 8px -2px rgba(0,0,0,0.02)",
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
@@ -1960,8 +2150,9 @@ function ListingHistoryModal({ historyData, loading, onClose, onCheckIn }) {
                           fontSize: "0.7rem",
                           fontWeight: 800,
                           textTransform: "uppercase",
-                          padding: "0.15rem 0.45rem",
-                          border: "1px solid #000",
+                          padding: "0.2rem 0.55rem",
+                          borderRadius: "8px",
+                          border: "1px solid rgba(23, 25, 21, 0.12)",
                           backgroundColor: r.status === "completed" ? "#D4EDDA" : r.status === "in_progress" ? "#FFE66D" : "#F0F0F0",
                         }}
                       >
@@ -1975,9 +2166,11 @@ function ListingHistoryModal({ historyData, loading, onClose, onCheckIn }) {
                             onCheckIn({ ...r, listing: historyData.listing });
                           }}
                           style={{
-                            padding: "0.3rem 0.6rem",
+                            padding: "0.35rem 0.75rem",
                             backgroundColor: "#4ECDC4",
-                            border: "1px solid #000",
+                            border: "1px solid rgba(23, 25, 21, 0.15)",
+                            borderRadius: "8px",
+                            boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
                             fontSize: "0.75rem",
                             fontWeight: 800,
                             cursor: "pointer",
@@ -2035,11 +2228,12 @@ const modalBackdropStyle = {
 
 const modalCardStyle = {
   backgroundColor: "#FFFFFF",
-  border: "3px solid #000",
-  boxShadow: "8px 8px 0px #000",
+  border: "1px solid rgba(23, 25, 21, 0.12)",
+  borderRadius: "20px",
+  boxShadow: "0 20px 45px -10px rgba(0, 0, 0, 0.18), 0 8px 20px -6px rgba(0, 0, 0, 0.1)",
   width: "100%",
   maxWidth: "580px",
-  padding: "1.5rem",
+  padding: "1.75rem",
   maxHeight: "90vh",
   overflowY: "auto",
   boxSizing: "border-box",
@@ -2052,8 +2246,8 @@ const modalHeaderStyle = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  borderBottom: "2px solid #000",
-  paddingBottom: "0.75rem",
+  borderBottom: "1px solid rgba(23, 25, 21, 0.08)",
+  paddingBottom: "0.85rem",
   marginBottom: "1.25rem",
 };
 
@@ -2062,6 +2256,7 @@ const closeBtnStyle = {
   border: "none",
   cursor: "pointer",
   padding: "0.25rem",
+  color: "#64748B",
 };
 
 const labelStyle = {
@@ -2069,56 +2264,67 @@ const labelStyle = {
   fontSize: "0.78rem",
   fontWeight: 800,
   textTransform: "uppercase",
-  marginBottom: "0.3rem",
+  marginBottom: "0.35rem",
   color: "#333",
+  letterSpacing: "0.3px",
 };
 
 const inputStyle = {
   width: "100%",
-  padding: "0.55rem 0.75rem",
-  border: "2px solid #000",
+  padding: "0.6rem 0.85rem",
+  border: "1.5px solid rgba(23, 25, 21, 0.15)",
+  borderRadius: "12px",
   fontWeight: 600,
-  fontSize: "0.85rem",
-  backgroundColor: "#FFF",
+  fontSize: "0.875rem",
+  backgroundColor: "#FAFAFA",
+  outline: "none",
+  transition: "all 0.15s ease",
 };
 
 const btnPrimaryStyle = {
-  padding: "0.6rem 1.25rem",
+  padding: "0.65rem 1.35rem",
   backgroundColor: "#FFE66D",
-  color: "#000",
-  border: "2px solid #000",
-  boxShadow: "3px 3px 0px #000",
+  color: "#171915",
+  border: "1px solid rgba(23, 25, 21, 0.2)",
+  borderRadius: "12px",
+  boxShadow: "0 4px 12px rgba(255, 230, 109, 0.4)",
   fontWeight: 800,
   fontSize: "0.85rem",
   textTransform: "uppercase",
   cursor: "pointer",
+  transition: "transform 0.15s ease, box-shadow 0.15s ease",
 };
 
 const btnSecondaryStyle = {
-  padding: "0.6rem 1.1rem",
+  padding: "0.65rem 1.2rem",
   backgroundColor: "#FFF",
-  color: "#000",
-  border: "2px solid #000",
+  color: "#171915",
+  border: "1px solid rgba(23, 25, 21, 0.15)",
+  borderRadius: "12px",
   fontWeight: 800,
   fontSize: "0.85rem",
   cursor: "pointer",
+  transition: "background 0.15s ease",
 };
 
 const errorBannerStyle = {
-  backgroundColor: "#FF6B6B",
-  color: "#000",
-  border: "2px solid #000",
-  padding: "0.65rem 0.85rem",
+  backgroundColor: "#FEE2E2",
+  color: "#991B1B",
+  border: "1px solid #FCA5A5",
+  borderRadius: "12px",
+  padding: "0.75rem 1rem",
   fontWeight: 700,
   fontSize: "0.85rem",
   marginBottom: "1rem",
 };
 
 const statBoxStyle = {
-  border: "1.5px solid #000",
-  padding: "0.5rem",
-  backgroundColor: "#F8F8F8",
+  border: "1px solid rgba(23, 25, 21, 0.08)",
+  borderRadius: "12px",
+  padding: "0.65rem 0.5rem",
+  backgroundColor: "#FAFAFA",
   textAlign: "center",
+  boxShadow: "0 2px 8px -2px rgba(0,0,0,0.03)",
 };
 
 const statLabelStyle = {

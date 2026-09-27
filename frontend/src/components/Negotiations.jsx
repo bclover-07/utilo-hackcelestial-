@@ -7,6 +7,8 @@ import { useAuth } from "@/context/AuthContext";
 import { Video, PhoneCall, PhoneOff, Bot, Sparkles } from "lucide-react";
 import {
   ResponsiveContainer,
+  AreaChart,
+  Area,
   LineChart,
   Line,
   XAxis,
@@ -36,36 +38,69 @@ function OfferConvergenceChart({ offers }) {
     conditions: o.conditions,
   }));
   return (
-    <div style={{ margin: "1rem 0 1.25rem", padding: "1rem", background: "#FAF8F5", borderRadius: "16px", border: "2px solid #20201e", boxShadow: "3px 3px 0 #20201e" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.6rem" }}>
+    <div style={{
+      margin: "1rem 0 1.25rem",
+      padding: "1.25rem",
+      background: "#FFFFFF",
+      borderRadius: "18px",
+      border: "1px solid rgba(23, 25, 21, 0.1)",
+      boxShadow: "0 4px 18px -2px rgba(23, 25, 21, 0.05)"
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.8rem", flexWrap: "wrap", gap: "8px" }}>
         <div>
-          <span className="eyebrow" style={{ color: "#7B61A8" }}>PRICE CONVERGENCE</span>
-          <h4 style={{ margin: "2px 0 0", fontSize: "1rem" }}>Offer Trajectory ({offers.length} Rounds)</h4>
+          <span className="eyebrow" style={{ color: "#6366f1", marginBottom: 2 }}>PRICE CONVERGENCE</span>
+          <h4 style={{ margin: "2px 0 0", fontSize: "1.05rem", fontWeight: 700 }}>Offer Trajectory ({offers.length} Rounds)</h4>
         </div>
-        <span className="badge" style={{ background: "#A8E6CF", border: "2px solid #20201e" }}>
+        <span className="badge" style={{
+          background: "rgba(16, 185, 129, 0.12)",
+          color: "#065f46",
+          border: "1px solid rgba(16, 185, 129, 0.25)",
+          borderRadius: "12px",
+          fontWeight: 700,
+          padding: "4px 10px"
+        }}>
           {money(offers[0].price)} → {money(offers.at(-1).price)}
         </span>
       </div>
-      <div style={{ width: "100%", height: 160 }}>
+      <div style={{ width: "100%", height: 170 }}>
         <ResponsiveContainer>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E0CF" />
-            <XAxis dataKey="round" tick={{ fontSize: 11, fontWeight: 700, fill: "#20201e" }} />
-            <YAxis tick={{ fontSize: 10, fill: "#555" }} tickFormatter={(val) => `₹${val >= 1000 ? `${(val/1000).toFixed(0)}k` : val}`} domain={["dataMin - 100", "dataMax + 100"]} />
-            <Tooltip
-              formatter={(val) => [money(val), "Offer Price"]}
-              labelFormatter={(label) => label}
-              contentStyle={{ background: "#fffef8", border: "2px solid #20201e", borderRadius: 10, fontWeight: 700 }}
+          <AreaChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+            <defs>
+              <linearGradient id="negotiationGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25} />
+                <stop offset="95%" stopColor="#6366f1" stopOpacity={0.01} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(23, 25, 21, 0.07)" />
+            <XAxis dataKey="round" tick={{ fontSize: 11, fontWeight: 700, fill: "#475569" }} stroke="rgba(23, 25, 21, 0.2)" />
+            <YAxis
+              tick={{ fontSize: 10, fill: "#64748b" }}
+              stroke="rgba(23, 25, 21, 0.2)"
+              tickFormatter={(val) => `₹${val >= 1000 ? `${(val/1000).toFixed(0)}k` : val}`}
+              domain={["dataMin - 100", "dataMax + 100"]}
             />
-            <Line
+            <Tooltip
+              formatter={(val, name, item) => [money(val), `Offer by ${item.payload.by}`]}
+              labelFormatter={(label) => `Round: ${label}`}
+              contentStyle={{
+                background: "#ffffff",
+                border: "1px solid rgba(23, 25, 21, 0.12)",
+                borderRadius: 12,
+                boxShadow: "0 6px 20px -3px rgba(0,0,0,0.1)",
+                fontWeight: 700
+              }}
+            />
+            <Area
               type="monotone"
               dataKey="price"
-              stroke="#20201e"
-              strokeWidth={3}
-              dot={{ r: 5, fill: "#FFE66D", stroke: "#20201e", strokeWidth: 2 }}
-              activeDot={{ r: 7, fill: "#4ECDC4" }}
+              stroke="#6366f1"
+              strokeWidth={2.5}
+              fillOpacity={1}
+              fill="url(#negotiationGradient)"
+              dot={{ r: 4.5, fill: "#fff", stroke: "#6366f1", strokeWidth: 2.5 }}
+              activeDot={{ r: 7, fill: "#4f46e5", stroke: "#fff", strokeWidth: 2 }}
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
       </div>
     </div>

@@ -15,13 +15,13 @@
   --peach: #f9c8a3;
   --lilac: #dcd2ff;
   --indigo: #a7b6ef;
-  --border-comic: 1.5px solid var(--ink);
-  --border-width: 1.5px;
-  --shadow-sm: 1.5px 1.5px 0 var(--ink);
-  --shadow-md: 2px 2px 0 var(--ink);
-  --shadow-lg: 2.5px 3px 0 var(--ink);
-  --shadow-xl: 3px 4px 0 var(--ink);
-  --shadow-hover: 2.5px 3px 0 var(--ink);
+  --border-comic: 1px solid rgba(23, 25, 21, 0.15);
+  --border-width: 1px;
+  --shadow-sm: 0 2px 6px -1px rgba(23, 25, 21, 0.05);
+  --shadow-md: 0 4px 16px -2px rgba(23, 25, 21, 0.06);
+  --shadow-lg: 0 8px 24px -4px rgba(23, 25, 21, 0.08);
+  --shadow-xl: 0 12px 32px -4px rgba(23, 25, 21, 0.1);
+  --shadow-hover: 0 8px 20px -3px rgba(23, 25, 21, 0.08);
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 ::selection {
@@ -161,9 +161,9 @@ input[type="range"] {
 .message,
 .sim-item-card,
 .agent-card {
-  border: 1.5px solid var(--ink);
+  border: 1px solid rgba(23, 25, 21, 0.12);
   border-radius: 20px;
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: 0 4px 16px -2px rgba(23, 25, 21, 0.05);
   transition:
     transform 200ms var(--ease-out),
     box-shadow 200ms var(--ease-out),
@@ -175,8 +175,8 @@ input[type="range"] {
 .pulse-card:hover,
 .offer-card:hover,
 .agent-card:hover {
-  box-shadow: 2.5px 3px 0 var(--ink);
-  transform: translateY(-1.5px);
+  box-shadow: 0 8px 24px -4px rgba(23, 25, 21, 0.08);
+  transform: translateY(-2px);
 }
 .panel {
   background-color: var(--paper-card);
@@ -188,16 +188,16 @@ input[type="range"] {
   .stat:hover,
   .agent-card:hover,
   .sim-item-card:hover {
-    transform: translate(-1px, -1.5px);
-    box-shadow: 2.5px 3px 0 var(--ink);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -4px rgba(23, 25, 21, 0.08);
   }
   .panel:focus-within {
-    box-shadow: 2.5px 3px 0 var(--ink);
+    box-shadow: 0 8px 24px -4px rgba(23, 25, 21, 0.08);
   }
 }
 .badge,
 .top-mode-pill {
-  border: 1.5px solid var(--ink);
+  border: 1px solid rgba(23, 25, 21, 0.15);
   border-radius: 30px;
   padding: 5px 11px;
 }
@@ -5913,12 +5913,12 @@ body {
   gap: 8px;
   padding: 16px 18px;
   border-radius: 16px;
-  border: 2px solid var(--ink);
+  border: 1px solid rgba(23, 25, 21, 0.12);
   background: #ffffff;
   text-align: left;
   cursor: pointer;
-  transition: transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out), background-color 160ms ease;
-  box-shadow: 2px 2px 0 var(--ink);
+  transition: transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out), background-color 160ms ease, border-color 160ms ease;
+  box-shadow: 0 2px 8px -1px rgba(23, 25, 21, 0.04);
   width: 100%;
   box-sizing: border-box;
 }
@@ -5926,12 +5926,14 @@ body {
 .thread-tab:hover:not(.selected) {
   background: #FFFDF5;
   transform: translateY(-1.5px);
-  box-shadow: 3px 3px 0 var(--ink);
+  border-color: rgba(23, 25, 21, 0.2);
+  box-shadow: 0 4px 14px -2px rgba(23, 25, 21, 0.08);
 }
 
 .thread-tab.selected {
-  background: var(--yellow, #FFE66D);
-  box-shadow: 3.5px 3.5px 0 var(--ink);
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border-color: #f59e0b;
+  box-shadow: 0 4px 16px -2px rgba(245, 158, 11, 0.2);
   transform: translateY(-2px);
 }
 
