@@ -568,7 +568,11 @@ class _LandingScreenState extends State<LandingScreen> {
                                 padding: const EdgeInsets.only(right: 8),
                                 child: ChoiceChip(
                                   selected: _selectedCalcCategory == i,
-                                  onSelected: (_) => setState(() => _selectedCalcCategory = i),
+                                  onSelected: (_) {
+                                    setState(() {
+                                      _selectedCalcCategory = i;
+                                    });
+                                  },
                                   label: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -601,7 +605,11 @@ class _LandingScreenState extends State<LandingScreen> {
                         divisions: 27,
                         activeColor: ink,
                         inactiveColor: const Color(0xffe2d9c2),
-                        onChanged: (v) => setState(() => _idleDays = v),
+                        onChanged: (v) {
+                          setState(() {
+                            _idleDays = v;
+                          });
+                        },
                       ),
                       const SizedBox(height: 10),
                       Row(
@@ -618,7 +626,11 @@ class _LandingScreenState extends State<LandingScreen> {
                         divisions: _selectedCalcCategory == 2 ? 299 : 49,
                         activeColor: ink,
                         inactiveColor: const Color(0xffe2d9c2),
-                        onChanged: (v) => setState(() => _calcUnits = v),
+                        onChanged: (v) {
+                          setState(() {
+                            _calcUnits = v;
+                          });
+                        },
                       ),
                       const SizedBox(height: 16),
                       // Results Card
@@ -678,7 +690,11 @@ class _LandingScreenState extends State<LandingScreen> {
                 for (int i = 0; i < _workflowSteps.length; i++)
                   Panel(
                     color: _workflowSteps[i]['color'] as Color,
-                    onTap: () => setState(() => _expandedWorkflowStep = _expandedWorkflowStep == i ? -1 : i),
+                    onTap: () {
+                      setState(() {
+                        _expandedWorkflowStep = _expandedWorkflowStep == i ? -1 : i;
+                      });
+                    },
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -752,7 +768,11 @@ class _LandingScreenState extends State<LandingScreen> {
                         children: [
                           Expanded(
                             child: GestureDetector(
-                              onTap: () => setState(() => _mode = 'seeker'),
+                              onTap: () {
+                                setState(() {
+                                  _mode = 'seeker';
+                                });
+                              },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(vertical: 10),
                                 decoration: BoxDecoration(
@@ -775,7 +795,11 @@ class _LandingScreenState extends State<LandingScreen> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: GestureDetector(
-                              onTap: () => setState(() => _mode = 'provider'),
+                              onTap: () {
+                                setState(() {
+                                  _mode = 'provider';
+                                });
+                              },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(vertical: 10),
                                 decoration: BoxDecoration(
@@ -1115,7 +1139,9 @@ class _LandingScreenState extends State<LandingScreen> {
                         ),
                         color: card,
                         onSelected: (code) {
-                          setState(() => _currentLang = code);
+                          setState(() {
+                            _currentLang = code;
+                          });
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Language set to ${code.toUpperCase()}')),
                           );
