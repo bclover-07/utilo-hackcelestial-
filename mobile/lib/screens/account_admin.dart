@@ -121,7 +121,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   f.name,
                   'document',
                 );
-                if (mounted) setState(() => document = r['_id']);
+                if (mounted) {
+                  setState(() {
+                    document = r['_id'];
+                  });
+                }
                 return 'Document uploaded. Save profile to submit it.';
               },
             ),

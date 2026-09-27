@@ -769,7 +769,11 @@ class _GeospatialMapWidgetState extends State<_GeospatialMapWidget> with SingleT
                   padding: const EdgeInsets.only(right: 6),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(16),
-                    onTap: () => setState(() => _selectedCategory = cat),
+                    onTap: () {
+                      setState(() {
+                        _selectedCategory = cat;
+                      });
+                    },
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
@@ -841,15 +845,17 @@ class _GeospatialMapWidgetState extends State<_GeospatialMapWidget> with SingleT
                               top: constraints.maxHeight / 2 - 20,
                               child: GestureDetector(
                                 onTap: () {
-                                  setState(() => _inspectedLocation = {
-                                    'title': '${widget.weather['icon']} ${widget.city} Weather Hub',
-                                    'category': 'Environmental Center',
-                                    'city': widget.city,
-                                    'impact': {
-                                      'cancellationRisk': sevKey == 'severe' ? 75 : sevKey == 'high' ? 50 : 20,
-                                      'demandChange': sevKey == 'severe' ? -35 : -10,
-                                      'supplyChange': sevKey == 'severe' ? -25 : -5,
-                                    },
+                                  setState(() {
+                                    _inspectedLocation = {
+                                      'title': '${widget.weather['icon']} ${widget.city} Weather Hub',
+                                      'category': 'Environmental Center',
+                                      'city': widget.city,
+                                      'impact': {
+                                        'cancellationRisk': sevKey == 'severe' ? 75 : sevKey == 'high' ? 50 : 20,
+                                        'demandChange': sevKey == 'severe' ? -35 : -10,
+                                        'supplyChange': sevKey == 'severe' ? -25 : -5,
+                                      },
+                                    };
                                   });
                                 },
                                 child: Container(
@@ -879,7 +885,11 @@ class _GeospatialMapWidgetState extends State<_GeospatialMapWidget> with SingleT
                                 left: px - 14,
                                 top: py - 14,
                                 child: GestureDetector(
-                                  onTap: () => setState(() => _inspectedLocation = loc),
+                                  onTap: () {
+                                    setState(() {
+                                      _inspectedLocation = loc;
+                                    });
+                                  },
                                   child: Container(
                                     width: 28,
                                     height: 28,
@@ -943,7 +953,11 @@ class _GeospatialMapWidgetState extends State<_GeospatialMapWidget> with SingleT
                             ),
                             IconButton(
                               icon: const Icon(Icons.close, size: 16, color: ink),
-                              onPressed: () => setState(() => _inspectedLocation = null),
+                              onPressed: () {
+                                setState(() {
+                                  _inspectedLocation = null;
+                                });
+                              },
                             ),
                           ],
                         ),
@@ -1172,8 +1186,16 @@ class _ForecastAndTrajectoryWidgetState extends State<_ForecastAndTrajectoryWidg
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _toggleBtn('🌤️ Weather', _mode == 'weather', () => setState(() => _mode = 'weather')),
-                    _toggleBtn('📈 Twin', _mode == 'probabilistic', () => setState(() => _mode = 'probabilistic')),
+                    _toggleBtn('🌤️ Weather', _mode == 'weather', () {
+                      setState(() {
+                        _mode = 'weather';
+                      });
+                    }),
+                    _toggleBtn('📈 Twin', _mode == 'probabilistic', () {
+                      setState(() {
+                        _mode = 'probabilistic';
+                      });
+                    }),
                   ],
                 ),
               ),
@@ -1246,7 +1268,9 @@ class _ForecastAndTrajectoryWidgetState extends State<_ForecastAndTrajectoryWidg
                 final count = widget.forecast.length;
                 if (count == 0) return;
                 final idx = ((details.localPosition.dx / width) * count).floor().clamp(0, count - 1);
-                setState(() => _hoveredIndex = idx);
+                setState(() {
+                  _hoveredIndex = idx;
+                });
               },
               child: CustomPaint(
                 size: Size.infinite,
@@ -1575,7 +1599,11 @@ class _CategoryImpactCardWidgetState extends State<_CategoryImpactCardWidget> {
 
             // Header Clickable
             InkWell(
-              onTap: () => setState(() => _expanded = !_expanded),
+              onTap: () {
+                setState(() {
+                  _expanded = !_expanded;
+                });
+              },
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
                 child: Row(
@@ -1997,7 +2025,9 @@ class _WhatIfSimulatorWidgetState extends State<_WhatIfSimulatorWidget> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _loading = false);
+        setState(() {
+          _loading = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Simulation error: $e')),
         );
@@ -2093,10 +2123,26 @@ class _WhatIfSimulatorWidgetState extends State<_WhatIfSimulatorWidget> {
                   style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: ink),
                 ),
                 const SizedBox(height: 8),
-                _sliderTile('🌡️ Temperature: ${_temp.round()}°C', _temp, -5.0, 52.0, (v) => setState(() => _temp = v)),
-                _sliderTile('🌧️ Precipitation / Rain: ${_rain.round()}mm', _rain, 0.0, 150.0, (v) => setState(() => _rain = v)),
-                _sliderTile('💨 Wind Speed: ${_wind.round()}km/h', _wind, 0.0, 130.0, (v) => setState(() => _wind = v)),
-                _sliderTile('💧 Humidity: ${_humidity.round()}%', _humidity, 10.0, 100.0, (v) => setState(() => _humidity = v)),
+                _sliderTile('🌡️ Temperature: ${_temp.round()}°C', _temp, -5.0, 52.0, (v) {
+                  setState(() {
+                    _temp = v;
+                  });
+                }),
+                _sliderTile('🌧️ Precipitation / Rain: ${_rain.round()}mm', _rain, 0.0, 150.0, (v) {
+                  setState(() {
+                    _rain = v;
+                  });
+                }),
+                _sliderTile('💨 Wind Speed: ${_wind.round()}km/h', _wind, 0.0, 130.0, (v) {
+                  setState(() {
+                    _wind = v;
+                  });
+                }),
+                _sliderTile('💧 Humidity: ${_humidity.round()}%', _humidity, 10.0, 100.0, (v) {
+                  setState(() {
+                    _humidity = v;
+                  });
+                }),
                 const SizedBox(height: 6),
                 Row(
                   children: [
@@ -2121,7 +2167,11 @@ class _WhatIfSimulatorWidgetState extends State<_WhatIfSimulatorWidget> {
                               );
                             }).toList(),
                             onChanged: (v) {
-                              if (v != null) setState(() => _weatherCode = v);
+                              if (v != null) {
+                                setState(() {
+                                  _weatherCode = v;
+                                });
+                              }
                             },
                           ),
                         ),
@@ -2721,10 +2771,26 @@ class _SocialPulseWidgetState extends State<_SocialPulseWidget> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _filterTab('All (${allSignals.length})', _sourceFilter == 'all', () => setState(() => _sourceFilter = 'all')),
-                _filterTab('📰 Live News (${sourceBreakdown['liveNews'] ?? 0})', _sourceFilter == 'news', () => setState(() => _sourceFilter = 'news')),
-                _filterTab('💬 Reddit (${sourceBreakdown['reddit'] ?? 0})', _sourceFilter == 'reddit', () => setState(() => _sourceFilter = 'reddit')),
-                _filterTab('📡 Traveler Pulse (${sourceBreakdown['citizenPulse'] ?? 0})', _sourceFilter == 'pulse', () => setState(() => _sourceFilter = 'pulse')),
+                _filterTab('All (${allSignals.length})', _sourceFilter == 'all', () {
+                  setState(() {
+                    _sourceFilter = 'all';
+                  });
+                }),
+                _filterTab('📰 Live News (${sourceBreakdown['liveNews'] ?? 0})', _sourceFilter == 'news', () {
+                  setState(() {
+                    _sourceFilter = 'news';
+                  });
+                }),
+                _filterTab('💬 Reddit (${sourceBreakdown['reddit'] ?? 0})', _sourceFilter == 'reddit', () {
+                  setState(() {
+                    _sourceFilter = 'reddit';
+                  });
+                }),
+                _filterTab('📡 Traveler Pulse (${sourceBreakdown['citizenPulse'] ?? 0})', _sourceFilter == 'pulse', () {
+                  setState(() {
+                    _sourceFilter = 'pulse';
+                  });
+                }),
               ],
             ),
           ),
@@ -2847,7 +2913,11 @@ class _SocialPulseWidgetState extends State<_SocialPulseWidget> {
           if (filtered.length > 6)
             Center(
               child: TextButton(
-                onPressed: () => setState(() => _expanded = !_expanded),
+                onPressed: () {
+                  setState(() {
+                    _expanded = !_expanded;
+                  });
+                },
                 child: Text(
                   _expanded ? 'Show fewer signals' : 'Show all ${filtered.length} signals',
                   style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: ink),

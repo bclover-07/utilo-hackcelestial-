@@ -97,11 +97,23 @@ class _AuthScreenState extends State<AuthScreen> {
         Navigator.of(context).popUntil((route) => route.isFirst);
       }
     } on ApiFailure catch (e) {
-      if (mounted) setState(() => _errorMessage = e.message);
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.message;
+        });
+      }
     } catch (e) {
-      if (mounted) setState(() => _errorMessage = e.toString());
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+        });
+      }
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) {
+        setState(() {
+          _busy = false;
+        });
+      }
     }
   }
 
@@ -231,7 +243,11 @@ class _AuthScreenState extends State<AuthScreen> {
                           children: [
                             Expanded(
                               child: GestureDetector(
-                                onTap: () => setState(() => _accountType = 'business'),
+                                onTap: () {
+                                  setState(() {
+                                    _accountType = 'business';
+                                  });
+                                },
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(vertical: 10),
                                   decoration: BoxDecoration(
@@ -255,7 +271,11 @@ class _AuthScreenState extends State<AuthScreen> {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: GestureDetector(
-                                  onTap: () => setState(() => _accountType = 'admin'),
+                                  onTap: () {
+                                    setState(() {
+                                      _accountType = 'admin';
+                                    });
+                                  },
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(vertical: 10),
                                     decoration: BoxDecoration(
@@ -291,7 +311,11 @@ class _AuthScreenState extends State<AuthScreen> {
                             children: [
                               Expanded(
                                 child: GestureDetector(
-                                  onTap: () => setState(() => _businessMode = 'seeker'),
+                                  onTap: () {
+                                    setState(() {
+                                      _businessMode = 'seeker';
+                                    });
+                                  },
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(vertical: 10),
                                     decoration: BoxDecoration(
@@ -314,7 +338,11 @@ class _AuthScreenState extends State<AuthScreen> {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: GestureDetector(
-                                  onTap: () => setState(() => _businessMode = 'provider'),
+                                  onTap: () {
+                                    setState(() {
+                                      _businessMode = 'provider';
+                                    });
+                                  },
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(vertical: 10),
                                     decoration: BoxDecoration(
@@ -459,7 +487,11 @@ class _AuthScreenState extends State<AuthScreen> {
                                 prefixIcon: Icon(Icons.category_outlined),
                               ),
                               items: _categories.map((c) => DropdownMenuItem(value: c['value'], child: Text(c['label']!))).toList(),
-                              onChanged: (v) => setState(() => _selectedCategory = v ?? 'hotel'),
+                              onChanged: (v) {
+                                setState(() {
+                                  _selectedCategory = v ?? 'hotel';
+                                });
+                              },
                             ),
                           ],
                           const SizedBox(height: 14),
@@ -486,7 +518,11 @@ class _AuthScreenState extends State<AuthScreen> {
                             prefixIcon: const Icon(Icons.lock_outline),
                             suffixIcon: IconButton(
                               icon: Icon(_obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
-                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
                             ),
                           ),
                           validator: (v) => v == null || v.length < 6 ? 'Password must be at least 6 characters' : null,

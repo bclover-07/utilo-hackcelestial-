@@ -221,9 +221,17 @@ class _AsyncButtonState extends State<AsyncButton> {
                         );
                       }
                     } catch (e) {
-                      if (mounted) setState(() => error = e.toString());
+                      if (mounted) {
+                        setState(() {
+                          error = e.toString();
+                        });
+                      }
                     } finally {
-                      if (mounted) setState(() => busy = false);
+                      if (mounted) {
+                        setState(() {
+                          busy = false;
+                        });
+                      }
                     }
                   },
             icon: busy
@@ -489,7 +497,9 @@ class _FieldsFormState extends State<FieldsForm> {
                     contentPadding: EdgeInsets.zero,
                     title: Text(f.title),
                     value: values[f.key] == true,
-                    onChanged: (v) => setState(() => values[f.key] = v),
+                    onChanged: (v) => setState(() {
+                      values[f.key] = v;
+                    }),
                   )
                 : f.options != null
                 ? DropdownButtonFormField<String>(

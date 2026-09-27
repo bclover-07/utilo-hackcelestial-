@@ -1335,7 +1335,11 @@ class _AgentScreenState extends State<AgentScreen> {
                     method: 'POST',
                     body: b,
                   );
-                  if (mounted) setState(() => result = r);
+                  if (mounted) {
+                    setState(() {
+                      result = r;
+                    });
+                  }
                   return 'Evidence review complete.';
                 },
               ),
@@ -1379,7 +1383,11 @@ class _AgentScreenState extends State<AgentScreen> {
                     method: 'POST',
                     body: {'kind': 'bundle', 'text': text, 'filters': input},
                   );
-                  if (mounted) setState(() => result = r);
+                  if (mounted) {
+                    setState(() {
+                      result = r;
+                    });
+                  }
                   return 'Matching complete.';
                 },
               ),
@@ -1493,7 +1501,11 @@ class _AgentScreenState extends State<AgentScreen> {
                         'listingId': listing,
                     },
                   );
-                  if (mounted) setState(() => result = r);
+                  if (mounted) {
+                    setState(() {
+                      result = r;
+                    });
+                  }
                   return 'Analysis ready.';
                 },
               ),
@@ -1855,7 +1867,9 @@ class _PlannerScreenState extends State<PlannerScreen> {
               body: {...b, 'kind': 'parse'},
             );
             if (mounted) {
-              setState(() => draft = Map<String, dynamic>.from(r['draft']));
+              setState(() {
+                draft = Map<String, dynamic>.from(r['draft']);
+              });
             }
             return 'Review the draft and supply missing details.';
           },
@@ -1879,7 +1893,11 @@ class _PlannerScreenState extends State<PlannerScreen> {
         PlanResult(
           session: widget.session,
           plan: plan!,
-          onChange: (p) => setState(() => plan = p),
+          onChange: (p) {
+            setState(() {
+              plan = p;
+            });
+          },
         ),
       Remote(
         key: ValueKey(refresh),
@@ -1907,7 +1925,9 @@ class _PlannerScreenState extends State<PlannerScreen> {
                         '/ai/plans/${p['_id']}',
                       );
                       if (mounted) {
-                        setState(() => plan = Map<String, dynamic>.from(r));
+                        setState(() {
+                          plan = Map<String, dynamic>.from(r);
+                        });
                       }
                       return 'Plan loaded.';
                     },
@@ -2172,7 +2192,11 @@ class _PlanResultState extends State<PlanResult> {
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,
             value: acknowledged,
-            onChanged: (v) => setState(() => acknowledged = v!),
+            onChanged: (v) {
+              setState(() {
+                acknowledged = v!;
+              });
+            },
             title: const Text(
               'I reviewed the package, conditions, deposits and availability limitations. Create invitations for this package.',
             ),

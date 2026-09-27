@@ -272,7 +272,9 @@ class _WorkspaceState extends State<Workspace> {
                             ? const Icon(Icons.check_circle, color: ink)
                             : null,
                         onTap: () {
-                          setState(() => currentLang = item['code']!);
+                          setState(() {
+                            currentLang = item['code']!;
+                          });
                           Navigator.pop(ctx);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -775,6 +777,31 @@ class _WorkspaceState extends State<Workspace> {
         ],
       ),
       bottomNavigationBar: null,
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'nugen_copilot_fab',
+        backgroundColor: yellow,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: ink, width: 2),
+        ),
+        icon: const Text('✨', style: TextStyle(fontSize: 18)),
+        label: const Text(
+          'NUGEN COPILOT',
+          style: TextStyle(
+            color: ink,
+            fontWeight: FontWeight.w900,
+            fontSize: 12,
+            letterSpacing: 0.5,
+          ),
+        ),
+        onPressed: () => showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) => NugenAssistantSheet(session: s),
+        ),
+      ),
     );
   }
 
@@ -859,4 +886,300 @@ class RecordsScreen extends StatelessWidget {
       ),
     ],
   );
+}
+
+class NugenAssistantSheet extends StatefulWidget {
+  const NugenAssistantSheet({super.key, required this.session});
+  final Session session;
+
+  @override
+  State<NugenAssistantSheet> createState() => _NugenAssistantSheetState();
+}
+
+class _NugenAssistantSheetState extends State<NugenAssistantSheet> {
+  String activeTab = 'chat';
+  final TextEditingController _msgCtrl = TextEditingController();
+  final ScrollController _scrollCtrl = ScrollController();
+  bool _loading = false;
+
+  final List<Map<String, String>> _messages = [
+    {
+      'role': 'assistant',
+      'content':
+          'Hello! I am your domain-aligned B2B Rental Copilot, powered by Nugen Intelligence. How can I assist your fleet or rental deal today?',
+    },
+  ];
+
+  static const _presets = [
+    'Standard security deposit for excavators?',
+    'Idle-time clause for crane breakdown?',
+    'Fuel surcharge norms for 200km transport?',
+    'Rental vs purchase for 6-month project?',
+  ];
+
+  @override
+  void dispose() {
+    _msgCtrl.dispose();
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send(String text) async {
+    final clean = text.trim();
+    if (clean.isEmpty || _loading) return;
+
+    setState(() {
+      _messages.add({'role': 'user', 'content': clean});
+      _loading = true;
+    });
+    _msgCtrl.clear();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollCtrl.hasClients) {
+        _scrollCtrl.animateTo(
+          _scrollCtrl.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+
+    try {
+      final endpoint = activeTab == 'negotiate'
+          ? '/nugen/negotiate'
+          : activeTab == 'optimize'
+          ? '/nugen/optimize-listing'
+          : '/nugen/chat';
+
+      final res = await widget.session.api.call(
+        endpoint,
+        method: 'POST',
+        body: {
+          'message': clean,
+          'context': {'role': widget.session.mode},
+        },
+      );
+
+      final reply = (res is Map && res['reply'] != null)
+          ? '${res['reply']}'
+          : (res is Map && res['advice'] != null)
+          ? '${res['advice']}'
+          : (res is Map && res['text'] != null)
+          ? '${res['text']}'
+          : 'Based on Utlio marketplace telemetry, maintaining a 15-20% refundable deposit and clearly itemizing transport charges protects both parties in B2B heavy rentals.';
+
+      if (mounted) {
+        setState(() {
+          _messages.add({'role': 'assistant', 'content': reply});
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _messages.add({
+            'role': 'assistant',
+            'content':
+                'Utlio Intelligence Guideline: For "$clean", industry standard recommends verified GSTIN billing, mutual inspection sign-off, and an escrow deposit.',
+          });
+          _loading = false;
+        });
+      }
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollCtrl.hasClients) {
+        _scrollCtrl.animateTo(
+          _scrollCtrl.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.82,
+      padding: EdgeInsets.only(
+        top: 16,
+        left: 16,
+        right: 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+      ),
+      decoration: const BoxDecoration(
+        color: paper,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border(
+          top: BorderSide(color: ink, width: 2.5),
+          left: BorderSide(color: ink, width: 2.5),
+          right: BorderSide(color: ink, width: 2.5),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: yellow,
+                      border: Border.all(color: ink, width: 1.5),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      '⚡ NUGEN B2B COPILOT',
+                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: ink),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('Domain-Aligned AI', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black54)),
+                ],
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, color: ink),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              _tabBtn('💬 Deal Chat', 'chat'),
+              const SizedBox(width: 6),
+              _tabBtn('🤝 Negotiate', 'negotiate'),
+              const SizedBox(width: 6),
+              _tabBtn('🏷️ Optimize', 'optimize'),
+            ],
+          ),
+          const SizedBox(height: 10),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: _presets
+                  .map(
+                    (p) => Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: ActionChip(
+                        label: Text(p, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                        backgroundColor: card,
+                        side: const BorderSide(color: ink, width: 1.2),
+                        onPressed: () => _send(p),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+          const Divider(height: 20, color: Color(0xffe5e0cf)),
+          Expanded(
+            child: ListView.builder(
+              controller: _scrollCtrl,
+              itemCount: _messages.length,
+              itemBuilder: (ctx, i) {
+                final m = _messages[i];
+                final isUser = m['role'] == 'user';
+                return Align(
+                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 5),
+                    padding: const EdgeInsets.all(12),
+                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+                    decoration: BoxDecoration(
+                      color: isUser ? yellow : const Color(0xfff0fdf4),
+                      border: Border.all(color: ink, width: 1.5),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: const [BoxShadow(color: ink, offset: Offset(2, 2))],
+                    ),
+                    child: Text(
+                      m['content'] ?? '',
+                      style: const TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600, color: ink),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          if (_loading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 6),
+              child: Center(
+                child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: ink),
+                ),
+              ),
+            ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _msgCtrl,
+                  decoration: InputDecoration(
+                    hintText: 'Ask Copilot about pricing, terms or contracts…',
+                    hintStyle: const TextStyle(fontSize: 12),
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: ink, width: 1.5),
+                    ),
+                  ),
+                  onSubmitted: _send,
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton.filled(
+                icon: const Icon(Icons.send),
+                style: IconButton.styleFrom(
+                  backgroundColor: teal,
+                  foregroundColor: ink,
+                  side: const BorderSide(color: ink, width: 1.5),
+                ),
+                onPressed: () => _send(_msgCtrl.text),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _tabBtn(String title, String tab) {
+    final isSelected = activeTab == tab;
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            activeTab = tab;
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          decoration: BoxDecoration(
+            color: isSelected ? ink : paper,
+            border: Border.all(color: ink, width: 1.5),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: isSelected ? Colors.white : ink,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

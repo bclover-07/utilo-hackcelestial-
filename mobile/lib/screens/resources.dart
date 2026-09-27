@@ -5,6 +5,7 @@ import '../core/api.dart';
 import '../ui/widgets.dart';
 import '../ui/theme.dart';
 import '../services/local_ai.dart';
+import 'deals.dart';
 
 Map<String, String> categoryOptions(dynamic data) => {
   for (final c in records(data)) '${c['slug']}': '${c['name']}',
@@ -328,7 +329,7 @@ class _RapidoNegotiateModalState extends State<RapidoNegotiateModal> {
       error = null;
     });
     try {
-      await widget.session.api.call(
+      final res = await widget.session.api.call(
         '/quotes/direct-offer',
         method: 'POST',
         body: {
@@ -339,15 +340,27 @@ class _RapidoNegotiateModalState extends State<RapidoNegotiateModal> {
             'conditions': _conditionsCtrl.text.trim(),
         },
       );
+      final quoteId = (res is Map && res['quoteId'] != null) ? '${res['quoteId']}' : null;
       if (mounted) {
         setState(() {
           loading = false;
           success = true;
         });
-        Future.delayed(const Duration(milliseconds: 1400), () {
+        Future.delayed(const Duration(milliseconds: 1200), () {
           if (mounted) {
             Navigator.pop(context);
             widget.onSuccess?.call();
+            if (quoteId != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => QuoteScreen(
+                    session: widget.session,
+                    id: quoteId,
+                  ),
+                ),
+              );
+            }
           }
         });
       }
@@ -595,7 +608,9 @@ class _RapidoNegotiateModalState extends State<RapidoNegotiateModal> {
                       onChanged: (val) {
                         final parsed = double.tryParse(val);
                         if (parsed != null && parsed > 0) {
-                          setState(() => offerPrice = parsed);
+                          setState(() {
+                            offerPrice = parsed;
+                          });
                         }
                       },
                     ),
@@ -1094,7 +1109,9 @@ class _ListingEditorState extends State<ListingEditor> {
                         ),
                       )
                       .toList(),
-                  onChanged: (v) => setState(() => category = v ?? ''),
+                  onChanged: (v) => setState(() {
+                    category = v ?? '';
+                  }),
                 ),
                 const SizedBox(height: 18),
                 FieldsForm(
@@ -1213,7 +1230,9 @@ class _ListingEditorState extends State<ListingEditor> {
                         api: widget.session.api,
                         task: 'polish',
                         source: description.text,
-                        onApply: (v) => setState(() => description.text = v),
+                        onApply: (v) => setState(() {
+                          description.text = v;
+                        }),
                       ),
                       const SizedBox(height: 18),
                     ],
@@ -1284,7 +1303,11 @@ class _ListingEditorState extends State<ListingEditor> {
                     file.name,
                     'image',
                   );
-                  if (mounted) setState(() => photos.add(uploaded['url']));
+                  if (mounted) {
+                    setState(() {
+                      photos.add(uploaded['url']);
+                    });
+                  }
                   return 'Photo uploaded.';
                 },
               ),
@@ -1302,7 +1325,9 @@ class _ListingEditorState extends State<ListingEditor> {
                     ),
                     IconButton(
                       tooltip: 'Remove photo',
-                      onPressed: () => setState(() => photos.remove(p)),
+                      onPressed: () => setState(() {
+                        photos.remove(p);
+                      }),
                       icon: const Icon(Icons.delete_outline),
                     ),
                   ],
@@ -1346,7 +1371,9 @@ class _AvailabilityScreenState extends State<AvailabilityScreen> {
                 ),
               )
               .toList(),
-          onChanged: (v) => setState(() => selected = v),
+          onChanged: (v) => setState(() {
+            selected = v;
+          }),
         ),
       ),
       const SizedBox(height: 20),
