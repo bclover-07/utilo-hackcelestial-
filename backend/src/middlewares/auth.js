@@ -23,6 +23,31 @@ export async function auth(req, res, next) {
   req.user = user;
   next();
 }
+
+export async function optionalAuth(req, res, next) {
+  let payload;
+  const sessionToken = req.cookies?.utilo_session || req.cookies?.utlio_session || req.headers.authorization?.replace(/^Bearer\s+/i, "");
+  if (!sessionToken) {
+    req.user = null;
+    return next();
+  }
+  try {
+    payload = jwt.verify(sessionToken, config.jwt, {
+      algorithms: ["HS256"],
+      issuer: ["utilo", "utlio"],
+      audience: ["utilo-web", "utlio-web"],
+    });
+    const user = await BusinessProfile.findById(payload.sub);
+    if (user && user.sessionVersion === payload.version) {
+      req.user = user;
+    } else {
+      req.user = null;
+    }
+  } catch {
+    req.user = null;
+  }
+  next();
+}
 export function admin(req, res, next) {
   assert(req.user.role === "admin", 403, "Administrator access required.");
   next();

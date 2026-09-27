@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { config } from "../config.js";
 import * as authService from "../services/authService.js";
 import { BusinessProfile } from "../models/BusinessProfile.js";
 

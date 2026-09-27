@@ -5,17 +5,17 @@ import { getSocialSignals } from "../services/socialSignalService.js";
 
 export const digitalTwinController = {
   async state(req, res) {
-    const city = req.query.city || req.user.city || "Mumbai";
+    const city = req.query.city || req.user?.city || "Mumbai";
     const state = await getDigitalTwinState(city);
     res.json(state);
   },
   async weather(req, res) {
-    const city = req.query.city || req.user.city || "Mumbai";
+    const city = req.query.city || req.user?.city || "Mumbai";
     const weather = await getCurrentWeather(city);
     res.json(weather);
   },
   async forecast(req, res) {
-    const city = req.query.city || req.user.city || "Mumbai";
+    const city = req.query.city || req.user?.city || "Mumbai";
     const days = Math.min(Number(req.query.days) || 7, 16);
     const forecast = await getWeatherForecast(city, days);
     res.json(forecast);
@@ -30,9 +30,9 @@ export const digitalTwinController = {
     res.json(data);
   },
   async simulate(req, res) {
-    const city = req.body.city || req.user.city || "Mumbai";
-    const overrides = req.body.overrides || {};
-    const presetId = req.body.preset;
+    const city = req.body?.city || req.user?.city || "Mumbai";
+    const overrides = req.body?.overrides || {};
+    const presetId = req.body?.preset;
     let finalOverrides = overrides;
     if (presetId) {
       const preset = PRESET_SCENARIOS.find((p) => p.id === presetId);
@@ -47,7 +47,7 @@ export const digitalTwinController = {
     res.json(PRESET_SCENARIOS);
   },
   async socialSignals(req, res) {
-    const city = req.query.city || req.user.city;
+    const city = req.query.city || req.user?.city || "Mumbai";
     const data = await getSocialSignals(city);
     res.json(data);
   },

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import mongoose from "mongoose";
-import { auth, business } from "../middlewares/auth.js";
+import { auth, optionalAuth, business } from "../middlewares/auth.js";
 import { authController } from "../controllers/authController.js";
 import { listingController } from "../controllers/listingController.js";
 import { authRoutes } from "./authRoutes.js";
@@ -34,6 +34,7 @@ api.get("/categories", listingController.categories);
 
 
 api.use("/auth", authRoutes);
+api.use(optionalAuth, digitalTwinRoutes);
 
 
 api.use(auth);
@@ -50,7 +51,6 @@ api.use(uploadRoutes);
 api.use(notificationRoutes);
 api.use(analyticsRoutes);
 api.use(workProcessRoutes);
-api.use(digitalTwinRoutes);
 
 
 api.use("/admin", adminRoutes);
