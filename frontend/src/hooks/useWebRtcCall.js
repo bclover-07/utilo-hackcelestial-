@@ -556,9 +556,35 @@ export function useWebRtcCall({
     }
 
     // ---------- Socket listeners ----------
+    // Dedup ring: prevents processing the same signal twice if it arrives
+    // via both the call room and the user personal room.
+    const recentSignalHashes = [];
+    const DEDUP_RING_SIZE = 30;
+
+    function signalHash(signal) {
+      // SDP signals are uniquely identified by type + first 64 chars of sdp
+      if (signal.sdp) return `${signal.type}:${signal.sdp.slice(0, 64)}`;
+      // ICE candidates by their foundation + priority
+      if (signal.candidate) {
+        const c = signal.candidate;
+        return `candidate:${c.candidate || ""}`.slice(0, 80);
+      }
+      return `${signal.type}:${signal.sessionId || ""}`;
+    }
+
+    function isDuplicateSignal(signal) {
+      if (signal.type === "media-state") return false; // always process latest
+      const hash = signalHash(signal);
+      if (recentSignalHashes.includes(hash)) return true;
+      recentSignalHashes.push(hash);
+      if (recentSignalHashes.length > DEDUP_RING_SIZE) recentSignalHashes.shift();
+      return false;
+    }
+
     function handleSignal(data) {
       if (disposed || ended || !data?.signal) return;
       if (!isThisCall(data) || isSelf(data.senderId)) return;
+      if (isDuplicateSignal(data.signal)) return;
       if (data.senderId) partnerIdRef.current = data.senderId;
       const { signal } = data;
       switch (signal.type) {

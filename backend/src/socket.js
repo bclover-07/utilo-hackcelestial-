@@ -366,6 +366,9 @@ export function initSocketServer(httpServer) {
     });
 
     // 4. Relay WebRTC Signaling (Offer, Answer, ICE Candidate)
+    //    Signals are sent to the call room only. The targeted user personal room
+    //    is used as a **fallback** only when the peer hasn't joined the call room yet,
+    //    which avoids the old bug where signals arrived twice.
     socket.on("webrtc_signal", ({ quoteId, roomId, targetUserId, signal }) => {
       if (!signal) return;
       const payload = {
@@ -374,29 +377,54 @@ export function initSocketServer(httpServer) {
         senderId: String(socket.user._id),
         signal,
       };
-      // Direct room broadcast to all other call participants
-      if (roomId) {
-        socket.to(`call_${roomId}`).emit("webrtc_signal", payload);
+      const callRoom = roomId ? `call_${roomId}` : null;
+      let deliveredViaCallRoom = false;
+
+      if (callRoom) {
+        // Check if the target peer is actually in the call room
+        const room = io.sockets.adapter.rooms.get(callRoom);
+        const targetSockets = targetUserId
+          ? Array.from(io.sockets.adapter.rooms.get(`user_${targetUserId}`) || [])
+          : [];
+        const peerInCallRoom = targetSockets.some((sid) => room && room.has(sid));
+
+        socket.to(callRoom).emit("webrtc_signal", payload);
+        deliveredViaCallRoom = peerInCallRoom;
       }
-      // Also emit to targeted user personal room as a fallback
-      if (targetUserId && targetUserId !== "undefined" && targetUserId !== "null") {
-        io.to(`user_${targetUserId}`).emit("webrtc_signal", payload);
+
+      // Fallback: deliver to user's personal room only if they're NOT in the call room yet
+      if (!deliveredViaCallRoom && targetUserId && targetUserId !== "undefined" && targetUserId !== "null") {
+        socket.to(`user_${targetUserId}`).emit("webrtc_signal", payload);
       }
     });
 
     // 4b. WebRTC Peer Ready Handshake
-    socket.on("webrtc_ready", ({ quoteId, roomId, targetUserId }) => {
+    //     Forward ALL fields including sessionId so the caller can match the callee's
+    //     RTCPeerConnection instance and send the SDP offer to the correct session.
+    socket.on("webrtc_ready", ({ quoteId, roomId, targetUserId, sessionId }) => {
       const payload = {
         quoteId,
         roomId,
         senderId: String(socket.user._id),
         userId: String(socket.user._id),
+        sessionId,
       };
-      if (roomId) {
-        socket.to(`call_${roomId}`).emit("webrtc_ready", payload);
+      const callRoom = roomId ? `call_${roomId}` : null;
+      let deliveredViaCallRoom = false;
+
+      if (callRoom) {
+        const room = io.sockets.adapter.rooms.get(callRoom);
+        const targetSockets = targetUserId
+          ? Array.from(io.sockets.adapter.rooms.get(`user_${targetUserId}`) || [])
+          : [];
+        const peerInCallRoom = targetSockets.some((sid) => room && room.has(sid));
+
+        socket.to(callRoom).emit("webrtc_ready", payload);
+        deliveredViaCallRoom = peerInCallRoom;
       }
-      if (targetUserId && targetUserId !== "undefined" && targetUserId !== "null") {
-        io.to(`user_${targetUserId}`).emit("webrtc_ready", payload);
+
+      if (!deliveredViaCallRoom && targetUserId && targetUserId !== "undefined" && targetUserId !== "null") {
+        socket.to(`user_${targetUserId}`).emit("webrtc_ready", payload);
       }
     });
 
