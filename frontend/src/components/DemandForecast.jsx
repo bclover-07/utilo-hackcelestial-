@@ -37,8 +37,8 @@ export function DemandForecastPage() {
         title="Understand today's demand."
         description="Explore current open requests and recorded utilization, with suggested actions grounded in marketplace evidence."
       />
-      <div className="split-layout">
-        <section className="panel" style={{ background: "#C3B1E1" }}>
+      <div style={{ margin: "24px 0", width: "100%" }}>
+        <section className="panel" style={{ background: "#C3B1E1", width: "100%" }}>
           <Badge>LANGGRAPH DEMAND ANALYST</Badge>
           <h2>Inspect demand by market</h2>
           <State resource={categories}>
@@ -56,51 +56,24 @@ export function DemandForecastPage() {
                   return "Demand snapshot reviewed.";
                 }}
               >
-                <Field
-                  label="City (optional)"
-                  name="city"
-                  placeholder="Mumbai"
-                />
-                <Field label="Category (optional)" name="category" as="select">
-                  <option value="">All categories</option>
-                  {cats.map((category) => (
-                    <option key={category._id} value={category.slug}>
-                      {category.name}
-                    </option>
-                  ))}
-                </Field>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
+                  <Field
+                    label="City (optional)"
+                    name="city"
+                    placeholder="Mumbai"
+                  />
+                  <Field label="Category (optional)" name="category" as="select">
+                    <option value="">All categories</option>
+                    {cats.map((category) => (
+                      <option key={category._id} value={category.slug}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </Field>
+                </div>
               </ActionForm>
             )}
           </State>
-        </section>
-        <section className="panel" style={{ background: "#FFE66D" }}>
-          <h3>How it works</h3>
-          <div className="ai-flow-visual">
-            <div className="ai-node" style={{ background: "#A8E6CF" }}>
-              📊 Data Gatherer
-            </div>
-            <span className="ai-arrow">→</span>
-            <div className="ai-node" style={{ background: "#89CFF0" }}>
-              🔍 Heatmap
-            </div>
-            <span className="ai-arrow">→</span>
-            <div className="ai-node" style={{ background: "#FFB347" }}>
-              ⚡ Supply Check
-            </div>
-            <span className="ai-arrow">→</span>
-            <div className="ai-node" style={{ background: "#C3B1E1" }}>
-              🧠 Gemini AI
-            </div>
-            <span className="ai-arrow">→</span>
-            <div className="ai-node" style={{ background: "#FF85A1" }}>
-              📈 Observations
-            </div>
-          </div>
-          <p>
-            The LangGraph pipeline gathers real aggregated data from searches,
-            requests, and listings, then runs it through Gemini for pattern
-            analysis.
-          </p>
         </section>
       </div>
       {result && (

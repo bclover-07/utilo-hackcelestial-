@@ -20,21 +20,29 @@ export async function notify(user, title, body, href, sessionOrMeta, maybeMeta) 
     kind: meta.kind || "general",
     relatedBooking: meta.relatedBooking,
     relatedListing: meta.relatedListing,
+    relatedQuote: meta.relatedQuote,
   };
 
-  const docs = await Notification.create([payload], session ? { session } : {});
-  const created = docs[0];
-
+  let created = null;
   try {
-    emitToUser(user, "notification", created);
-    emitToUser(user, "notification_new", created);
-    emitToUser(user, "inventory_changed", {
-      kind: meta.kind,
-      bookingId: meta.relatedBooking,
-      listingId: meta.relatedListing,
-    });
-  } catch {
-    // Non-blocking socket emission
+    const docs = await Notification.create([payload], session ? { session } : {});
+    created = docs[0];
+  } catch (err) {
+    console.warn("[notify] Failed to persist notification record:", err.message);
+  }
+
+  if (created) {
+    try {
+      emitToUser(user, "notification", created);
+      emitToUser(user, "notification_new", created);
+      emitToUser(user, "inventory_changed", {
+        kind: meta.kind,
+        bookingId: meta.relatedBooking,
+        listingId: meta.relatedListing,
+      });
+    } catch {
+      // Non-blocking socket emission
+    }
   }
 
   return created;

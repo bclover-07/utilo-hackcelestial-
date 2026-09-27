@@ -8,6 +8,7 @@ import {
 } from "react";
 import { api } from "@/lib/api";
 import { unloadLocalAi } from "@/lib/local-ai";
+import { setSocketAuthToken, disconnectSocket } from "@/lib/socket";
 export type User = {
   _id: string;
   name: string;
@@ -23,6 +24,7 @@ export type User = {
   verification: string;
   verificationNote?: string;
   favorites: string[];
+  socketToken?: string;
 };
 type Auth = {
   user: User | null;
@@ -43,10 +45,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [error, setError] = useState("");
   const refresh = async () => {
     try {
-      setUser(await api<User>("/auth/me"));
+      const u = await api<User>("/auth/me");
+      if (u?.socketToken) setSocketAuthToken(u.socketToken);
+      setUser(u);
       setError("");
     } catch (e) {
       setUser(null);
+      disconnectSocket();
       setError(
         (e as { status?: number }).status === 401 ? "" : (e as Error).message,
       );
@@ -58,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let active = true;
     const expired = () => {
       unloadLocalAi();
+      disconnectSocket();
       setUser(null);
       setError("");
       setLoading(false);
@@ -66,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     api<User>("/auth/me")
       .then((u) => {
         if (active) {
+          if (u?.socketToken) setSocketAuthToken(u.socketToken);
           setUser(u);
           setError("");
         }
@@ -83,6 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
   const login = async (data: Record<string, string>) => {
     const u = await api<User>("/auth/login", { method: "POST", body: data });
+    if (u?.socketToken) setSocketAuthToken(u.socketToken);
     setUser(u);
     setError("");
     setLoading(false);
@@ -90,6 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
   const register = async (data: Record<string, string>) => {
     const u = await api<User>("/auth/register", { method: "POST", body: data });
+    if (u?.socketToken) setSocketAuthToken(u.socketToken);
     setUser(u);
     setError("");
     setLoading(false);
@@ -98,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     await api("/auth/logout", { method: "POST" });
     unloadLocalAi();
+    disconnectSocket();
     setUser(null);
     setError("");
   };

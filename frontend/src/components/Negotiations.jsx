@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { getSocket } from "@/lib/socket";
@@ -145,14 +145,17 @@ function QuoteDetail({ q, reload }) {
     [selectedOfferPrice, setSelectedOfferPrice] = useState(null),
     [selectedOfferConditions, setSelectedOfferConditions] = useState(null),
     [socketMessages, setSocketMessages] = useState([]),
-    [socketActive, setSocketActive] = useState(false);
+    [socketActive, setSocketActive] = useState(false),
+    [sendingMessage, setSendingMessage] = useState(false);
+
+  const messagesEndRef = useRef(null);
 
   // Counterparty info
   const isProvider = String(q.provider?._id) === String(user._id);
   const counterparty = isProvider ? q.seeker : q.provider;
   const partnerName = counterparty?.name || (isProvider ? "Seeker" : "Provider");
   const partnerRole = isProvider ? "Seeker" : "Provider";
-  const partnerId = counterparty?._id;
+  const partnerId = counterparty?._id ? String(counterparty._id) : "";
 
   // Video call interaction state
   const [requestingCall, setRequestingCall] = useState(false);
@@ -177,7 +180,7 @@ function QuoteDetail({ q, reload }) {
           detail: {
             quoteId: String(q._id),
             roomId: res.roomId,
-            partnerId: String(partnerId),
+            partnerId: partnerId,
             partnerName,
             partnerRole,
             listingTitle: q.listing?.title || "Asset Negotiation",
@@ -197,21 +200,27 @@ function QuoteDetail({ q, reload }) {
   const handleAcceptVideoCall = async (msg) => {
     const roomId = msg.videoCall?.roomId || `call_${q._id}`;
     const messageId = msg._id;
+    const isCaller =
+      String(msg.videoCall?.caller?._id || msg.videoCall?.caller || msg.sender?._id) ===
+      String(user._id);
+
     try {
-      await api(`/quotes/${q._id}/video-call/respond`, {
-        method: "POST",
-        body: { action: "accept", roomId, messageId },
-      });
+      if (!isCaller && msg.videoCall?.status === "requested") {
+        await api(`/quotes/${q._id}/video-call/respond`, {
+          method: "POST",
+          body: { action: "accept", roomId, messageId },
+        });
+      }
       window.dispatchEvent(
         new CustomEvent("utlio:open-video-call", {
           detail: {
             quoteId: String(q._id),
             roomId,
-            partnerId: String(msg.sender?._id || partnerId),
-            partnerName: msg.sender?.name || partnerName,
+            partnerId: partnerId,
+            partnerName,
             partnerRole,
             listingTitle: q.listing?.title || "Asset Negotiation",
-            isInitiator: false,
+            isInitiator: isCaller,
             messageId,
           },
         })
@@ -248,6 +257,10 @@ function QuoteDetail({ q, reload }) {
     ),
   ];
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [realtimeMessages.length]);
+
   // Socket.io real-time room joining, messaging & video call events
   useEffect(() => {
     const socket = getSocket();
@@ -275,7 +288,8 @@ function QuoteDetail({ q, reload }) {
     }, 0);
 
     function handleNewMessage(msg) {
-      if (String(msg.quote) === String(q._id)) {
+      const msgQuoteId = String(msg.quote?._id || msg.quote);
+      if (msgQuoteId === String(q._id)) {
         setSocketMessages((prev) => {
           if (prev.some((m) => String(m._id) === String(msg._id))) return prev;
           return [...prev, msg];
@@ -486,17 +500,29 @@ function QuoteDetail({ q, reload }) {
               Socket.io Live
             </span>
           ) : (
-            <span
+            <button
+              type="button"
+              onClick={() => {
+                const s = getSocket();
+                if (s) {
+                  try {
+                    s.disconnect();
+                  } catch {}
+                  s.connect();
+                }
+              }}
               className="badge"
               style={{
                 background: "#FFE66D40",
                 border: "1.5px solid #20201e",
                 fontSize: "0.75rem",
                 padding: "3px 8px",
+                cursor: "pointer",
               }}
+              title="Click to reconnect socket"
             >
-              Connecting...
-            </span>
+              Connecting... (Tap to retry)
+            </button>
           )}
         </div>
         {realtimeMessages.length ? (
@@ -694,6 +720,7 @@ function QuoteDetail({ q, reload }) {
                 </div>
               );
             })}
+            <div ref={messagesEndRef} style={{ height: "1px" }} />
           </div>
         ) : messages.loading ? (
           <p>Loading messages...</p>
@@ -706,14 +733,16 @@ function QuoteDetail({ q, reload }) {
             e.preventDefault();
             const form = new FormData(e.currentTarget);
             const text = form.get("text");
-            if (!text || !String(text).trim()) return;
+            if (!text || !String(text).trim() || sendingMessage) return;
             const textarea = e.currentTarget.querySelector('textarea[name="text"]');
+            const cleanText = String(text).trim();
+            if (textarea) textarea.value = "";
+            setSendingMessage(true);
             try {
               const result = await api(`/quotes/${q._id}/messages`, {
                 method: "POST",
-                body: { text: String(text).trim() },
+                body: { text: cleanText },
               });
-              if (textarea) textarea.value = "";
               if (result && result._id) {
                 setSocketMessages((prev) => {
                   if (prev.some((m) => String(m._id) === String(result._id))) return prev;
@@ -722,6 +751,9 @@ function QuoteDetail({ q, reload }) {
               }
             } catch (err) {
               console.error("Message send error:", err);
+              if (textarea && !textarea.value) textarea.value = cleanText;
+            } finally {
+              setSendingMessage(false);
             }
           }}
         >
@@ -732,7 +764,14 @@ function QuoteDetail({ q, reload }) {
             rows={2}
             required
             maxLength={4000}
-            placeholder="Type your message to the counter-party here..."
+            placeholder="Type your message to the counter-party here (Press Enter to send)..."
+            disabled={sendingMessage}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                e.currentTarget.form?.requestSubmit();
+              }
+            }}
           />
 
           <div
@@ -746,21 +785,22 @@ function QuoteDetail({ q, reload }) {
           >
             <button
               type="submit"
+              disabled={sendingMessage}
               className="button"
               style={{
-                background: "#FAF8F5",
+                background: sendingMessage ? "#e5e7eb" : "#FAF8F5",
                 color: "#20201e",
                 border: "2px solid #20201e",
                 borderRadius: "12px",
                 padding: "9px 18px",
                 fontWeight: 800,
                 fontSize: "0.88rem",
-                cursor: "pointer",
+                cursor: sendingMessage ? "not-allowed" : "pointer",
                 boxShadow: "2.5px 2.5px 0 #20201e",
                 transition: "all 0.15s ease",
               }}
             >
-              Send message
+              {sendingMessage ? "Sending..." : "Send message"}
             </button>
 
             <button

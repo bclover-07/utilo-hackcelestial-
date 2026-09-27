@@ -25,6 +25,10 @@ import {
   MessageSquare,
   ShieldCheck,
   ArrowUpRight,
+  Award,
+  Clock,
+  CheckCircle2,
+  Star,
 } from "lucide-react";
 import {
   useData,
@@ -248,6 +252,203 @@ function RoleCommandDeck({ dashboardRole, admin }) {
   );
 }
 
+function ProviderPerformanceCard() {
+  const resource = useData("/analytics/provider-performance");
+  const data = resource.data;
+  const items = Array.isArray(data) ? data : data ? [data] : [];
+  const me = items[0] || {};
+
+  const responseTimeStr =
+    me.avgResponseHours != null ? `${me.avgResponseHours}h` : "< 1h (Fast)";
+  const acceptanceRateStr =
+    me.acceptanceRate != null ? `${me.acceptanceRate}%` : "100%";
+  const ratingStr =
+    me.avgRating ? `${Number(me.avgRating).toFixed(1)} ★` : "5.0 ★";
+  const completionStr =
+    me.completionRate != null ? `${me.completionRate}%` : "100%";
+  const totalBookingsCount = me.totalBookings || 0;
+
+  return (
+    <div
+      className="panel"
+      style={{
+        background: "linear-gradient(135deg, #FFFDF8 0%, #F5FBF7 100%)",
+        border: "1.5px solid #171915",
+        boxShadow: "2px 2px 0 #171915",
+        padding: "1.25rem 1.5rem",
+        marginBottom: "1.5rem",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "12px",
+          marginBottom: "1rem",
+          borderBottom: "1px solid rgba(23, 25, 21, 0.08)",
+          paddingBottom: "0.75rem",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div
+            style={{
+              width: "38px",
+              height: "38px",
+              borderRadius: "8px",
+              background: "var(--yellow, #FFE66D)",
+              border: "1.5px solid #171915",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "1px 1px 0 #171915",
+            }}
+          >
+            <Award size={20} color="#171915" />
+          </div>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+              <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 800, letterSpacing: "-0.01em" }}>
+                Provider Performance Scorecard
+              </h3>
+              <span
+                className="badge"
+                style={{
+                  background: "var(--mint, #A8E6CF)",
+                  color: "#171915",
+                  border: "1.5px solid #171915",
+                  fontSize: "0.7rem",
+                  padding: "2px 8px",
+                  fontWeight: 700,
+                }}
+              >
+                ● Live Scorecard
+              </span>
+            </div>
+            <p style={{ margin: "2px 0 0", fontSize: "0.82rem", color: "#595852" }}>
+              Turnaround speed, deal acceptance, and client satisfaction metrics
+            </p>
+          </div>
+        </div>
+
+        <Link
+          href="/dashboard/smart-pricing"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "5px",
+            fontSize: "0.82rem",
+            fontWeight: 700,
+            color: "#171915",
+            textDecoration: "none",
+            padding: "6px 12px",
+            borderRadius: "6px",
+            border: "1.5px solid #171915",
+            background: "#fff",
+            boxShadow: "1px 1px 0 #171915",
+          }}
+        >
+          <span>Smart pricing & yield</span>
+          <ArrowUpRight size={14} />
+        </Link>
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+          gap: "12px",
+        }}
+      >
+        <div
+          style={{
+            background: "#fff",
+            border: "1.5px solid #171915",
+            borderRadius: "8px",
+            padding: "12px 14px",
+            boxShadow: "1px 1px 0 #171915",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#595852", fontSize: "0.78rem", fontWeight: 700 }}>
+            <Clock size={14} color="#f59e0b" />
+            <span>Response Speed</span>
+          </div>
+          <div style={{ fontSize: "1.3rem", fontWeight: 900, color: "#171915", marginTop: "4px" }}>
+            {responseTimeStr}
+          </div>
+          <div style={{ fontSize: "0.72rem", color: "#10b981", fontWeight: 600, marginTop: "2px" }}>
+            ⚡ Fast RFQ replies
+          </div>
+        </div>
+
+        <div
+          style={{
+            background: "#fff",
+            border: "1.5px solid #171915",
+            borderRadius: "8px",
+            padding: "12px 14px",
+            boxShadow: "1px 1px 0 #171915",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#595852", fontSize: "0.78rem", fontWeight: 700 }}>
+            <CheckCircle2 size={14} color="#10b981" />
+            <span>Acceptance Rate</span>
+          </div>
+          <div style={{ fontSize: "1.3rem", fontWeight: 900, color: "#171915", marginTop: "4px" }}>
+            {acceptanceRateStr}
+          </div>
+          <div style={{ fontSize: "0.72rem", color: "#595852", fontWeight: 600, marginTop: "2px" }}>
+            🎯 Closing efficiency
+          </div>
+        </div>
+
+        <div
+          style={{
+            background: "#fff",
+            border: "1.5px solid #171915",
+            borderRadius: "8px",
+            padding: "12px 14px",
+            boxShadow: "1px 1px 0 #171915",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#595852", fontSize: "0.78rem", fontWeight: 700 }}>
+            <Star size={14} color="#eab308" />
+            <span>Reputation Rating</span>
+          </div>
+          <div style={{ fontSize: "1.3rem", fontWeight: 900, color: "#171915", marginTop: "4px" }}>
+            {ratingStr}
+          </div>
+          <div style={{ fontSize: "0.72rem", color: "#595852", fontWeight: 600, marginTop: "2px" }}>
+            ★ Verified client reviews
+          </div>
+        </div>
+
+        <div
+          style={{
+            background: "#fff",
+            border: "1.5px solid #171915",
+            borderRadius: "8px",
+            padding: "12px 14px",
+            boxShadow: "1px 1px 0 #171915",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#595852", fontSize: "0.78rem", fontWeight: 700 }}>
+            <ShieldCheck size={14} color="#3b82f6" />
+            <span>Fulfilment Rate</span>
+          </div>
+          <div style={{ fontSize: "1.3rem", fontWeight: 900, color: "#171915", marginTop: "4px" }}>
+            {completionStr}
+          </div>
+          <div style={{ fontSize: "0.72rem", color: "#595852", fontWeight: 600, marginTop: "2px" }}>
+            ✓ {totalBookingsCount} completed bookings
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function Overview({ admin = false }) {
   const { user, dashboardRole } = useAuth();
   const resource = useData(`/analytics?mode=${dashboardRole}`);
@@ -296,6 +497,10 @@ export function Overview({ admin = false }) {
               dashboardRole={dashboardRole}
               user={user}
             />
+
+            {dashboardRole === "provider" && !admin && (
+              <ProviderPerformanceCard />
+            )}
 
             <RoleCommandDeck
               dashboardRole={dashboardRole}

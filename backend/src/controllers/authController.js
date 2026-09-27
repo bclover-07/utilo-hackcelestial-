@@ -7,17 +7,24 @@ const send = (fn) => async (req, res) => res.json(await fn(req, res));
 export const authController = {
   register: send(async (req, res) => {
     const u = await authService.register(req.body);
-    authService.session(res, u);
-    return authService.publicUser(u);
+    const token = authService.session(res, u);
+    return { ...authService.publicUser(u), socketToken: token };
   }),
 
   login: send(async (req, res) => {
     const u = await authService.login(req.body);
-    authService.session(res, u);
-    return authService.publicUser(u);
+    const token = authService.session(res, u);
+    return { ...authService.publicUser(u), socketToken: token };
   }),
 
-  me: send(async (req) => authService.publicUser(req.user)),
+  me: send(async (req) => {
+    const token = req.cookies?.utlio_session || null;
+    return { ...authService.publicUser(req.user), socketToken: token };
+  }),
+
+  socketToken: send(async (req) => {
+    return { token: req.cookies?.utlio_session || null };
+  }),
 
   logout: send(async (req, res) => {
     await BusinessProfile.updateOne(

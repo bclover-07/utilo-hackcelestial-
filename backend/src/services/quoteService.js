@@ -222,6 +222,7 @@ export async function accept(user, id, raw) {
         `${l.title} is reserved. Payment is arranged directly between businesses.`,
         "/dashboard/bookings",
         session,
+        { kind: "booking", relatedBooking: booking._id, relatedListing: l._id }
       );
     await logWorkProcess({
       user,
@@ -247,6 +248,16 @@ export async function decline(user, id, raw) {
     { new: true },
   );
   assert(q, 409, "Negotiation changed. Refresh first.");
+  const otherParty = String(q.provider) === String(user._id) ? q.seeker : q.provider;
+  if (otherParty) {
+    await notify(
+      otherParty,
+      "Negotiation offer declined",
+      `${user.name || "Partner"} declined the current negotiation offer.`,
+      `/dashboard/negotiations?selected=${q._id}`,
+      { kind: "negotiation", relatedQuote: q._id }
+    );
+  }
   await logWorkProcess({
     user,
     action: "NEGOTIATION_DECLINED",
@@ -265,14 +276,19 @@ export async function message(user, id, raw) {
     .populate("sender", "name")
     .lean();
   try {
-    broadcastMessage(id, populated);
+    broadcastMessage(id, populated, [q.provider, q.seeker]);
   } catch {}
-  await notify(
-    String(q.provider) === String(user._id) ? q.seeker : q.provider,
-    "New message",
-    "Your booking partner sent a message.",
-    "/dashboard/negotiations",
-  );
+  const recipient = String(q.provider) === String(user._id) ? q.seeker : q.provider;
+  if (recipient) {
+    const preview = text.length > 80 ? `${text.slice(0, 80)}…` : text;
+    await notify(
+      recipient,
+      `New message from ${user.name || "Partner"}`,
+      preview,
+      `/dashboard/negotiations?selected=${id}`,
+      { kind: "message", relatedQuote: id }
+    );
+  }
   return populated;
 }
 
@@ -385,7 +401,7 @@ export async function directOffer(user, raw) {
         .populate("sender", "name")
         .session(session)
         .lean();
-      broadcastMessage(quote._id, populatedMsg);
+      broadcastMessage(quote._id, populatedMsg, [quote.provider, quote.seeker]);
     } catch {}
 
     await notify(
@@ -446,6 +462,8 @@ export async function requestVideoCall(user, id) {
   const io = getIO();
   if (io) {
     io.to(`quote_${id}`).emit("new_message", populated);
+    io.to(`user_${q.provider._id}`).emit("new_message", populated);
+    io.to(`user_${q.seeker._id}`).emit("new_message", populated);
     const incomingPayload = {
       quoteId: String(id),
       roomId,
@@ -491,10 +509,15 @@ export async function respondVideoCall(user, id, raw) {
       roomId,
       messageId,
       acceptedBy: { _id: String(user._id), name: user.name },
+      userId: String(user._id),
+      senderId: String(user._id),
     };
     if (io) {
       io.to(`quote_${id}`).emit("video_call_accepted", payload);
       io.to(`user_${callerId}`).emit("video_call_accepted", payload);
+      if (roomId) {
+        io.to(`call_${roomId}`).emit("video_call_accepted", payload);
+      }
     }
     return { success: true, status: "accepted", roomId };
   } else {

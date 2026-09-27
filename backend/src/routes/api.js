@@ -38,6 +38,7 @@ api.use(auth);
 api.get("/ai/local-config", (_req, res) => res.set("Cache-Control", "no-store").json(localAiConfig));
 
 api.get("/auth/me", authController.me);
+api.get("/auth/socket-token", authController.socketToken);
 api.post("/auth/logout", authController.logout);
 api.patch("/profile", authController.profile);
 api.post("/profile/verify-gstin", authController.verifyGstin);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { getSocket } from "@/lib/socket";
 import { playConnectTone, playEndTone } from "@/lib/callSound";
 import {
@@ -26,7 +27,9 @@ const RTC_CONFIG = {
     { urls: "stun:stun2.l.google.com:19302" },
     { urls: "stun:stun3.l.google.com:19302" },
     { urls: "stun:stun4.l.google.com:19302" },
+    { urls: "stun:global.stun.twilio.com:3478" },
   ],
+  iceCandidatePoolSize: 10,
 };
 
 function formatDuration(seconds) {
@@ -47,7 +50,7 @@ export function VideoCallModal({
   isInitiator = false,
   messageId = "",
 }) {
-  // State: 'initializing' | 'calling' | 'connecting' | 'connected' | 'declined' | 'ended' | 'timeout' | 'error'
+  const { user } = useAuth();
   const [callState, setCallState] = useState(isInitiator ? "calling" : "initializing");
   const [errorMessage, setErrorMessage] = useState("");
   const [audioMuted, setAudioMuted] = useState(false);
@@ -59,9 +62,13 @@ export function VideoCallModal({
   const [sessionNonce] = useState(() => `UTL-${Math.random().toString(36).substring(2, 7).toUpperCase()}`);
   const [activeChallenge, setActiveChallenge] = useState(null);
   const [challengeStatus, setChallengeStatus] = useState("idle");
+  const [needsUserTapForSound, setNeedsUserTapForSound] = useState(false);
 
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
+  const remoteAudioRef = useRef(null);
+  const remoteStreamRef = useRef(null);
+  const remotePeerIdRef = useRef(partnerId);
   const pcRef = useRef(null);
   const localStreamRef = useRef(null);
   const screenStreamRef = useRef(null);
@@ -69,7 +76,11 @@ export function VideoCallModal({
   const callTimeoutRef = useRef(null);
   const durationRef = useRef(0);
   const pendingCandidatesRef = useRef([]);
+  const earlySignalsBufferRef = useRef([]);
   const hasOfferedRef = useRef(false);
+  const peerReadyReceivedRef = useRef(false);
+  const seenCandidatesRef = useRef(new Set());
+  const hasReceivedOfferRef = useRef(false);
 
   // Initialize browser GPS for real-time live video watermark
   useEffect(() => {
@@ -109,10 +120,57 @@ export function VideoCallModal({
     setChallengeStatus("active");
   };
 
-  // Sync ref with duration
+  // Sync ref with duration and partnerId
   useEffect(() => {
     durationRef.current = duration;
   }, [duration]);
+
+  useEffect(() => {
+    if (partnerId) {
+      remotePeerIdRef.current = partnerId;
+    }
+  }, [partnerId]);
+
+  // Unmute and play media when user interacts
+  const enableUserAudio = useCallback(() => {
+    setNeedsUserTapForSound(false);
+    if (remoteAudioRef.current) {
+      remoteAudioRef.current.muted = false;
+      remoteAudioRef.current.play().catch(() => {});
+    }
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.muted = false;
+      remoteVideoRef.current.play().catch(() => {});
+    }
+  }, []);
+
+  // Ensure remote media plays when connected
+  useEffect(() => {
+    if (callState === "connected" && remoteStreamRef.current) {
+      if (remoteVideoRef.current && remoteVideoRef.current.srcObject !== remoteStreamRef.current) {
+        remoteVideoRef.current.srcObject = remoteStreamRef.current;
+      }
+      if (remoteAudioRef.current && remoteAudioRef.current.srcObject !== remoteStreamRef.current) {
+        remoteAudioRef.current.srcObject = remoteStreamRef.current;
+      }
+
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.play().catch(() => {
+          if (remoteVideoRef.current) {
+            remoteVideoRef.current.muted = true;
+            remoteVideoRef.current.play().catch(() => {});
+          }
+          setNeedsUserTapForSound(true);
+        });
+      }
+
+      if (remoteAudioRef.current) {
+        remoteAudioRef.current.play().catch(() => {
+          setNeedsUserTapForSound(true);
+        });
+      }
+    }
+  }, [callState]);
 
   // Teardown helper
   const cleanUpMedia = useCallback(() => {
@@ -143,6 +201,11 @@ export function VideoCallModal({
       pcRef.current = null;
     }
 
+    if (remoteStreamRef.current) {
+      remoteStreamRef.current.getTracks().forEach((t) => t.stop());
+      remoteStreamRef.current = null;
+    }
+
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = null;
     }
@@ -157,9 +220,12 @@ export function VideoCallModal({
       const currentDuration = durationRef.current;
       setCallState("ended");
 
-      if (notifyRemote) {
-        const socket = getSocket();
-        if (socket && socket.connected) {
+      const socket = getSocket();
+      if (socket && socket.connected) {
+        if (roomId) {
+          socket.emit("leave_call_room", { quoteId, roomId });
+        }
+        if (notifyRemote) {
           socket.emit("video_call_end", {
             quoteId,
             roomId,
@@ -182,7 +248,9 @@ export function VideoCallModal({
     if (!isOpen) return;
 
     let isMounted = true;
+    let readyInterval = null;
     pendingCandidatesRef.current = [];
+    earlySignalsBufferRef.current = [];
     hasOfferedRef.current = false;
     setDuration(0);
     setAudioMuted(false);
@@ -195,8 +263,125 @@ export function VideoCallModal({
       setCallState("connecting");
     }
 
+    const socket = getSocket();
+    if (!socket) {
+      setCallState("error");
+      setErrorMessage("Real-time network connection is unavailable.");
+      return;
+    }
+
+    // Join the call room immediately
+    if (roomId) {
+      socket.emit("join_call_room", { quoteId, roomId });
+    }
+
+    function drainCandidates(pcInstance) {
+      if (!pcInstance || !pcInstance.remoteDescription) return;
+      while (pendingCandidatesRef.current.length > 0) {
+        const c = pendingCandidatesRef.current.shift();
+        if (c) {
+          try {
+            const candidateInit = typeof c === "string" ? { candidate: c } : c;
+            pcInstance.addIceCandidate(candidateInit).catch(() => {});
+          } catch {}
+        }
+      }
+    }
+
+    function processSignal(pcInstance, signal, senderId) {
+      if (!pcInstance || !signal) return;
+
+      if (signal.type === "offer") {
+        hasReceivedOfferRef.current = true;
+        if (pcInstance.signalingState !== "stable") {
+          console.warn("[WebRTC] Ignoring offer in non-stable state:", pcInstance.signalingState);
+          return;
+        }
+
+        const sdpObj =
+          signal.sessionDescription ||
+          (typeof signal.sdp === "string"
+            ? { type: "offer", sdp: signal.sdp }
+            : signal.sdp);
+
+        pcInstance
+          .setRemoteDescription(new RTCSessionDescription(sdpObj))
+          .then(() => {
+            drainCandidates(pcInstance);
+            return pcInstance.createAnswer({
+              offerToReceiveAudio: true,
+              offerToReceiveVideo: true,
+            });
+          })
+          .then((answer) => pcInstance.setLocalDescription(answer))
+          .then(() => {
+            const s = getSocket();
+            if (s && s.connected) {
+              s.emit("webrtc_signal", {
+                quoteId,
+                roomId,
+                targetUserId: senderId || remotePeerIdRef.current || partnerId,
+                signal: {
+                  type: "answer",
+                  sdp: pcInstance.localDescription.sdp,
+                  sessionDescription: {
+                    type: pcInstance.localDescription.type,
+                    sdp: pcInstance.localDescription.sdp,
+                  },
+                },
+              });
+            }
+            setCallState("connecting");
+          })
+          .catch((err) => {
+            console.error("[WebRTC] Error handling WebRTC offer:", err);
+          });
+      } else if (signal.type === "answer") {
+        if (pcInstance.signalingState !== "have-local-offer") {
+          console.warn("[WebRTC] Ignoring answer in unexpected state:", pcInstance.signalingState);
+          return;
+        }
+
+        const sdpObj =
+          signal.sessionDescription ||
+          (typeof signal.sdp === "string"
+            ? { type: "answer", sdp: signal.sdp }
+            : signal.sdp);
+
+        pcInstance
+          .setRemoteDescription(new RTCSessionDescription(sdpObj))
+          .then(() => {
+            drainCandidates(pcInstance);
+            setCallState("connecting");
+          })
+          .catch((err) => {
+            console.error("[WebRTC] Error setting remote description from answer:", err);
+          });
+      } else if (signal.type === "candidate") {
+        const cand = signal.candidate;
+        if (cand && (cand.candidate || typeof cand === "string")) {
+          const candKey = typeof cand === "string" ? cand : (cand.candidate || JSON.stringify(cand));
+          if (candKey && seenCandidatesRef.current.has(candKey)) return;
+          if (candKey) seenCandidatesRef.current.add(candKey);
+
+          if (pcInstance.remoteDescription && pcInstance.remoteDescription.type) {
+            try {
+              const candidateInit = typeof cand === "string" ? { candidate: cand } : cand;
+              pcInstance
+                .addIceCandidate(candidateInit)
+                .catch((err) => console.warn("[WebRTC] Error adding ICE candidate:", err));
+            } catch (e) {
+              console.warn("[WebRTC] Exception adding candidate:", e);
+            }
+          } else {
+            pendingCandidatesRef.current.push(cand);
+          }
+        }
+      }
+    }
+
     async function sendOffer(pcInstance, socketInstance) {
-      if (hasOfferedRef.current || !pcInstance || !socketInstance) return;
+      if (!pcInstance || !socketInstance || hasOfferedRef.current) return;
       try {
         hasOfferedRef.current = true;
         setCallState("connecting");
@@ -208,27 +393,84 @@ export function VideoCallModal({
 
         socketInstance.emit("webrtc_signal", {
           quoteId,
-          targetUserId: partnerId,
+          roomId,
+          targetUserId: remotePeerIdRef.current || partnerId,
           signal: {
             type: "offer",
-            sdp: offer,
+            sdp: offer.sdp,
+            sessionDescription: {
+              type: offer.type,
+              sdp: offer.sdp,
+            },
           },
         });
       } catch (err) {
-        console.error("Error creating WebRTC offer:", err);
+        console.error("[WebRTC] Error creating WebRTC offer:", err);
+        hasOfferedRef.current = false;
       }
     }
 
-    async function startCall() {
-      const socket = getSocket();
-      if (!socket) {
-        if (isMounted) {
-          setCallState("error");
-          setErrorMessage("Real-time network connection is unavailable.");
-        }
+    // Register signaling listener IMMEDIATELY so early signals are never lost
+    function handleSignal({ senderId, signal }) {
+      if (!isMounted || !signal) return;
+      // Filter out our own signals
+      if (senderId && user?._id && String(senderId) === String(user._id)) return;
+      if (senderId) {
+        remotePeerIdRef.current = senderId;
+      }
+      const pc = pcRef.current;
+      if (!pc) {
+        earlySignalsBufferRef.current.push({ senderId, signal });
         return;
       }
+      processSignal(pc, signal, senderId);
+    }
+    socket.on("webrtc_signal", handleSignal);
 
+    // When counterparty announces ready or joins
+    function handlePeerReady(data) {
+      if (!isMounted) return;
+      const sender = data?.senderId || data?.userId || data?.acceptedBy?._id;
+      if (sender && user?._id && String(sender) === String(user._id)) return;
+      if (sender) {
+        remotePeerIdRef.current = sender;
+      }
+      peerReadyReceivedRef.current = true;
+      if (isInitiator) {
+        const pc = pcRef.current;
+        if (pc && !hasOfferedRef.current) {
+          sendOffer(pc, socket);
+        }
+      }
+    }
+    socket.on("peer_joined", handlePeerReady);
+    socket.on("webrtc_ready", handlePeerReady);
+    socket.on("video_call_accepted", handlePeerReady);
+
+    // Remote user ends call
+    function handleCallEnded(data) {
+      if (String(data.quoteId) === String(quoteId)) {
+        handleEndCall(false);
+      }
+    }
+    socket.on("video_call_ended", handleCallEnded);
+
+    // Remote user declines call
+    function handleCallDeclined(data) {
+      if (String(data.quoteId) === String(quoteId)) {
+        playEndTone();
+        if (isMounted) {
+          setCallState("declined");
+          if (callTimeoutRef.current) clearTimeout(callTimeoutRef.current);
+        }
+        setTimeout(() => {
+          if (isMounted) handleEndCall(false);
+        }, 2500);
+      }
+    }
+    socket.on("video_call_declined", handleCallDeclined);
+
+    async function startCall() {
       try {
         // 1. Get user media (camera + mic)
         let stream;
@@ -246,14 +488,14 @@ export function VideoCallModal({
             },
           });
         } catch (mediaErr) {
-          console.warn("Could not get ideal video/audio, trying fallback:", mediaErr);
+          console.warn("[WebRTC] Could not get ideal video/audio, trying fallback:", mediaErr);
           try {
             stream = await navigator.mediaDevices.getUserMedia({
               video: true,
               audio: true,
             });
           } catch (audioOnlyErr) {
-            console.warn("Could not get video, trying audio only:", audioOnlyErr);
+            console.warn("[WebRTC] Could not get video, trying audio only:", audioOnlyErr);
             stream = await navigator.mediaDevices.getUserMedia({
               video: false,
               audio: true,
@@ -266,6 +508,11 @@ export function VideoCallModal({
           stream.getTracks().forEach((t) => t.stop());
           return;
         }
+
+        // Ensure all audio and video tracks are unmuted and enabled
+        stream.getTracks().forEach((t) => {
+          t.enabled = true;
+        });
 
         localStreamRef.current = stream;
         if (localVideoRef.current) {
@@ -281,45 +528,84 @@ export function VideoCallModal({
           pc.addTrack(track, stream);
         });
 
-        // Remote track arrival
+        // Remote track arrival (audio + video)
         pc.ontrack = (event) => {
           if (!isMounted) return;
-          if (remoteVideoRef.current && event.streams[0]) {
-            remoteVideoRef.current.srcObject = event.streams[0];
-            setCallState("connected");
-            playConnectTone();
-
-            if (callTimeoutRef.current) {
-              clearTimeout(callTimeoutRef.current);
-              callTimeoutRef.current = null;
+          let incomingStream = event.streams && event.streams[0];
+          if (!incomingStream) {
+            if (!remoteStreamRef.current) {
+              remoteStreamRef.current = new MediaStream();
             }
+            remoteStreamRef.current.addTrack(event.track);
+            incomingStream = remoteStreamRef.current;
+          } else {
+            remoteStreamRef.current = incomingStream;
+          }
 
-            if (!timerRef.current) {
-              timerRef.current = setInterval(() => {
-                setDuration((prev) => prev + 1);
-              }, 1000);
-            }
+          if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = incomingStream;
+            remoteVideoRef.current.play().catch(() => {
+              if (remoteVideoRef.current) {
+                remoteVideoRef.current.muted = true;
+                remoteVideoRef.current.play().catch(() => {});
+              }
+              setNeedsUserTapForSound(true);
+            });
+          }
+
+          if (remoteAudioRef.current) {
+            remoteAudioRef.current.srcObject = incomingStream;
+            remoteAudioRef.current.play().catch(() => {
+              setNeedsUserTapForSound(true);
+            });
+          }
+
+          setCallState("connected");
+          playConnectTone();
+
+          if (callTimeoutRef.current) {
+            clearTimeout(callTimeoutRef.current);
+            callTimeoutRef.current = null;
+          }
+
+          if (!timerRef.current) {
+            timerRef.current = setInterval(() => {
+              setDuration((prev) => prev + 1);
+            }, 1000);
           }
         };
 
         // ICE candidate generation
         pc.onicecandidate = (event) => {
-          if (event.candidate && socket.connected) {
-            socket.emit("webrtc_signal", {
-              quoteId,
-              targetUserId: partnerId,
-              signal: {
-                type: "candidate",
-                candidate: event.candidate,
-              },
-            });
+          if (event.candidate && event.candidate.candidate) {
+            const currentSocket = getSocket();
+            if (currentSocket && currentSocket.connected) {
+              currentSocket.emit("webrtc_signal", {
+                quoteId,
+                roomId,
+                targetUserId: remotePeerIdRef.current || partnerId,
+                signal: {
+                  type: "candidate",
+                  candidate: event.candidate.toJSON ? event.candidate.toJSON() : event.candidate,
+                },
+              });
+            }
           }
         };
 
-        pc.onconnectionstatechange = () => {
+        const checkConnectionState = () => {
           if (!isMounted) return;
-          if (pc.connectionState === "connected") {
+          const connState = pc.connectionState;
+          const iceState = pc.iceConnectionState;
+
+          if (connState === "connected" || iceState === "connected" || iceState === "completed") {
             setCallState("connected");
+            if (remoteVideoRef.current && remoteStreamRef.current) {
+              remoteVideoRef.current.play().catch(() => {});
+            }
+            if (remoteAudioRef.current && remoteStreamRef.current) {
+              remoteAudioRef.current.play().catch(() => {});
+            }
             if (callTimeoutRef.current) {
               clearTimeout(callTimeoutRef.current);
               callTimeoutRef.current = null;
@@ -330,8 +616,9 @@ export function VideoCallModal({
               }, 1000);
             }
           } else if (
-            pc.connectionState === "disconnected" ||
-            pc.connectionState === "failed"
+            connState === "disconnected" ||
+            connState === "failed" ||
+            iceState === "failed"
           ) {
             if (callState === "connected") {
               setCallState("connecting");
@@ -339,100 +626,22 @@ export function VideoCallModal({
           }
         };
 
-        // 3. Signaling listener
-        function handleSignal({ senderId, signal }) {
-          if (!isMounted || !pcRef.current) return;
-          const currentPc = pcRef.current;
+        pc.onconnectionstatechange = checkConnectionState;
+        pc.oniceconnectionstatechange = checkConnectionState;
 
-          if (signal.type === "offer") {
-            currentPc
-              .setRemoteDescription(new RTCSessionDescription(signal.sdp))
-              .then(() => {
-                // Drain any pending candidates
-                while (pendingCandidatesRef.current.length > 0) {
-                  const c = pendingCandidatesRef.current.shift();
-                  currentPc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {});
-                }
-                return currentPc.createAnswer();
-              })
-              .then((answer) => currentPc.setLocalDescription(answer))
-              .then(() => {
-                socket.emit("webrtc_signal", {
-                  quoteId,
-                  targetUserId: senderId,
-                  signal: {
-                    type: "answer",
-                    sdp: currentPc.localDescription,
-                  },
-                });
-                setCallState("connecting");
-              })
-              .catch((err) => {
-                console.error("Error handling WebRTC offer:", err);
-              });
-          } else if (signal.type === "answer") {
-            currentPc
-              .setRemoteDescription(new RTCSessionDescription(signal.sdp))
-              .then(() => {
-                while (pendingCandidatesRef.current.length > 0) {
-                  const c = pendingCandidatesRef.current.shift();
-                  currentPc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {});
-                }
-              })
-              .catch((err) => {
-                console.error("Error setting remote description from answer:", err);
-              });
-          } else if (signal.type === "candidate") {
-            if (signal.candidate) {
-              if (currentPc.remoteDescription && currentPc.remoteDescription.type) {
-                currentPc
-                  .addIceCandidate(new RTCIceCandidate(signal.candidate))
-                  .catch((err) => console.warn("Error adding ICE candidate:", err));
-              } else {
-                pendingCandidatesRef.current.push(signal.candidate);
-              }
-            }
+        // Drain any early signals received before PC was ready
+        while (earlySignalsBufferRef.current.length > 0) {
+          const item = earlySignalsBufferRef.current.shift();
+          if (item) {
+            processSignal(pc, item.signal, item.senderId);
           }
         }
 
-        socket.on("webrtc_signal", handleSignal);
-
-        // When recipient enters or accepts call
-        function handlePeerReady(data) {
-          if (!isMounted) return;
-          if (isInitiator && !hasOfferedRef.current) {
-            sendOffer(pcRef.current, socket);
-          }
-        }
-        socket.on("webrtc_ready", handlePeerReady);
-        socket.on("video_call_accepted", handlePeerReady);
-
-        // Remote user ends call
-        function handleCallEnded(data) {
-          if (String(data.quoteId) === String(quoteId)) {
-            handleEndCall(false);
-          }
-        }
-        socket.on("video_call_ended", handleCallEnded);
-
-        // Remote user declines call
-        function handleCallDeclined(data) {
-          if (String(data.quoteId) === String(quoteId)) {
-            playEndTone();
-            if (isMounted) {
-              setCallState("declined");
-              if (callTimeoutRef.current) clearTimeout(callTimeoutRef.current);
-            }
-            setTimeout(() => {
-              if (isMounted) handleEndCall(false);
-            }, 2500);
-          }
-        }
-        socket.on("video_call_declined", handleCallDeclined);
-
-        // 4. Initiator vs Recipient setup
+        // 3. Initiator vs Recipient startup
         if (isInitiator) {
-          // Set 40-second timeout if partner doesn't pick up
+          if (peerReadyReceivedRef.current && !hasOfferedRef.current) {
+            sendOffer(pc, socket);
+          }
           callTimeoutRef.current = setTimeout(() => {
             if (isMounted && (callState === "calling" || callState === "initializing")) {
               playEndTone();
@@ -441,16 +650,38 @@ export function VideoCallModal({
                 if (isMounted) handleEndCall(false);
               }, 3000);
             }
-          }, 40000);
+          }, 45000);
         } else {
-          // Recipient: emit ready to notify caller we're in the room and ready for offer
+          // Recipient: announce ready immediately and on interval until offer is received
           socket.emit("webrtc_ready", {
             quoteId,
-            targetUserId: partnerId,
+            roomId,
+            targetUserId: remotePeerIdRef.current || partnerId,
           });
+
+          let attempts = 0;
+          readyInterval = setInterval(() => {
+            if (!isMounted || hasReceivedOfferRef.current || callState === "connected") {
+              clearInterval(readyInterval);
+              return;
+            }
+            attempts++;
+            if (attempts > 8) {
+              clearInterval(readyInterval);
+              return;
+            }
+            const s = getSocket();
+            if (s && s.connected) {
+              s.emit("webrtc_ready", {
+                quoteId,
+                roomId,
+                targetUserId: remotePeerIdRef.current || partnerId,
+              });
+            }
+          }, 1500);
         }
       } catch (err) {
-        console.error("WebRTC initialization error:", err);
+        console.error("[WebRTC] Initialization error:", err);
         if (isMounted) {
           setCallState("error");
           setErrorMessage(
@@ -466,17 +697,20 @@ export function VideoCallModal({
 
     return () => {
       isMounted = false;
+      if (readyInterval) clearInterval(readyInterval);
       const s = getSocket();
       if (s) {
-        s.off("webrtc_signal");
-        s.off("webrtc_ready");
-        s.off("video_call_accepted");
-        s.off("video_call_ended");
-        s.off("video_call_declined");
+        if (roomId) s.emit("leave_call_room", { quoteId, roomId });
+        s.off("webrtc_signal", handleSignal);
+        s.off("webrtc_ready", handlePeerReady);
+        s.off("peer_joined", handlePeerReady);
+        s.off("video_call_accepted", handlePeerReady);
+        s.off("video_call_ended", handleCallEnded);
+        s.off("video_call_declined", handleCallDeclined);
       }
       cleanUpMedia();
     };
-  }, [isOpen, quoteId, partnerId, isInitiator, cleanUpMedia, handleEndCall]);
+  }, [isOpen, quoteId, roomId, partnerId, isInitiator, cleanUpMedia, handleEndCall]);
 
   // Audio Toggle
   const toggleAudio = () => {
@@ -621,6 +855,7 @@ export function VideoCallModal({
 
   return (
     <div
+      onClick={needsUserTapForSound ? enableUserAudio : undefined}
       style={{
         position: "fixed",
         inset: 0,
@@ -839,9 +1074,44 @@ export function VideoCallModal({
               width: "100%",
               height: "100%",
               objectFit: "contain",
-              display: callState === "connected" ? "block" : "none",
+              position: "absolute",
+              inset: 0,
+              opacity: callState === "connected" ? 1 : 0,
+              transition: "opacity 0.4s ease",
+              pointerEvents: callState === "connected" ? "auto" : "none",
+              zIndex: 1,
             }}
           />
+
+          {/* Dedicated Remote Audio Stream */}
+          <audio ref={remoteAudioRef} autoPlay playsInline />
+
+          {/* Autoplay Audio Unmute Prompt Banner */}
+          {needsUserTapForSound && (
+            <button
+              type="button"
+              onClick={enableUserAudio}
+              style={{
+                position: "absolute",
+                top: "16px",
+                zIndex: 25,
+                background: "#FFE66D",
+                color: "#20201e",
+                border: "2px solid #20201e",
+                borderRadius: "24px",
+                padding: "8px 18px",
+                fontWeight: 800,
+                fontSize: "0.85rem",
+                boxShadow: "3px 3px 0 #20201e",
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <span>🔊</span> Sound paused by browser. Click anywhere to unmute {partnerName}
+            </button>
+          )}
 
           {/* Real-time GPS & Cryptographic Watermark Overlay */}
           {callState === "connected" && (
@@ -1199,10 +1469,10 @@ export function VideoCallModal({
           <div
             style={{
               position: "absolute",
-              bottom: "16px",
-              right: "16px",
-              width: "160px",
-              height: "100px",
+              bottom: "12px",
+              right: "12px",
+              width: "clamp(110px, 25vw, 160px)",
+              height: "clamp(75px, 17vw, 105px)",
               background: "#171915",
               borderRadius: "12px",
               border: "2px solid #FFE66D",

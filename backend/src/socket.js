@@ -11,9 +11,16 @@ export function getIO() {
   return ioInstance;
 }
 
-export function broadcastMessage(quoteId, message) {
+export function broadcastMessage(quoteId, message, userIds = []) {
   if (ioInstance) {
-    ioInstance.to(`quote_${quoteId}`).emit("new_message", message);
+    const targetRooms = new Set();
+    if (quoteId) targetRooms.add(`quote_${quoteId}`);
+    if (Array.isArray(userIds)) {
+      userIds.forEach((uid) => {
+        if (uid) targetRooms.add(`user_${String(uid)}`);
+      });
+    }
+    ioInstance.to(Array.from(targetRooms)).emit("new_message", message);
   }
 }
 
@@ -46,8 +53,13 @@ export function initSocketServer(httpServer) {
     try {
       const cookieHeader = socket.handshake.headers.cookie || "";
       const cookieMatch = cookieHeader.match(/utlio_session=([^;]+)/);
+      const authHeader = socket.handshake.headers.authorization || "";
+      const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
       const token =
-        socket.handshake.auth?.token || (cookieMatch ? cookieMatch[1] : null);
+        socket.handshake.auth?.token ||
+        socket.handshake.query?.token ||
+        bearerToken ||
+        (cookieMatch ? cookieMatch[1] : null);
 
       if (!token) {
         return next(new Error("Authentication token required for Socket.io"));
@@ -191,8 +203,10 @@ export function initSocketServer(httpServer) {
           .populate("videoCall.caller videoCall.recipient", "name")
           .lean();
 
-        // Broadcast to quote room so chat updates with interactive card
+        // Broadcast to quote room and participant user rooms so chat updates with interactive card
         io.to(`quote_${quoteId}`).emit("new_message", populated);
+        io.to(`user_${q.provider._id}`).emit("new_message", populated);
+        io.to(`user_${q.seeker._id}`).emit("new_message", populated);
 
         const incomingPayload = {
           quoteId: String(quoteId),
@@ -255,11 +269,16 @@ export function initSocketServer(httpServer) {
             _id: String(socket.user._id),
             name: socket.user.name,
           },
+          userId: String(socket.user._id),
+          senderId: String(socket.user._id),
         };
 
         io.to(`quote_${quoteId}`).emit("video_call_accepted", payload);
         const callerId = String(q.provider) === String(socket.user._id) ? String(q.seeker) : String(q.provider);
         io.to(`user_${callerId}`).emit("video_call_accepted", payload);
+        if (roomId) {
+          io.to(`call_${roomId}`).emit("video_call_accepted", payload);
+        }
 
         if (typeof callback === "function") {
           callback({ success: true, payload });
@@ -298,12 +317,17 @@ export function initSocketServer(httpServer) {
             _id: String(socket.user._id),
             name: socket.user.name,
           },
+          userId: String(socket.user._id),
+          senderId: String(socket.user._id),
           reason: reason || "User is currently unavailable.",
         };
 
         io.to(`quote_${quoteId}`).emit("video_call_declined", payload);
         const callerId = String(q.provider) === String(socket.user._id) ? String(q.seeker) : String(q.provider);
         io.to(`user_${callerId}`).emit("video_call_declined", payload);
+        if (roomId) {
+          io.to(`call_${roomId}`).emit("video_call_declined", payload);
+        }
 
         if (typeof callback === "function") {
           callback({ success: true });
@@ -315,23 +339,65 @@ export function initSocketServer(httpServer) {
       }
     });
 
+    // 3b. Video Call Room Signaling Join/Leave
+    socket.on("join_call_room", ({ quoteId, roomId }) => {
+      if (roomId) {
+        socket.join(`call_${roomId}`);
+        socket.to(`call_${roomId}`).emit("peer_joined", {
+          quoteId,
+          roomId,
+          userId: String(socket.user._id),
+          senderId: String(socket.user._id),
+          name: socket.user.name,
+        });
+      }
+    });
+
+    socket.on("leave_call_room", ({ quoteId, roomId }) => {
+      if (roomId) {
+        socket.leave(`call_${roomId}`);
+        socket.to(`call_${roomId}`).emit("peer_left", {
+          quoteId,
+          roomId,
+          userId: String(socket.user._id),
+          senderId: String(socket.user._id),
+        });
+      }
+    });
+
     // 4. Relay WebRTC Signaling (Offer, Answer, ICE Candidate)
-    socket.on("webrtc_signal", ({ quoteId, targetUserId, signal }) => {
-      if (!targetUserId || !signal) return;
-      io.to(`user_${targetUserId}`).emit("webrtc_signal", {
+    socket.on("webrtc_signal", ({ quoteId, roomId, targetUserId, signal }) => {
+      if (!signal) return;
+      const payload = {
         quoteId,
+        roomId,
         senderId: String(socket.user._id),
         signal,
-      });
+      };
+      // Direct room broadcast to all other call participants
+      if (roomId) {
+        socket.to(`call_${roomId}`).emit("webrtc_signal", payload);
+      }
+      // Also emit to targeted user personal room as a fallback
+      if (targetUserId && targetUserId !== "undefined" && targetUserId !== "null") {
+        io.to(`user_${targetUserId}`).emit("webrtc_signal", payload);
+      }
     });
 
     // 4b. WebRTC Peer Ready Handshake
-    socket.on("webrtc_ready", ({ quoteId, targetUserId }) => {
-      if (!targetUserId) return;
-      io.to(`user_${targetUserId}`).emit("webrtc_ready", {
+    socket.on("webrtc_ready", ({ quoteId, roomId, targetUserId }) => {
+      const payload = {
         quoteId,
+        roomId,
         senderId: String(socket.user._id),
-      });
+        userId: String(socket.user._id),
+      };
+      if (roomId) {
+        socket.to(`call_${roomId}`).emit("webrtc_ready", payload);
+      }
+      if (targetUserId && targetUserId !== "undefined" && targetUserId !== "null") {
+        io.to(`user_${targetUserId}`).emit("webrtc_ready", payload);
+      }
     });
 
     // 5. End Video Call
