@@ -15,6 +15,7 @@ class ApiFailure implements Exception {
 class Api {
   static const List<String> defaultCandidates = [
     'http://127.0.0.1:4000/api',
+    'http://172.18.17.159:4000/api',
     'http://10.229.144.159:4000/api',
     'http://10.0.2.2:4000/api',
     'http://localhost:4000/api',

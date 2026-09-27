@@ -97,11 +97,11 @@ class _UtlioAppState extends State<UtlioApp> {
                           alignment: WrapAlignment.center,
                           children: [
                             NeoButton(
-                              text: 'Wi-Fi (10.229.144.159)',
+                              text: 'Wi-Fi (172.18.17.159)',
                               color: card,
                               fontSize: 12,
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              onPressed: () => widget.session.changeHost('http://10.229.144.159:4000/api'),
+                              onPressed: () => widget.session.changeHost('http://172.18.17.159:4000/api'),
                             ),
                             NeoButton(
                               text: 'USB/ADB (127.0.0.1)',
