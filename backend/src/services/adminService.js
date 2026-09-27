@@ -22,11 +22,16 @@ export const audit = async (user, action, target, detail, session) =>
       session ? { session } : {},
     )
   )[0];
+import { lookupGstin } from "./gstinService.js";
+
 export async function verify(user, id, raw) {
   const data = z
     .object({
       verification: z.enum(["verified", "rejected"]),
       verificationNote: z.string().trim().min(3).max(2000),
+      verificationMethod: z
+        .enum(["automated_gstin", "manual_document", "hybrid", "none"])
+        .optional(),
     })
     .parse(raw);
   return mongoose.connection.transaction(async (session) => {
@@ -36,13 +41,21 @@ export async function verify(user, id, raw) {
     }).session(session);
     assert(profile, 404, "Business not found.");
     assert(
-      data.verification !== "verified" || profile.documentId,
+      data.verification !== "verified" || profile.documentId || profile.gstin,
       400,
-      "Business must submit a verification document first.",
+      "Business must submit a verification document or a valid GSTIN.",
     );
-    Object.assign(profile, data);
+    profile.verification = data.verification;
+    profile.verificationNote = data.verificationNote;
+    if (data.verificationMethod) {
+      profile.verificationMethod = data.verificationMethod;
+    } else if (profile.documentId && profile.gstinData) {
+      profile.verificationMethod = "hybrid";
+    } else if (profile.documentId) {
+      profile.verificationMethod = "manual_document";
+    }
     await profile.save({ session });
-    await audit(user, "verification", id, data.verificationNote, session);
+    await audit(user, "verification", id, `${data.verificationNote} [Method: ${profile.verificationMethod}]`, session);
     await notify(
       id,
       `Business verification ${data.verification}`,
@@ -52,6 +65,37 @@ export async function verify(user, id, raw) {
     );
     return profile;
   });
+}
+
+export async function verifyGstinAuto(user, id, gstinParam) {
+  const profile = await BusinessProfile.findOne({ _id: id, role: "business" });
+  assert(profile, 404, "Business not found.");
+  const gstinToVerify = (gstinParam || profile.gstin || "").trim().toUpperCase();
+  assert(gstinToVerify, 400, "No GSTIN supplied for automated verification.");
+
+  const lookupResult = await lookupGstin(gstinToVerify, profile);
+  assert(lookupResult.success, 400, lookupResult.error || "GSTIN verification failed.");
+
+  profile.gstin = gstinToVerify;
+  profile.gstinData = lookupResult;
+  profile.verification = "verified";
+  profile.verificationMethod = profile.documentId ? "hybrid" : "automated_gstin";
+  profile.verificationNote = `Automated GSTIN Registry Verification Passed. Trade Name: "${lookupResult.tradeName}", State: ${lookupResult.state}, Status: ${lookupResult.status}.`;
+
+  await profile.save();
+  await audit(
+    user,
+    "gstin-automated-verification",
+    id,
+    `GSTIN ${gstinToVerify} verified via ${lookupResult.source}. Status: ${lookupResult.status}`,
+  );
+  await notify(
+    id,
+    "GSTIN Automated Verification Passed",
+    `Your GSTIN ${gstinToVerify} has been successfully verified on the official registry.`,
+    "/dashboard/profile",
+  );
+  return profile;
 }
 export async function saveCategory(user, id, raw) {
   const data = categorySchema.parse(raw);

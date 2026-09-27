@@ -31,4 +31,30 @@ export const authController = {
   profile: send(async (req) =>
     authService.publicUser(await authService.updateProfile(req.user, req.body)),
   ),
+
+  verifyGstin: send(async (req) => {
+    const { lookupGstin } = await import("../services/gstinService.js");
+    const gstinToVerify = (req.body?.gstin || req.user.gstin || "").trim().toUpperCase();
+    if (!gstinToVerify) {
+      throw Object.assign(new Error("Please enter a valid 15-digit GSTIN."), { status: 400 });
+    }
+    const result = await lookupGstin(gstinToVerify, req.user);
+    if (!result.success) {
+      throw Object.assign(new Error(result.error || "GSTIN verification failed."), { status: 400 });
+    }
+    const updated = await BusinessProfile.findByIdAndUpdate(
+      req.user._id,
+      {
+        $set: {
+          gstin: gstinToVerify,
+          gstinData: result,
+          verification: "verified",
+          verificationMethod: req.user.documentId ? "hybrid" : "automated_gstin",
+          verificationNote: `Automated GSTIN Registry Verification Passed (${result.tradeName}, ${result.state})`,
+        },
+      },
+      { new: true },
+    );
+    return authService.publicUser(updated);
+  }),
 };

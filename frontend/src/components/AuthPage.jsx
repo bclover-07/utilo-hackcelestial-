@@ -153,29 +153,52 @@ function AuthForm({ register, initialPersona }) {
           <fieldset disabled={busy} className="persona-fieldset">
             <legend>Account type</legend>
             <div className="persona-toggle account-type-toggle" aria-label="Account type">
-              <button type="button" aria-pressed={role === "business"} className={role === "business" ? "selected" : ""} onClick={() => selectPersona("seeker")}><Package size={19} /> Business</button>
-              {!register && <button type="button" aria-pressed={role === "admin"} className={role === "admin" ? "selected" : ""} onClick={() => selectPersona("admin")}><ShieldCheck size={19} /> Admin</button>}
+              <button
+                type="button"
+                aria-pressed={role === "business"}
+                className={role === "business" ? "selected" : ""}
+                onClick={() => selectPersona("seeker")}
+              >
+                <Package size={19} /> Business Account
+              </button>
+              {!register && (
+                <button
+                  type="button"
+                  aria-pressed={role === "admin"}
+                  className={role === "admin" ? "selected" : ""}
+                  onClick={() => selectPersona("admin")}
+                >
+                  <ShieldCheck size={19} /> Admin Portal
+                </button>
+              )}
             </div>
-            {role === "business" && <><p className="business-mode-label">{register ? "Choose your starting mode" : "Open your business workspace in"}</p><div className="persona-toggle business-mode-toggle" aria-label="Business mode">
-              {Object.entries(personas).filter(([key]) => key !== "admin").map(([key, item]) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    type="button"
-                    key={key}
-                    data-persona={key}
-                    aria-pressed={persona === key}
-                    className={persona === key ? "selected" : ""}
-                    onClick={() => selectPersona(key)}
-                  >
-                    <Icon size={19} />
-                    {item.title}
-                  </button>
-                );
-              })}
-            </div></>}
+            {role === "business" && register && (
+              <>
+                <p className="business-mode-label">Primary workspace intent (can switch anytime)</p>
+                <div className="persona-toggle business-mode-toggle" aria-label="Business mode">
+                  {Object.entries(personas).filter(([key]) => key !== "admin").map(([key, item]) => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        type="button"
+                        key={key}
+                        data-persona={key}
+                        aria-pressed={persona === key}
+                        className={persona === key ? "selected" : ""}
+                        onClick={() => selectPersona(key)}
+                      >
+                        <Icon size={19} />
+                        {item.title}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
             <p className="persona-caption">
-              {personas[persona].detail}
+              {role === "admin"
+                ? "Platform administration, verification reviews, and compliance mediation."
+                : "One unified business account for all operations: share idle assets, rent from verified businesses, and manage agreements."}
             </p>
           </fieldset>
           {!register && (

@@ -11,6 +11,7 @@ adminRoutes.get("/agents", agentStudioController.overview);
 adminRoutes.post("/agents/brief", rateLimit({ windowMs: 60000, limit: 8, keyGenerator: req => String(req.user._id), message: { error: "AI request limit reached. Try again in one minute." } }), agentStudioController.operations);
 adminRoutes.get("/verifications", c.verifications);
 adminRoutes.patch("/verifications/:id", c.verify);
+adminRoutes.post("/verifications/:id/auto-gstin", c.verifyGstinAuto);
 adminRoutes.post("/categories", c.createCategory);
 adminRoutes.put("/categories/:id", c.updateCategory);
 adminRoutes.get("/settings", c.settings);

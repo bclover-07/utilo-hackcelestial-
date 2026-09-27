@@ -40,6 +40,7 @@ api.get("/ai/local-config", (_req, res) => res.set("Cache-Control", "no-store").
 api.get("/auth/me", authController.me);
 api.post("/auth/logout", authController.logout);
 api.patch("/profile", authController.profile);
+api.post("/profile/verify-gstin", authController.verifyGstin);
 
 
 api.use(uploadRoutes);

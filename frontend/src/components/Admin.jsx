@@ -121,24 +121,89 @@ export function VerificationsPage() {
                     <div>
                       <h2>{u.name}</h2>
                       <div className="spec-chip-strip" style={{ marginTop: 4 }}>
-                        <span className="spec-chip">🏢 {u.category}</span>
-                        <span className="spec-chip">📍 {u.city}</span>
+                        <span className="spec-chip">🏢 {u.category || "General"}</span>
+                        <span className="spec-chip">📍 {u.city || "Not set"}</span>
                         <span className="spec-chip">📄 GSTIN: {u.gstin || "Not supplied"}</span>
                       </div>
                     </div>
-                    <Badge>{u.verification}</Badge>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
+                      <Badge>{u.verification}</Badge>
+                      {u.verificationMethod && u.verificationMethod !== "none" && (
+                        <span style={{ fontSize: "0.72rem", background: "#E8F5E9", border: "1px solid #171915", borderRadius: "6px", padding: "2px 6px", fontWeight: 700 }}>
+                          {u.verificationMethod === "automated_gstin" ? "⚡ Automated GST" : u.verificationMethod === "manual_document" ? "📑 Manual Doc" : "🔗 Hybrid"}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="spec-chip-strip" style={{ margin: "0.5rem 0" }}>
                     <span className="spec-chip">✉ {u.email}</span>
                     <span className="spec-chip">📞 {u.phone}</span>
                   </div>
-                  {u.documentId ? (
-                    <div style={{ margin: "0.75rem 0" }}>
-                      <PrivateDocument id={u.documentId} />
+
+                  {/* Automated GSTIN Verification Section (Option A) */}
+                  <div style={{ margin: "0.75rem 0", padding: "0.75rem", background: "#F5F8F7", borderRadius: "10px", border: "1.5px solid #171915" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                      <span style={{ fontSize: "0.8rem", fontWeight: 800, textTransform: "uppercase", color: "#0F766E", letterSpacing: "0.05em" }}>
+                        Option A: Automated GSTIN API
+                      </span>
+                      {u.gstinData && (
+                        <span style={{ fontSize: "0.72rem", color: "#059669", fontWeight: 700 }}>
+                          ● Registry Validated
+                        </span>
+                      )}
                     </div>
-                  ) : (
-                    <p className="hint">No compliance document submitted yet.</p>
-                  )}
+                    {u.gstinData ? (
+                      <div style={{ fontSize: "0.82rem", lineHeight: 1.4, background: "#FFF", padding: "8px", borderRadius: "6px", border: "1px solid #E5E0CF", marginBottom: "6px" }}>
+                        <div><strong>Legal:</strong> {u.gstinData.legalName}</div>
+                        <div><strong>Trade:</strong> {u.gstinData.tradeName}</div>
+                        <div><strong>State:</strong> {u.gstinData.state} ({u.gstinData.stateCode}) · <strong>Status:</strong> {u.gstinData.status}</div>
+                        <div style={{ fontSize: "0.72rem", color: "#666", marginTop: "2px" }}>Source: {u.gstinData.source}</div>
+                      </div>
+                    ) : (
+                      <p style={{ fontSize: "0.8rem", color: "#555", margin: "4px 0 8px" }}>
+                        {u.gstin ? `GSTIN supplied: ${u.gstin}. Ready for automated lookup.` : "No GSTIN entered yet."}
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      className="button"
+                      disabled={!u.gstin}
+                      style={{
+                        fontSize: "0.78rem",
+                        padding: "4px 10px",
+                        background: u.gstin ? "#FFE66D" : "#E2E8F0",
+                        border: "1.5px solid #171915",
+                        boxShadow: "1.5px 1.5px 0 #171915",
+                        cursor: u.gstin ? "pointer" : "not-allowed",
+                        fontWeight: 700,
+                        width: "100%",
+                      }}
+                      onClick={async () => {
+                        await api(`/admin/verifications/${u._id}/auto-gstin`, {
+                          method: "POST",
+                          body: { gstin: u.gstin },
+                        });
+                        await r.reload();
+                      }}
+                    >
+                      ⚡ Run Automated GSTIN Verification
+                    </button>
+                  </div>
+
+                  {/* Manual Compliance Document Section (Option B) */}
+                  <div style={{ margin: "0.75rem 0", padding: "0.75rem", background: "#FAF8F5", borderRadius: "10px", border: "1.5px solid #171915" }}>
+                    <span style={{ fontSize: "0.8rem", fontWeight: 800, textTransform: "uppercase", color: "#6B7280", letterSpacing: "0.05em", display: "block", marginBottom: "6px" }}>
+                      Option B: Manual Compliance Document
+                    </span>
+                    {u.documentId ? (
+                      <div style={{ margin: "0.5rem 0" }}>
+                        <PrivateDocument id={u.documentId} />
+                      </div>
+                    ) : (
+                      <p className="hint" style={{ margin: "4px 0" }}>No manual compliance document uploaded.</p>
+                    )}
+                  </div>
+
                   <ActionForm
                     label="Save decision"
                     onSubmit={async (form) => {
@@ -150,8 +215,13 @@ export function VerificationsPage() {
                     }}
                   >
                     <Field label="Decision" name="verification" as="select">
-                      <option value="verified">Approve</option>
+                      <option value="verified">Approve (Verified)</option>
                       <option value="rejected">Reject</option>
+                    </Field>
+                    <Field label="Verification Method" name="verificationMethod" as="select" defaultValue={u.verificationMethod || (u.documentId ? "manual_document" : "automated_gstin")}>
+                      <option value="automated_gstin">Automated GSTIN Registry</option>
+                      <option value="manual_document">Manual Document Inspection</option>
+                      <option value="hybrid">Hybrid (Both Automated + Manual)</option>
                     </Field>
                     <Field
                       label="Review note"

@@ -17,6 +17,12 @@ export const BusinessProfile = model("BusinessProfile", {
     enum: ["pending", "verified", "rejected"],
     default: "pending",
   },
+  verificationMethod: {
+    type: String,
+    enum: ["automated_gstin", "manual_document", "hybrid", "none"],
+    default: "none",
+  },
+  gstinData: { type: Schema.Types.Mixed, default: null },
   verificationNote: String,
   sessionVersion: { type: Number, default: 0 },
   favorites: [{ type: Schema.Types.ObjectId, ref: "Listing" }],

@@ -22,6 +22,10 @@ export const adminController = {
 
   verify: send((req) => admin.verify(req.user, recordId(req), req.body)),
 
+  verifyGstinAuto: send((req) =>
+    admin.verifyGstinAuto(req.user, recordId(req), req.body?.gstin),
+  ),
+
   createCategory: send((req) =>
     admin.saveCategory(req.user, null, req.body),
   ),
