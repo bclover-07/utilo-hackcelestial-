@@ -7,13 +7,13 @@ const send = (fn) => async (req, res) => res.json(await fn(req, res));
 export const authController = {
   register: send(async (req, res) => {
     const u = await authService.register(req.body);
-    const token = authService.session(res, u);
+    const token = authService.session(res, u, req);
     return { ...authService.publicUser(u), socketToken: token };
   }),
 
   login: send(async (req, res) => {
     const u = await authService.login(req.body);
-    const token = authService.session(res, u);
+    const token = authService.session(res, u, req);
     return { ...authService.publicUser(u), socketToken: token };
   }),
 
