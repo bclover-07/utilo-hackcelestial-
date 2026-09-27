@@ -24,6 +24,10 @@ import {
   Activity,
   Maximize2,
   Minimize2,
+  Copy,
+  FileText,
+  Download,
+  ExternalLink,
 } from "lucide-react";
 import { api } from "@/lib/api";
 
@@ -82,10 +86,39 @@ export default function NugenAssistant() {
   const [alignLog, setAlignLog] = useState([]);
   const [customKey, setCustomKey] = useState("");
   const [savingKey, setSavingKey] = useState(false);
+  const [corpusDocs, setCorpusDocs] = useState([]);
+  const [selectedCorpusDoc, setSelectedCorpusDoc] = useState(null);
+  const [copiedDocName, setCopiedDocName] = useState("");
+
+  const fetchCorpus = async () => {
+    try {
+      const res = await api("/nugen/corpus");
+      if (res?.documents) setCorpusDocs(res.documents);
+    } catch {}
+  };
+
+  const downloadDoc = (doc) => {
+    const blob = new Blob([doc.content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = doc.name;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const copyDoc = async (doc) => {
+    try {
+      await navigator.clipboard.writeText(doc.content);
+      setCopiedDocName(doc.name);
+      setTimeout(() => setCopiedDocName(""), 2000);
+    } catch {}
+  };
 
   // Load pipeline status on mount
   useEffect(() => {
     fetchStatus();
+    fetchCorpus();
     const handleOpen = (e) => {
       setIsOpen(true);
       if (e?.detail?.tab) setActiveTab(e.detail.tab);
@@ -1175,6 +1208,121 @@ export default function NugenAssistant() {
                         ))}
                       </div>
                     )}
+
+                    {/* Training Corpus Documents for Nugen */}
+                    <div
+                      style={{
+                        background: "#fffdf4",
+                        border: "2px solid #171915",
+                        borderRadius: "12px",
+                        padding: "14px",
+                        boxShadow: "3px 3px 0 #171915",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "10px",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <FileText size={16} />
+                            <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: 800 }}>
+                              Nugen Training Corpus Files
+                            </h4>
+                          </div>
+                          <p style={{ margin: "2px 0 0", fontSize: "0.74rem", color: "#666" }}>
+                            Upload these to Nugen.in to train your domain-specific model:
+                          </p>
+                        </div>
+                        <a
+                          href="https://nugen.in"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            fontSize: "0.72rem",
+                            fontWeight: 800,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            color: "#171915",
+                            textDecoration: "underline",
+                          }}
+                        >
+                          nugen.in <ExternalLink size={11} />
+                        </a>
+                      </div>
+
+                      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                        {(corpusDocs.length > 0 ? corpusDocs : [
+                          { name: "01_utlio_b2b_rental_domain_master.txt", content: "" },
+                          { name: "02_utlio_seeker_event_planner_intelligence.txt", content: "" },
+                          { name: "03_utlio_b2b_negotiation_and_contracts.txt", content: "" },
+                          { name: "04_utlio_verified_inventory_catalog_benchmark.txt", content: "" },
+                        ]).map((doc, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              background: "#ffffff",
+                              border: "1.5px solid #171915",
+                              borderRadius: "8px",
+                              padding: "10px",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}
+                          >
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <strong style={{ fontSize: "0.78rem", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {doc.name}
+                              </strong>
+                              <span style={{ fontSize: "0.7rem", color: "#777" }}>
+                                {doc.name.includes("seeker") ? "Seeker Event Planning Formulas & Blueprints" : doc.name.includes("benchmark") ? "Live Database Inventory Snapshot" : doc.name.includes("negotiation") ? "B2B Negotiation Playbook & Pricing" : "Master Rental Architecture & Escrow"} · {doc.content ? `${Math.round(doc.content.length / 1024)} KB` : "Document"}
+                              </span>
+                            </div>
+
+                            <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
+                              <button
+                                type="button"
+                                onClick={() => copyDoc(doc)}
+                                style={{
+                                  padding: "5px 8px",
+                                  fontSize: "0.72rem",
+                                  fontWeight: 700,
+                                  background: copiedDocName === doc.name ? "#dcfce7" : "#f4f4f5",
+                                  border: "1px solid #171915",
+                                  borderRadius: "6px",
+                                  cursor: "pointer",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "3px",
+                                }}
+                              >
+                                <Copy size={11} /> {copiedDocName === doc.name ? "Copied!" : "Copy"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => downloadDoc(doc)}
+                                style={{
+                                  padding: "5px 8px",
+                                  fontSize: "0.72rem",
+                                  fontWeight: 700,
+                                  background: "#ffe66d",
+                                  border: "1px solid #171915",
+                                  borderRadius: "6px",
+                                  cursor: "pointer",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "3px",
+                                }}
+                              >
+                                <Download size={11} /> Download
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
 

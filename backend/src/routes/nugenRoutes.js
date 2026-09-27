@@ -15,6 +15,7 @@ nugenRoutes.get("/nugen/status", c.status);
 nugenRoutes.get("/nugen/models/base", c.listBaseModels);
 nugenRoutes.get("/nugen/models/aligned", c.listAlignedModels);
 
+nugenRoutes.get("/nugen/corpus", c.getCorpus);
 nugenRoutes.post("/nugen/corpus/upload", nugenLimit, c.uploadCorpus);
 nugenRoutes.get("/nugen/documents", c.listDocuments);
 nugenRoutes.get("/nugen/documents/:id/status", c.documentStatus);

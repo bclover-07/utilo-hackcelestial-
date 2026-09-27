@@ -18,8 +18,13 @@ export const nugenController = {
     res.json(models);
   },
 
+  getCorpus: async (_req, res) => {
+    const corpus = await generateB2BRentalCorpus();
+    res.json({ count: corpus.length, documents: corpus });
+  },
+
   uploadCorpus: async (_req, res) => {
-    const corpus = generateB2BRentalCorpus();
+    const corpus = await generateB2BRentalCorpus();
     const result = await nugen.uploadDocuments(corpus);
     res.json({ message: "Domain corpus uploaded successfully", ...result });
   },
