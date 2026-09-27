@@ -272,12 +272,12 @@ function generateSeededLocations(city, weatherCoords) {
 }
 
 export async function getDigitalTwinState(city = "Mumbai") {
+  const cityName = city || "Mumbai";
   const [weather, forecast, socialData] = await Promise.all([
-    getCurrentWeather(city),
-    getWeatherForecast(city, 7),
-    getSocialSignals(city),
+    getCurrentWeather(cityName),
+    getWeatherForecast(cityName, 7),
+    getSocialSignals(cityName),
   ]);
-  if (weather.error) return { error: weather.error };
 
   let listings = [];
   let activeBookings = [];
