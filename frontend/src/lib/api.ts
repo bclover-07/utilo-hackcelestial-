@@ -60,7 +60,7 @@ export async function api<T = unknown>(
       throw new Error(
         "This request took too long. Please retry. Check your records before repeating a booking or other change.",
       );
-    throw new Error("Cannot reach Utlio. Check your connection and retry.");
+    throw new Error("Cannot reach Utilo. Check your connection and retry.");
   }
   let data: any;
   try {

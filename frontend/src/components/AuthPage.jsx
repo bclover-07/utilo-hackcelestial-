@@ -93,7 +93,7 @@ function AuthForm({ register, initialPersona }) {
     <main className="auth-studio">
       <header className="auth-header">
         <Link className="brand" href="/">
-          <span>u</span>utlio<span className="brand-dot">✳</span>
+          <span>u</span>utilo<span className="brand-dot">✳</span>
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <LanguageSwitcher compact />

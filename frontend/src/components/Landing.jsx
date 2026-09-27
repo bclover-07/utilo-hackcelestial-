@@ -204,7 +204,7 @@ function CapacityRoiCalculatorSection({ destination, reveal }) {
             <span className="eyebrow">INTERACTIVE CAPACITY REVENUE CALCULATOR</span>
             <h2>Estimate Your Idle Asset Earnings</h2>
             <p>
-              See how much ancillary revenue your unused spaces, furniture, or equipment could generate each month on Utlio.
+              See how much ancillary revenue your unused spaces, furniture, or equipment could generate each month on Utilo.
             </p>
           </div>
 
@@ -366,7 +366,7 @@ function AutonomousAgentMatrixSection({ destination, reveal }) {
           </h2>
         </div>
         <p>
-          Utlio runs specialized AI worker agents coordinated by a Supervisor Planner, verified by a reflection critic node.
+          Utilo runs specialized AI worker agents coordinated by a Supervisor Planner, verified by a reflection critic node.
         </p>
       </div>
 
@@ -422,7 +422,7 @@ function AutonomousAgentMatrixSection({ destination, reveal }) {
 
 const testimonials = [
   {
-    quote: "Utlio transformed our vacant weekday banquets into ₹4.8 Lakhs of extra monthly revenue. The escrow-backed bookings give us complete peace of mind.",
+    quote: "Utilo transformed our vacant weekday banquets into ₹4.8 Lakhs of extra monthly revenue. The escrow-backed bookings give us complete peace of mind.",
     name: "Rajesh Singhania",
     business: "Grand Palace Banquets, Mumbai BKC",
     metric: "+₹4.8L/mo idle yield",
@@ -494,20 +494,20 @@ function HospitalityTestimonialsSection({ reveal }) {
 
 const faqs = [
   {
-    q: "How does Utlio ensure asset security and transaction safety?",
+    q: "How does Utilo ensure asset security and transaction safety?",
     a: "Every business undergoes verification before publishing resources. Transactions are protected through structured escrow milestones, damage security holds, and automated dispute mediation protocols.",
   },
   {
     q: "Can I use the same business account as both a Seeker and a Provider?",
-    a: "Yes! Utlio features a dual-role exchange model. A single business account allows you to discover and book resources as a Seeker, and list excess capacity as a Provider with a seamless one-click switch.",
+    a: "Yes! Utilo features a dual-role exchange model. A single business account allows you to discover and book resources as a Seeker, and list excess capacity as a Provider with a seamless one-click switch.",
   },
   {
     q: "How does the AI Event Conductor assemble multi-supplier packages?",
     a: "The Conductor uses a Supervisor Planner to break down complex briefs (e.g. '300-person banquet setup in Mumbai') into discrete categories. It performs Monte Carlo failure simulation and corridor clustering to ensure reliable delivery.",
   },
   {
-    q: "Does Utlio support multiple regional and global languages?",
-    a: "Yes! Utlio features dynamic multi-language translation powered by Google Translate, supporting 14 languages including Hindi, Marathi, Bengali, Gujarati, Tamil, Telugu, Spanish, French, and German across all dashboards, forms, and workflows.",
+    q: "Does Utilo support multiple regional and global languages?",
+    a: "Yes! Utilo features dynamic multi-language translation powered by Google Translate, supporting 14 languages including Hindi, Marathi, Bengali, Gujarati, Tamil, Telugu, Spanish, French, and German across all dashboards, forms, and workflows.",
   },
   {
     q: "How does dynamic pricing work for providers?",
@@ -526,7 +526,7 @@ function InteractiveFaqSection({ reveal }) {
           <h2>Frequently Asked Questions</h2>
         </div>
         <p style={{ margin: "10px auto 0" }}>
-          Everything you need to know about Utlio’s resource exchange, AI agents, and security.
+          Everything you need to know about Utilo’s resource exchange, AI agents, and security.
         </p>
       </div>
 
@@ -578,7 +578,7 @@ export default function Landing() {
       </a>
       <nav className="neo-nav" aria-label="Main navigation">
         <Link className="brand" href="/">
-          <span>u</span>utlio<span className="brand-dot">✳</span>
+          <span>u</span>utilo<span className="brand-dot">✳</span>
         </Link>
         <div className={`neo-nav-links ${menu ? "open" : ""}`}>
           <a href="#how-it-works" onClick={() => setMenu(false)}>
@@ -962,7 +962,7 @@ export default function Landing() {
       <footer className="neo-footer">
         <div>
           <Link className="brand" href="/">
-            <span>u</span>utlio<span className="brand-dot">✳</span>
+            <span>u</span>utilo<span className="brand-dot">✳</span>
           </Link>
           <p>Less idle. More possible.</p>
         </div>

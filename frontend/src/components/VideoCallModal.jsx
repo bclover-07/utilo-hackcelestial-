@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { getSocket } from "@/lib/socket";
-import { playConnectTone, playEndTone } from "@/lib/callSound";
+import { useWebRtcCall } from "@/hooks/useWebRtcCall";
 import {
   Mic,
   MicOff,
@@ -18,24 +17,143 @@ import {
   AlertCircle,
   PhoneCall,
   Clock,
+  RefreshCw,
 } from "lucide-react";
 
-const RTC_CONFIG = {
-  iceServers: [
-    { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun1.l.google.com:19302" },
-    { urls: "stun:stun2.l.google.com:19302" },
-    { urls: "stun:stun3.l.google.com:19302" },
-    { urls: "stun:stun4.l.google.com:19302" },
-    { urls: "stun:global.stun.twilio.com:3478" },
-  ],
-  iceCandidatePoolSize: 10,
+const COLORS = {
+  ink: "#20201e",
+  panel: "#171915",
+  header: "#222521",
+  dock: "#1e211c",
+  divider: "#2d312c",
+  stage: "#090a08",
+  paper: "#FAF8F5",
+  yellow: "#FFE66D",
+  teal: "#4ECDC4",
+  mint: "#A8E6CF",
+  pink: "#FF85A1",
+  lilac: "#C3B1E1",
+  green: "#10b981",
+  red: "#ef4444",
+  muted: "#9ca3af",
 };
 
 function formatDuration(seconds) {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+}
+
+function StatusPill({ color, label, glow = false }) {
+  return (
+    <span
+      style={{
+        background: `${color}25`,
+        border: `1px solid ${color}`,
+        color,
+        padding: "4px 10px",
+        borderRadius: "20px",
+        fontSize: "0.78rem",
+        fontWeight: 700,
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "6px",
+        whiteSpace: "nowrap",
+      }}
+    >
+      <span
+        style={{
+          width: 8,
+          height: 8,
+          borderRadius: "50%",
+          background: color,
+          boxShadow: glow ? `0 0 6px ${color}` : "none",
+        }}
+      />
+      {label}
+    </span>
+  );
+}
+
+function ControlButton({ onClick, icon, label, title, background = COLORS.paper, color = COLORS.ink, disabled = false, strong = false }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      aria-label={title}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        background,
+        color,
+        border: `2px solid ${COLORS.ink}`,
+        borderRadius: "12px",
+        padding: strong ? "10px 20px" : "10px 16px",
+        fontWeight: strong ? 800 : 700,
+        fontSize: strong ? "0.9rem" : "0.85rem",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.5 : 1,
+        boxShadow: `${strong ? 3 : 2}px ${strong ? 3 : 2}px 0 ${COLORS.ink}`,
+        transition: "transform 0.12s ease",
+      }}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function Avatar({ letter, size, background, glow }) {
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        background,
+        color: COLORS.ink,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: size * 0.028 + "rem",
+        fontWeight: 900,
+        border: `3px solid ${COLORS.ink}`,
+        boxShadow: glow ? `0 0 30px ${background}66` : "none",
+      }}
+    >
+      {letter}
+    </div>
+  );
+}
+
+function StageNotice({ icon, title, titleColor = "#fff", body, children }) {
+  return (
+    <div
+      role="status"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#fff",
+        gap: "14px",
+        padding: "24px",
+        textAlign: "center",
+        maxWidth: "460px",
+        zIndex: 5,
+      }}
+    >
+      {icon}
+      <div>
+        <h3 style={{ margin: "0 0 6px", fontSize: "1.2rem", fontWeight: 800, color: titleColor }}>{title}</h3>
+        {body && <p style={{ margin: 0, color: "#cbd5e1", fontSize: "0.88rem", lineHeight: 1.45 }}>{body}</p>}
+      </div>
+      {children}
+    </div>
+  );
 }
 
 export function VideoCallModal({
@@ -51,61 +169,60 @@ export function VideoCallModal({
   messageId = "",
 }) {
   const { user } = useAuth();
-  const [callState, setCallState] = useState(isInitiator ? "calling" : "initializing");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [audioMuted, setAudioMuted] = useState(false);
-  const [videoOff, setVideoOff] = useState(false);
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [duration, setDuration] = useState(0);
+  const call = useWebRtcCall({
+    isOpen,
+    quoteId,
+    roomId,
+    partnerId,
+    isInitiator,
+    messageId,
+    selfId: user?._id ? String(user._id) : "",
+    onClose,
+  });
+  const {
+    callState,
+    errorMessage,
+    mediaWarning,
+    duration,
+    audioMuted,
+    videoOff,
+    hasLocalVideo,
+    hasLocalAudio,
+    isScreenSharing,
+    hasRemoteVideo,
+    remoteMedia,
+    needsUserTapForSound,
+    localVideoRef,
+    remoteVideoRef,
+    remoteAudioRef,
+    enableUserAudio,
+    toggleAudio,
+    toggleVideo,
+    toggleScreenShare,
+    endCall,
+  } = call;
+
   const [isMinimized, setIsMinimized] = useState(false);
   const [geoData, setGeoData] = useState(null);
   const [sessionNonce] = useState(() => `UTL-${Math.random().toString(36).substring(2, 7).toUpperCase()}`);
   const [activeChallenge, setActiveChallenge] = useState(null);
   const [challengeStatus, setChallengeStatus] = useState("idle");
-  const [needsUserTapForSound, setNeedsUserTapForSound] = useState(false);
 
-  const localVideoRef = useRef(null);
-  const remoteVideoRef = useRef(null);
-  const remoteAudioRef = useRef(null);
-  const remoteStreamRef = useRef(null);
-  const remotePeerIdRef = useRef(partnerId);
-  const pcRef = useRef(null);
-  const localStreamRef = useRef(null);
-  const screenStreamRef = useRef(null);
-  const timerRef = useRef(null);
-  const callTimeoutRef = useRef(null);
-  const durationRef = useRef(0);
-  const pendingCandidatesRef = useRef([]);
-  const earlySignalsBufferRef = useRef([]);
-  const hasOfferedRef = useRef(false);
-  const peerReadyReceivedRef = useRef(false);
-  const seenCandidatesRef = useRef(new Set());
-  const hasReceivedOfferRef = useRef(false);
-
-  // Initialize browser GPS for real-time live video watermark
+  // Browser GPS for the live video watermark
   useEffect(() => {
-    if (typeof window !== "undefined" && "geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setGeoData({
-            lat: pos.coords.latitude.toFixed(4),
-            lng: pos.coords.longitude.toFixed(4),
-            accuracy: Math.round(pos.coords.accuracy),
-            timestamp: new Date().toISOString().replace("T", " ").slice(0, 19) + " UTC",
-          });
-        },
-        () => {
-          setGeoData({
-            lat: "19.0760",
-            lng: "72.8777",
-            accuracy: 12,
-            timestamp: new Date().toISOString().replace("T", " ").slice(0, 19) + " UTC",
-            simulated: true,
-          });
-        },
-        { enableHighAccuracy: true, timeout: 8000 },
-      );
-    }
+    if (typeof window === "undefined" || !("geolocation" in navigator)) return;
+    const stamp = () => new Date().toISOString().replace("T", " ").slice(0, 19) + " UTC";
+    navigator.geolocation.getCurrentPosition(
+      (pos) =>
+        setGeoData({
+          lat: pos.coords.latitude.toFixed(4),
+          lng: pos.coords.longitude.toFixed(4),
+          accuracy: Math.round(pos.coords.accuracy),
+          timestamp: stamp(),
+        }),
+      () => setGeoData({ lat: "19.0760", lng: "72.8777", accuracy: 12, timestamp: stamp(), simulated: true }),
+      { enableHighAccuracy: true, timeout: 8000 },
+    );
   }, []);
 
   const triggerLivenessChallenge = () => {
@@ -115,1556 +232,591 @@ export function VideoCallModal({
       `Show live street-view / building entrance number matching registered address.`,
       `Demonstrate physical custody by opening the machine engine hood or main entry door.`,
     ];
-    const picked = challenges[Math.floor(Math.random() * challenges.length)];
-    setActiveChallenge(picked);
+    setActiveChallenge(challenges[Math.floor(Math.random() * challenges.length)]);
     setChallengeStatus("active");
-  };
-
-  // Sync ref with duration and partnerId
-  useEffect(() => {
-    durationRef.current = duration;
-  }, [duration]);
-
-  useEffect(() => {
-    if (partnerId) {
-      remotePeerIdRef.current = partnerId;
-    }
-  }, [partnerId]);
-
-  // Unmute and play media when user interacts
-  const enableUserAudio = useCallback(() => {
-    setNeedsUserTapForSound(false);
-    if (remoteAudioRef.current) {
-      remoteAudioRef.current.muted = false;
-      remoteAudioRef.current.play().catch(() => {});
-    }
-    if (remoteVideoRef.current) {
-      remoteVideoRef.current.muted = false;
-      remoteVideoRef.current.play().catch(() => {});
-    }
-  }, []);
-
-  // Ensure remote media plays when connected
-  useEffect(() => {
-    if (callState === "connected" && remoteStreamRef.current) {
-      if (remoteVideoRef.current && remoteVideoRef.current.srcObject !== remoteStreamRef.current) {
-        remoteVideoRef.current.srcObject = remoteStreamRef.current;
-      }
-      if (remoteAudioRef.current && remoteAudioRef.current.srcObject !== remoteStreamRef.current) {
-        remoteAudioRef.current.srcObject = remoteStreamRef.current;
-      }
-
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.play().catch(() => {
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.muted = true;
-            remoteVideoRef.current.play().catch(() => {});
-          }
-          setNeedsUserTapForSound(true);
-        });
-      }
-
-      if (remoteAudioRef.current) {
-        remoteAudioRef.current.play().catch(() => {
-          setNeedsUserTapForSound(true);
-        });
-      }
-    }
-  }, [callState]);
-
-  // Teardown helper
-  const cleanUpMedia = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    if (callTimeoutRef.current) {
-      clearTimeout(callTimeoutRef.current);
-      callTimeoutRef.current = null;
-    }
-
-    if (screenStreamRef.current) {
-      screenStreamRef.current.getTracks().forEach((t) => t.stop());
-      screenStreamRef.current = null;
-    }
-
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((t) => t.stop());
-      localStreamRef.current = null;
-    }
-
-    if (pcRef.current) {
-      pcRef.current.ontrack = null;
-      pcRef.current.onicecandidate = null;
-      pcRef.current.onconnectionstatechange = null;
-      pcRef.current.close();
-      pcRef.current = null;
-    }
-
-    if (remoteStreamRef.current) {
-      remoteStreamRef.current.getTracks().forEach((t) => t.stop());
-      remoteStreamRef.current = null;
-    }
-
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = null;
-    }
-    if (remoteVideoRef.current) {
-      remoteVideoRef.current.srcObject = null;
-    }
-  }, []);
-
-  const handleEndCall = useCallback(
-    (notifyRemote = true) => {
-      playEndTone();
-      const currentDuration = durationRef.current;
-      setCallState("ended");
-
-      const socket = getSocket();
-      if (socket && socket.connected) {
-        if (roomId) {
-          socket.emit("leave_call_room", { quoteId, roomId });
-        }
-        if (notifyRemote) {
-          socket.emit("video_call_end", {
-            quoteId,
-            roomId,
-            messageId,
-            durationSeconds: currentDuration,
-          });
-        }
-      }
-
-      cleanUpMedia();
-      setTimeout(() => {
-        onClose();
-      }, 1000);
-    },
-    [quoteId, roomId, messageId, onClose, cleanUpMedia]
-  );
-
-  // WebRTC Peer Connection & Media Initialization
-  useEffect(() => {
-    if (!isOpen) return;
-
-    let isMounted = true;
-    let readyInterval = null;
-    pendingCandidatesRef.current = [];
-    earlySignalsBufferRef.current = [];
-    hasOfferedRef.current = false;
-    setDuration(0);
-    setAudioMuted(false);
-    setVideoOff(false);
-    setIsScreenSharing(false);
-
-    if (isInitiator) {
-      setCallState("calling");
-    } else {
-      setCallState("connecting");
-    }
-
-    const socket = getSocket();
-    if (!socket) {
-      setCallState("error");
-      setErrorMessage("Real-time network connection is unavailable.");
-      return;
-    }
-
-    // Join the call room immediately
-    if (roomId) {
-      socket.emit("join_call_room", { quoteId, roomId });
-    }
-
-    function drainCandidates(pcInstance) {
-      if (!pcInstance || !pcInstance.remoteDescription) return;
-      while (pendingCandidatesRef.current.length > 0) {
-        const c = pendingCandidatesRef.current.shift();
-        if (c) {
-          try {
-            const candidateInit = typeof c === "string" ? { candidate: c } : c;
-            pcInstance.addIceCandidate(candidateInit).catch(() => {});
-          } catch {}
-        }
-      }
-    }
-
-    function processSignal(pcInstance, signal, senderId) {
-      if (!pcInstance || !signal) return;
-
-      if (signal.type === "offer") {
-        hasReceivedOfferRef.current = true;
-        if (pcInstance.signalingState !== "stable") {
-          console.warn("[WebRTC] Ignoring offer in non-stable state:", pcInstance.signalingState);
-          return;
-        }
-
-        const sdpObj =
-          signal.sessionDescription ||
-          (typeof signal.sdp === "string"
-            ? { type: "offer", sdp: signal.sdp }
-            : signal.sdp);
-
-        pcInstance
-          .setRemoteDescription(new RTCSessionDescription(sdpObj))
-          .then(() => {
-            drainCandidates(pcInstance);
-            return pcInstance.createAnswer({
-              offerToReceiveAudio: true,
-              offerToReceiveVideo: true,
-            });
-          })
-          .then((answer) => pcInstance.setLocalDescription(answer))
-          .then(() => {
-            const s = getSocket();
-            if (s && s.connected) {
-              s.emit("webrtc_signal", {
-                quoteId,
-                roomId,
-                targetUserId: senderId || remotePeerIdRef.current || partnerId,
-                signal: {
-                  type: "answer",
-                  sdp: pcInstance.localDescription.sdp,
-                  sessionDescription: {
-                    type: pcInstance.localDescription.type,
-                    sdp: pcInstance.localDescription.sdp,
-                  },
-                },
-              });
-            }
-            setCallState("connecting");
-          })
-          .catch((err) => {
-            console.error("[WebRTC] Error handling WebRTC offer:", err);
-          });
-      } else if (signal.type === "answer") {
-        if (pcInstance.signalingState !== "have-local-offer") {
-          console.warn("[WebRTC] Ignoring answer in unexpected state:", pcInstance.signalingState);
-          return;
-        }
-
-        const sdpObj =
-          signal.sessionDescription ||
-          (typeof signal.sdp === "string"
-            ? { type: "answer", sdp: signal.sdp }
-            : signal.sdp);
-
-        pcInstance
-          .setRemoteDescription(new RTCSessionDescription(sdpObj))
-          .then(() => {
-            drainCandidates(pcInstance);
-            setCallState("connecting");
-          })
-          .catch((err) => {
-            console.error("[WebRTC] Error setting remote description from answer:", err);
-          });
-      } else if (signal.type === "candidate") {
-        const cand = signal.candidate;
-        if (cand && (cand.candidate || typeof cand === "string")) {
-          const candKey = typeof cand === "string" ? cand : (cand.candidate || JSON.stringify(cand));
-          if (candKey && seenCandidatesRef.current.has(candKey)) return;
-          if (candKey) seenCandidatesRef.current.add(candKey);
-
-          if (pcInstance.remoteDescription && pcInstance.remoteDescription.type) {
-            try {
-              const candidateInit = typeof cand === "string" ? { candidate: cand } : cand;
-              pcInstance
-                .addIceCandidate(candidateInit)
-                .catch((err) => console.warn("[WebRTC] Error adding ICE candidate:", err));
-            } catch (e) {
-              console.warn("[WebRTC] Exception adding candidate:", e);
-            }
-          } else {
-            pendingCandidatesRef.current.push(cand);
-          }
-        }
-      }
-    }
-
-    async function sendOffer(pcInstance, socketInstance) {
-      if (!pcInstance || !socketInstance || hasOfferedRef.current) return;
-      try {
-        hasOfferedRef.current = true;
-        setCallState("connecting");
-        const offer = await pcInstance.createOffer({
-          offerToReceiveAudio: true,
-          offerToReceiveVideo: true,
-        });
-        await pcInstance.setLocalDescription(offer);
-
-        socketInstance.emit("webrtc_signal", {
-          quoteId,
-          roomId,
-          targetUserId: remotePeerIdRef.current || partnerId,
-          signal: {
-            type: "offer",
-            sdp: offer.sdp,
-            sessionDescription: {
-              type: offer.type,
-              sdp: offer.sdp,
-            },
-          },
-        });
-      } catch (err) {
-        console.error("[WebRTC] Error creating WebRTC offer:", err);
-        hasOfferedRef.current = false;
-      }
-    }
-
-    // Register signaling listener IMMEDIATELY so early signals are never lost
-    function handleSignal({ senderId, signal }) {
-      if (!isMounted || !signal) return;
-      // Filter out our own signals
-      if (senderId && user?._id && String(senderId) === String(user._id)) return;
-      if (senderId) {
-        remotePeerIdRef.current = senderId;
-      }
-      const pc = pcRef.current;
-      if (!pc) {
-        earlySignalsBufferRef.current.push({ senderId, signal });
-        return;
-      }
-      processSignal(pc, signal, senderId);
-    }
-    socket.on("webrtc_signal", handleSignal);
-
-    // When counterparty announces ready or joins
-    function handlePeerReady(data) {
-      if (!isMounted) return;
-      const sender = data?.senderId || data?.userId || data?.acceptedBy?._id;
-      if (sender && user?._id && String(sender) === String(user._id)) return;
-      if (sender) {
-        remotePeerIdRef.current = sender;
-      }
-      peerReadyReceivedRef.current = true;
-      if (isInitiator) {
-        const pc = pcRef.current;
-        if (pc && !hasOfferedRef.current) {
-          sendOffer(pc, socket);
-        }
-      }
-    }
-    socket.on("peer_joined", handlePeerReady);
-    socket.on("webrtc_ready", handlePeerReady);
-    socket.on("video_call_accepted", handlePeerReady);
-
-    // Remote user ends call
-    function handleCallEnded(data) {
-      if (String(data.quoteId) === String(quoteId)) {
-        handleEndCall(false);
-      }
-    }
-    socket.on("video_call_ended", handleCallEnded);
-
-    // Remote user declines call
-    function handleCallDeclined(data) {
-      if (String(data.quoteId) === String(quoteId)) {
-        playEndTone();
-        if (isMounted) {
-          setCallState("declined");
-          if (callTimeoutRef.current) clearTimeout(callTimeoutRef.current);
-        }
-        setTimeout(() => {
-          if (isMounted) handleEndCall(false);
-        }, 2500);
-      }
-    }
-    socket.on("video_call_declined", handleCallDeclined);
-
-    async function startCall() {
-      try {
-        // 1. Get user media (camera + mic)
-        let stream;
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-              facingMode: "user",
-            },
-            audio: {
-              echoCancellation: true,
-              noiseSuppression: true,
-              autoGainControl: true,
-            },
-          });
-        } catch (mediaErr) {
-          console.warn("[WebRTC] Could not get ideal video/audio, trying fallback:", mediaErr);
-          try {
-            stream = await navigator.mediaDevices.getUserMedia({
-              video: true,
-              audio: true,
-            });
-          } catch (audioOnlyErr) {
-            console.warn("[WebRTC] Could not get video, trying audio only:", audioOnlyErr);
-            stream = await navigator.mediaDevices.getUserMedia({
-              video: false,
-              audio: true,
-            });
-            setVideoOff(true);
-          }
-        }
-
-        if (!isMounted) {
-          stream.getTracks().forEach((t) => t.stop());
-          return;
-        }
-
-        // Ensure all audio and video tracks are unmuted and enabled
-        stream.getTracks().forEach((t) => {
-          t.enabled = true;
-        });
-
-        localStreamRef.current = stream;
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
-        }
-
-        // 2. Create RTCPeerConnection
-        const pc = new RTCPeerConnection(RTC_CONFIG);
-        pcRef.current = pc;
-
-        // Add local tracks to peer connection
-        stream.getTracks().forEach((track) => {
-          pc.addTrack(track, stream);
-        });
-
-        // Remote track arrival (audio + video)
-        pc.ontrack = (event) => {
-          if (!isMounted) return;
-          let incomingStream = event.streams && event.streams[0];
-          if (!incomingStream) {
-            if (!remoteStreamRef.current) {
-              remoteStreamRef.current = new MediaStream();
-            }
-            remoteStreamRef.current.addTrack(event.track);
-            incomingStream = remoteStreamRef.current;
-          } else {
-            remoteStreamRef.current = incomingStream;
-          }
-
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = incomingStream;
-            remoteVideoRef.current.play().catch(() => {
-              if (remoteVideoRef.current) {
-                remoteVideoRef.current.muted = true;
-                remoteVideoRef.current.play().catch(() => {});
-              }
-              setNeedsUserTapForSound(true);
-            });
-          }
-
-          if (remoteAudioRef.current) {
-            remoteAudioRef.current.srcObject = incomingStream;
-            remoteAudioRef.current.play().catch(() => {
-              setNeedsUserTapForSound(true);
-            });
-          }
-
-          setCallState("connected");
-          playConnectTone();
-
-          if (callTimeoutRef.current) {
-            clearTimeout(callTimeoutRef.current);
-            callTimeoutRef.current = null;
-          }
-
-          if (!timerRef.current) {
-            timerRef.current = setInterval(() => {
-              setDuration((prev) => prev + 1);
-            }, 1000);
-          }
-        };
-
-        // ICE candidate generation
-        pc.onicecandidate = (event) => {
-          if (event.candidate && event.candidate.candidate) {
-            const currentSocket = getSocket();
-            if (currentSocket && currentSocket.connected) {
-              currentSocket.emit("webrtc_signal", {
-                quoteId,
-                roomId,
-                targetUserId: remotePeerIdRef.current || partnerId,
-                signal: {
-                  type: "candidate",
-                  candidate: event.candidate.toJSON ? event.candidate.toJSON() : event.candidate,
-                },
-              });
-            }
-          }
-        };
-
-        const checkConnectionState = () => {
-          if (!isMounted) return;
-          const connState = pc.connectionState;
-          const iceState = pc.iceConnectionState;
-
-          if (connState === "connected" || iceState === "connected" || iceState === "completed") {
-            setCallState("connected");
-            if (remoteVideoRef.current && remoteStreamRef.current) {
-              remoteVideoRef.current.play().catch(() => {});
-            }
-            if (remoteAudioRef.current && remoteStreamRef.current) {
-              remoteAudioRef.current.play().catch(() => {});
-            }
-            if (callTimeoutRef.current) {
-              clearTimeout(callTimeoutRef.current);
-              callTimeoutRef.current = null;
-            }
-            if (!timerRef.current) {
-              timerRef.current = setInterval(() => {
-                setDuration((prev) => prev + 1);
-              }, 1000);
-            }
-          } else if (
-            connState === "disconnected" ||
-            connState === "failed" ||
-            iceState === "failed"
-          ) {
-            if (callState === "connected") {
-              setCallState("connecting");
-            }
-          }
-        };
-
-        pc.onconnectionstatechange = checkConnectionState;
-        pc.oniceconnectionstatechange = checkConnectionState;
-
-        // Drain any early signals received before PC was ready
-        while (earlySignalsBufferRef.current.length > 0) {
-          const item = earlySignalsBufferRef.current.shift();
-          if (item) {
-            processSignal(pc, item.signal, item.senderId);
-          }
-        }
-
-        // 3. Initiator vs Recipient startup
-        if (isInitiator) {
-          if (peerReadyReceivedRef.current && !hasOfferedRef.current) {
-            sendOffer(pc, socket);
-          }
-          callTimeoutRef.current = setTimeout(() => {
-            if (isMounted && (callState === "calling" || callState === "initializing")) {
-              playEndTone();
-              setCallState("timeout");
-              setTimeout(() => {
-                if (isMounted) handleEndCall(false);
-              }, 3000);
-            }
-          }, 45000);
-        } else {
-          // Recipient: announce ready immediately and on interval until offer is received
-          socket.emit("webrtc_ready", {
-            quoteId,
-            roomId,
-            targetUserId: remotePeerIdRef.current || partnerId,
-          });
-
-          let attempts = 0;
-          readyInterval = setInterval(() => {
-            if (!isMounted || hasReceivedOfferRef.current || callState === "connected") {
-              clearInterval(readyInterval);
-              return;
-            }
-            attempts++;
-            if (attempts > 8) {
-              clearInterval(readyInterval);
-              return;
-            }
-            const s = getSocket();
-            if (s && s.connected) {
-              s.emit("webrtc_ready", {
-                quoteId,
-                roomId,
-                targetUserId: remotePeerIdRef.current || partnerId,
-              });
-            }
-          }, 1500);
-        }
-      } catch (err) {
-        console.error("[WebRTC] Initialization error:", err);
-        if (isMounted) {
-          setCallState("error");
-          setErrorMessage(
-            err.name === "NotAllowedError" || err.name === "PermissionDeniedError"
-              ? "Camera & microphone permissions were denied. Please allow camera and microphone access in your browser address bar."
-              : `Unable to access media devices: ${err.message}`
-          );
-        }
-      }
-    }
-
-    startCall();
-
-    return () => {
-      isMounted = false;
-      if (readyInterval) clearInterval(readyInterval);
-      const s = getSocket();
-      if (s) {
-        if (roomId) s.emit("leave_call_room", { quoteId, roomId });
-        s.off("webrtc_signal", handleSignal);
-        s.off("webrtc_ready", handlePeerReady);
-        s.off("peer_joined", handlePeerReady);
-        s.off("video_call_accepted", handlePeerReady);
-        s.off("video_call_ended", handleCallEnded);
-        s.off("video_call_declined", handleCallDeclined);
-      }
-      cleanUpMedia();
-    };
-  }, [isOpen, quoteId, roomId, partnerId, isInitiator, cleanUpMedia, handleEndCall]);
-
-  // Audio Toggle
-  const toggleAudio = () => {
-    if (!localStreamRef.current) return;
-    const audioTracks = localStreamRef.current.getAudioTracks();
-    audioTracks.forEach((t) => {
-      t.enabled = !t.enabled;
-    });
-    setAudioMuted((prev) => !prev);
-  };
-
-  // Video Toggle
-  const toggleVideo = () => {
-    if (!localStreamRef.current) return;
-    const videoTracks = localStreamRef.current.getVideoTracks();
-    videoTracks.forEach((t) => {
-      t.enabled = !t.enabled;
-    });
-    setVideoOff((prev) => !prev);
-  };
-
-  // Screen Share Toggle
-  const toggleScreenShare = async () => {
-    if (!pcRef.current) return;
-
-    if (isScreenSharing) {
-      if (screenStreamRef.current) {
-        screenStreamRef.current.getTracks().forEach((t) => t.stop());
-        screenStreamRef.current = null;
-      }
-      if (localStreamRef.current) {
-        const camTrack = localStreamRef.current.getVideoTracks()[0];
-        const sender = pcRef.current
-          .getSenders()
-          .find((s) => s.track && s.track.kind === "video");
-        if (sender && camTrack) {
-          sender.replaceTrack(camTrack);
-        }
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = localStreamRef.current;
-        }
-      }
-      setIsScreenSharing(false);
-    } else {
-      try {
-        const displayStream = await navigator.mediaDevices.getDisplayMedia({
-          video: { cursor: "always" },
-          audio: false,
-        });
-        screenStreamRef.current = displayStream;
-        const screenTrack = displayStream.getVideoTracks()[0];
-
-        const sender = pcRef.current
-          .getSenders()
-          .find((s) => s.track && s.track.kind === "video");
-        if (sender && screenTrack) {
-          sender.replaceTrack(screenTrack);
-        }
-
-        screenTrack.onended = () => {
-          toggleScreenShare();
-        };
-
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = displayStream;
-        }
-        setIsScreenSharing(true);
-      } catch (err) {
-        console.warn("Screen share cancelled or failed:", err);
-      }
-    }
   };
 
   if (!isOpen) return null;
 
-  // Minimized Floating Widget
+  const initial = partnerName ? partnerName.charAt(0).toUpperCase() : "P";
+  const isLive = callState === "connected";
+  const isReconnecting = callState === "reconnecting";
+  const inCall = isLive || isReconnecting;
+  const showRemoteVideo = inCall && hasRemoteVideo && !remoteMedia.videoOff;
+  const isRinging = callState === "calling";
+
+  // Remote audio lives outside the minimized/expanded branches so sound never drops.
+  const remoteAudio = <audio ref={remoteAudioRef} autoPlay playsInline style={{ display: "none" }} />;
+
   if (isMinimized) {
     return (
-      <div
-        style={{
-          position: "fixed",
-          bottom: "20px",
-          right: "20px",
-          width: "280px",
-          background: "#171915",
-          color: "#fff",
-          border: "2px solid #FFE66D",
-          borderRadius: "14px",
-          boxShadow: "4px 4px 0 #20201e",
-          padding: "12px",
-          zIndex: 99999,
-          display: "flex",
-          flexDirection: "column",
-          gap: "8px",
-        }}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <strong style={{ fontSize: "0.85rem", display: "block" }}>{partnerName}</strong>
-            <span style={{ fontSize: "0.75rem", color: "#A8E6CF" }}>
-              ⏱️ {formatDuration(duration)}
-            </span>
-          </div>
-          <div style={{ display: "flex", gap: "6px" }}>
-            <button
-              type="button"
-              onClick={() => setIsMinimized(false)}
-              style={{
-                background: "#FFE66D",
-                border: "1.5px solid #20201e",
-                borderRadius: "6px",
-                padding: "4px 6px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-              }}
-              title="Expand"
-            >
-              <Maximize2 size={14} color="#20201e" />
-            </button>
-            <button
-              type="button"
-              onClick={() => handleEndCall(true)}
-              style={{
-                background: "#FF85A1",
-                border: "1.5px solid #20201e",
-                borderRadius: "6px",
-                padding: "4px 6px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-              }}
-              title="End Call"
-            >
-              <PhoneOff size={14} color="#20201e" />
-            </button>
+      <>
+        {remoteAudio}
+        <div
+          role="dialog"
+          aria-label={`Video call with ${partnerName}`}
+          style={{
+            position: "fixed",
+            bottom: "20px",
+            right: "20px",
+            width: "280px",
+            background: COLORS.panel,
+            color: "#fff",
+            border: `2px solid ${COLORS.yellow}`,
+            borderRadius: "14px",
+            boxShadow: `4px 4px 0 ${COLORS.ink}`,
+            padding: "12px",
+            zIndex: 99999,
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+            <div style={{ minWidth: 0 }}>
+              <strong style={{ fontSize: "0.85rem", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {partnerName}
+              </strong>
+              <span style={{ fontSize: "0.75rem", color: COLORS.mint }}>
+                {isLive ? `⏱️ ${formatDuration(duration)}` : isRinging ? "Ringing…" : isReconnecting ? "Reconnecting…" : "Connecting…"}
+              </span>
+            </div>
+            <div style={{ display: "flex", gap: "6px" }}>
+              <button
+                type="button"
+                onClick={toggleAudio}
+                disabled={!hasLocalAudio}
+                title={audioMuted ? "Unmute microphone" : "Mute microphone"}
+                aria-label={audioMuted ? "Unmute microphone" : "Mute microphone"}
+                style={{ background: audioMuted ? COLORS.pink : COLORS.paper, border: `1.5px solid ${COLORS.ink}`, borderRadius: 6, padding: "4px 6px", cursor: "pointer", display: "flex" }}
+              >
+                {audioMuted ? <MicOff size={14} color={COLORS.ink} /> : <Mic size={14} color={COLORS.ink} />}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsMinimized(false)}
+                title="Expand"
+                aria-label="Expand call window"
+                style={{ background: COLORS.yellow, border: `1.5px solid ${COLORS.ink}`, borderRadius: 6, padding: "4px 6px", cursor: "pointer", display: "flex" }}
+              >
+                <Maximize2 size={14} color={COLORS.ink} />
+              </button>
+              <button
+                type="button"
+                onClick={() => endCall(true)}
+                title="End call"
+                aria-label="End call"
+                style={{ background: COLORS.pink, border: `1.5px solid ${COLORS.ink}`, borderRadius: 6, padding: "4px 6px", cursor: "pointer", display: "flex" }}
+              >
+                <PhoneOff size={14} color={COLORS.ink} />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div
-      onClick={needsUserTapForSound ? enableUserAudio : undefined}
-      style={{
-        position: "fixed",
-        inset: 0,
-        backgroundColor: "rgba(15, 17, 21, 0.88)",
-        backdropFilter: "blur(8px)",
-        zIndex: 99999,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "12px",
-      }}
-    >
+    <>
+      {remoteAudio}
       <div
+        onClick={needsUserTapForSound ? enableUserAudio : undefined}
         style={{
-          width: "100%",
-          maxWidth: "980px",
-          height: "90vh",
-          maxHeight: "700px",
-          backgroundColor: "#171915",
-          borderRadius: "20px",
-          border: "3px solid #20201e",
-          boxShadow: "8px 8px 0px #059669",
+          position: "fixed",
+          inset: 0,
+          backgroundColor: "rgba(15, 17, 21, 0.88)",
+          backdropFilter: "blur(8px)",
+          zIndex: 99999,
           display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-          position: "relative",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "12px",
         }}
       >
-        {/* Top Header Bar */}
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Video call with ${partnerName}`}
           style={{
-            padding: "12px 18px",
-            background: "#222521",
-            borderBottom: "2px solid #2d312c",
+            width: "100%",
+            maxWidth: "980px",
+            height: "90vh",
+            maxHeight: "700px",
+            backgroundColor: COLORS.panel,
+            borderRadius: "20px",
+            border: `3px solid ${COLORS.ink}`,
+            boxShadow: "8px 8px 0px #059669",
             display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: "10px",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                background: "#FFE66D",
-                color: "#20201e",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 800,
-                fontSize: "1rem",
-                border: "1.5px solid #20201e",
-              }}
-            >
-              {partnerName ? partnerName.charAt(0).toUpperCase() : "P"}
-            </div>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.95rem" }}>
-                  {partnerName}
-                </span>
-                <span
-                  style={{
-                    background: "#A8E6CF",
-                    color: "#171915",
-                    fontSize: "0.7rem",
-                    fontWeight: 700,
-                    padding: "2px 6px",
-                    borderRadius: "4px",
-                    border: "1px solid #20201e",
-                  }}
-                >
-                  {partnerRole}
-                </span>
-              </div>
-              <small style={{ color: "#9ca3af", fontSize: "0.75rem" }}>{listingTitle}</small>
-            </div>
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            {callState === "connected" && (
-              <span
-                style={{
-                  background: "#05966925",
-                  border: "1px solid #059669",
-                  color: "#34d399",
-                  padding: "4px 10px",
-                  borderRadius: "20px",
-                  fontSize: "0.78rem",
-                  fontWeight: 700,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
-                <span
-                  style={{
-                    width: "8px",
-                    height: "8px",
-                    borderRadius: "50%",
-                    background: "#10b981",
-                    boxShadow: "0 0 6px #10b981",
-                  }}
-                />
-                LIVE {formatDuration(duration)}
-              </span>
-            )}
-
-            {callState === "calling" && (
-              <span
-                style={{
-                  background: "#FFE66D25",
-                  border: "1px solid #FFE66D",
-                  color: "#FFE66D",
-                  padding: "4px 10px",
-                  borderRadius: "20px",
-                  fontSize: "0.78rem",
-                  fontWeight: 700,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
-                <span
-                  style={{
-                    width: "8px",
-                    height: "8px",
-                    borderRadius: "50%",
-                    background: "#FFE66D",
-                  }}
-                />
-                Calling {partnerName}...
-              </span>
-            )}
-
-            {callState === "connecting" && (
-              <span
-                style={{
-                  background: "#4ECDC425",
-                  border: "1px solid #4ECDC4",
-                  color: "#4ECDC4",
-                  padding: "4px 10px",
-                  borderRadius: "20px",
-                  fontSize: "0.78rem",
-                  fontWeight: 700,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                }}
-              >
-                <span
-                  style={{
-                    width: "8px",
-                    height: "8px",
-                    borderRadius: "50%",
-                    background: "#4ECDC4",
-                  }}
-                />
-                Connecting P2P...
-              </span>
-            )}
-
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "4px",
-                color: "#9ca3af",
-                fontSize: "0.75rem",
-              }}
-            >
-              <ShieldCheck size={14} color="#A8E6CF" /> Encrypted WebRTC
-            </span>
-
-            <button
-              type="button"
-              onClick={() => setIsMinimized(true)}
-              style={{
-                background: "transparent",
-                border: "1.5px solid #4b5563",
-                borderRadius: "8px",
-                color: "#e5e7eb",
-                padding: "6px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-              }}
-              title="Minimize"
-            >
-              <Minimize2 size={16} />
-            </button>
-          </div>
-        </div>
-
-        {/* Video Canvas Stage */}
-        <div
-          style={{
-            flex: 1,
-            position: "relative",
-            background: "#090a08",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            flexDirection: "column",
             overflow: "hidden",
+            position: "relative",
           }}
         >
-          {/* Main Remote Video */}
-          <video
-            ref={remoteVideoRef}
-            autoPlay
-            playsInline
+          {/* Header */}
+          <div
             style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-              position: "absolute",
-              inset: 0,
-              opacity: callState === "connected" ? 1 : 0,
-              transition: "opacity 0.4s ease",
-              pointerEvents: callState === "connected" ? "auto" : "none",
-              zIndex: 1,
+              padding: "12px 18px",
+              background: COLORS.header,
+              borderBottom: `2px solid ${COLORS.divider}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: "10px",
             }}
-          />
-
-          {/* Dedicated Remote Audio Stream */}
-          <audio ref={remoteAudioRef} autoPlay playsInline />
-
-          {/* Autoplay Audio Unmute Prompt Banner */}
-          {needsUserTapForSound && (
-            <button
-              type="button"
-              onClick={enableUserAudio}
-              style={{
-                position: "absolute",
-                top: "16px",
-                zIndex: 25,
-                background: "#FFE66D",
-                color: "#20201e",
-                border: "2px solid #20201e",
-                borderRadius: "24px",
-                padding: "8px 18px",
-                fontWeight: 800,
-                fontSize: "0.85rem",
-                boxShadow: "3px 3px 0 #20201e",
-                cursor: "pointer",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
-              <span>🔊</span> Sound paused by browser. Click anywhere to unmute {partnerName}
-            </button>
-          )}
-
-          {/* Real-time GPS & Cryptographic Watermark Overlay */}
-          {callState === "connected" && (
-            <div
-              style={{
-                position: "absolute",
-                top: 14,
-                left: 14,
-                right: 14,
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                zIndex: 10,
-                flexWrap: "wrap",
-                gap: "8px",
-              }}
-            >
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
               <div
                 style={{
-                  background: "rgba(23, 25, 21, 0.88)",
-                  backdropFilter: "blur(6px)",
-                  border: "1.5px solid #2ed573",
-                  borderRadius: "8px",
-                  padding: "5px 12px",
-                  color: "#E2E8F0",
-                  fontFamily: "monospace",
-                  fontSize: "0.74rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
-                }}
-              >
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#2ed573", display: "inline-block", boxShadow: "0 0 6px #2ed573" }} />
-                <span>
-                  <strong>GPS:</strong> {geoData ? `${geoData.lat}° N, ${geoData.lng}° E` : "19.0760° N, 72.8777° E"}
-                </span>
-                <span>•</span>
-                <span><strong>UTC:</strong> {geoData?.timestamp || "2026-09-27 UTC"}</span>
-                <span>•</span>
-                <span style={{ color: "#FFE66D" }}><strong>NONCE:</strong> {sessionNonce}</span>
-                <span>•</span>
-                <span style={{ color: "#2ed573", fontWeight: 700 }}>✓ TAMPER-SEALED</span>
-              </div>
-
-              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                <span
-                  style={{
-                    background: challengeStatus === "passed" ? "#2ed573" : "#0F766E",
-                    border: "1px solid #171915",
-                    borderRadius: "6px",
-                    padding: "4px 8px",
-                    color: "#fff",
-                    fontWeight: 700,
-                    fontSize: "0.72rem",
-                  }}
-                >
-                  {challengeStatus === "passed" ? "✓ LIVENESS PASSED" : "🛡️ ANTI-SPOOF ACTIVE"}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Interactive Dynamic Challenge Overlay Banner */}
-          {activeChallenge && callState === "connected" && (
-            <div
-              style={{
-                position: "absolute",
-                top: 64,
-                left: "50%",
-                transform: "translateX(-50%)",
-                background: "#FFFDF8",
-                border: "2px solid #171915",
-                borderRadius: "12px",
-                padding: "12px 18px",
-                zIndex: 20,
-                maxWidth: "520px",
-                width: "90%",
-                boxShadow: "3px 3px 0 #171915",
-                textAlign: "center",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "#D97706", textTransform: "uppercase" }}>
-                  ⚡ Live Asset Liveness Challenge (Anti-Deepfake / Anti-Spoofing)
-                </span>
-                <span style={{ fontSize: "0.72rem", background: "#FEF3C7", padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>
-                  Active Challenge
-                </span>
-              </div>
-              <p style={{ margin: "6px 0 12px", fontSize: "0.88rem", fontWeight: 700, color: "#171915" }}>
-                "{activeChallenge}"
-              </p>
-              <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
-                <button
-                  type="button"
-                  style={{ padding: "5px 14px", background: "#2ed573", color: "#171915", border: "1.5px solid #171915", borderRadius: 6, fontWeight: 800, fontSize: "0.78rem", cursor: "pointer", boxShadow: "1px 1px 0 #171915" }}
-                  onClick={() => {
-                    setActiveChallenge(null);
-                    setChallengeStatus("passed");
-                  }}
-                >
-                  ✓ Verification Passed
-                </button>
-                <button
-                  type="button"
-                  style={{ padding: "5px 14px", background: "#ff4757", color: "#fff", border: "1.5px solid #171915", borderRadius: 6, fontWeight: 800, fontSize: "0.78rem", cursor: "pointer", boxShadow: "1px 1px 0 #171915" }}
-                  onClick={() => {
-                    setActiveChallenge(null);
-                    setChallengeStatus("failed");
-                  }}
-                >
-                  ✕ Flag Discrepancy
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Caller State: Awaiting Answer */}
-          {callState === "calling" && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#fff",
-                gap: "16px",
-                padding: "24px",
-                textAlign: "center",
-                zIndex: 5,
-              }}
-            >
-              <div
-                style={{
-                  width: "96px",
-                  height: "96px",
+                  width: 36,
+                  height: 36,
                   borderRadius: "50%",
-                  background: "#FFE66D",
-                  color: "#20201e",
+                  background: COLORS.yellow,
+                  color: COLORS.ink,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "2.6rem",
-                  fontWeight: 900,
-                  border: "3px solid #20201e",
-                  boxShadow: "0 0 35px rgba(255, 230, 109, 0.4)",
-                  animation: "bounce 2s infinite",
+                  fontWeight: 800,
+                  fontSize: "1rem",
+                  border: `1.5px solid ${COLORS.ink}`,
+                  flexShrink: 0,
                 }}
               >
-                {partnerName ? partnerName.charAt(0).toUpperCase() : <PhoneCall size={44} />}
+                {initial}
               </div>
-              <div>
-                <h3 style={{ margin: "0 0 6px", fontSize: "1.3rem", fontWeight: 800 }}>
-                  Calling {partnerName}...
-                </h3>
-                <p style={{ margin: 0, color: "#cbd5e1", fontSize: "0.88rem" }}>
-                  A video call request notification was sent to {partnerName}.
-                </p>
-                <small style={{ color: "#9ca3af", fontSize: "0.8rem", display: "block", marginTop: "6px" }}>
-                  Waiting for them to accept the incoming call...
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.95rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {partnerName}
+                  </span>
+                  <span
+                    style={{
+                      background: COLORS.mint,
+                      color: COLORS.panel,
+                      fontSize: "0.7rem",
+                      fontWeight: 700,
+                      padding: "2px 6px",
+                      borderRadius: "4px",
+                      border: `1px solid ${COLORS.ink}`,
+                    }}
+                  >
+                    {partnerRole}
+                  </span>
+                </div>
+                <small style={{ color: COLORS.muted, fontSize: "0.75rem", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {listingTitle}
                 </small>
               </div>
             </div>
-          )}
 
-          {/* Connecting State */}
-          {callState === "connecting" && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#fff",
-                gap: "14px",
-                padding: "20px",
-                textAlign: "center",
-                zIndex: 5,
-              }}
-            >
-              <div
-                style={{
-                  width: "88px",
-                  height: "88px",
-                  borderRadius: "50%",
-                  background: "#4ECDC4",
-                  color: "#20201e",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "2.4rem",
-                  fontWeight: 900,
-                  border: "3px solid #20201e",
-                  boxShadow: "0 0 25px rgba(78, 205, 196, 0.4)",
-                }}
-              >
-                {partnerName ? partnerName.charAt(0).toUpperCase() : <User size={40} />}
-              </div>
-              <div>
-                <h3 style={{ margin: "0 0 4px", fontSize: "1.2rem", fontWeight: 700 }}>
-                  Connecting with {partnerName}...
-                </h3>
-                <p style={{ margin: 0, color: "#9ca3af", fontSize: "0.85rem" }}>
-                  Establishing encrypted peer-to-peer WebRTC stream
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Declined State */}
-          {callState === "declined" && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#fff",
-                gap: "14px",
-                padding: "24px",
-                textAlign: "center",
-                maxWidth: "440px",
-                zIndex: 5,
-              }}
-            >
-              <div
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  borderRadius: "50%",
-                  background: "#FF85A1",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  border: "3px solid #20201e",
-                }}
-              >
-                <PhoneOff size={38} color="#20201e" />
-              </div>
-              <h3 style={{ margin: 0, color: "#FF85A1", fontSize: "1.25rem", fontWeight: 800 }}>
-                Call Declined
-              </h3>
-              <p style={{ margin: 0, color: "#cbd5e1", fontSize: "0.9rem", lineHeight: 1.4 }}>
-                {partnerName} is unable to join the video call at this moment. You can continue negotiating via chat messages.
-              </p>
-            </div>
-          )}
-
-          {/* Timeout State */}
-          {callState === "timeout" && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#fff",
-                gap: "14px",
-                padding: "24px",
-                textAlign: "center",
-                maxWidth: "440px",
-                zIndex: 5,
-              }}
-            >
-              <div
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  borderRadius: "50%",
-                  background: "#FFE66D",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  border: "3px solid #20201e",
-                }}
-              >
-                <Clock size={38} color="#20201e" />
-              </div>
-              <h3 style={{ margin: 0, color: "#FFE66D", fontSize: "1.25rem", fontWeight: 800 }}>
-                No Response
-              </h3>
-              <p style={{ margin: 0, color: "#cbd5e1", fontSize: "0.9rem", lineHeight: 1.4 }}>
-                {partnerName} did not answer the video call. Please try again later or leave a message.
-              </p>
-            </div>
-          )}
-
-          {/* Ended State */}
-          {callState === "ended" && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#fff",
-                gap: "12px",
-                padding: "24px",
-                textAlign: "center",
-                zIndex: 5,
-              }}
-            >
-              <PhoneOff size={44} color="#9ca3af" />
-              <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: 800 }}>Call Ended</h3>
-              <p style={{ margin: 0, color: "#9ca3af", fontSize: "0.85rem" }}>
-                Total duration: {formatDuration(duration)}
-              </p>
-            </div>
-          )}
-
-          {/* Error Screen */}
-          {callState === "error" && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#fff",
-                gap: "12px",
-                padding: "24px",
-                textAlign: "center",
-                maxWidth: "460px",
-                zIndex: 5,
-              }}
-            >
-              <AlertCircle size={46} color="#FF85A1" />
-              <h3 style={{ margin: 0, color: "#FF85A1", fontSize: "1.15rem" }}>
-                Call Setup Notice
-              </h3>
-              <p style={{ margin: 0, color: "#d1d5db", fontSize: "0.88rem", lineHeight: 1.5 }}>
-                {errorMessage || "Unable to establish video connection."}
-              </p>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              {isLive && <StatusPill color="#34d399" label={`LIVE ${formatDuration(duration)}`} glow />}
+              {isRinging && <StatusPill color={COLORS.yellow} label={`Calling ${partnerName}...`} />}
+              {callState === "connecting" && <StatusPill color={COLORS.teal} label="Connecting P2P..." />}
+              {isReconnecting && <StatusPill color={COLORS.yellow} label="Reconnecting..." />}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: COLORS.muted, fontSize: "0.75rem" }}>
+                <ShieldCheck size={14} color={COLORS.mint} /> Encrypted WebRTC
+              </span>
               <button
                 type="button"
-                onClick={() => handleEndCall(false)}
+                onClick={() => setIsMinimized(true)}
+                title="Minimize"
+                aria-label="Minimize call window"
                 style={{
-                  marginTop: "8px",
-                  background: "#FFE66D",
-                  color: "#20201e",
-                  fontWeight: 700,
-                  border: "2px solid #20201e",
-                  borderRadius: "10px",
-                  padding: "8px 18px",
+                  background: "transparent",
+                  border: "1.5px solid #4b5563",
+                  borderRadius: 8,
+                  color: "#e5e7eb",
+                  padding: 6,
                   cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
                 }}
               >
-                Close Window
+                <Minimize2 size={16} />
               </button>
             </div>
-          )}
+          </div>
 
-          {/* Picture-In-Picture Self Camera Window */}
+          {/* Stage */}
           <div
             style={{
-              position: "absolute",
-              bottom: "12px",
-              right: "12px",
-              width: "clamp(110px, 25vw, 160px)",
-              height: "clamp(75px, 17vw, 105px)",
-              background: "#171915",
-              borderRadius: "12px",
-              border: "2px solid #FFE66D",
+              flex: 1,
+              position: "relative",
+              background: COLORS.stage,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               overflow: "hidden",
-              boxShadow: "3px 3px 0 #20201e",
-              zIndex: 10,
             }}
           >
+            {/* Remote video is always muted — audio is played by the dedicated <audio> element */}
             <video
-              ref={localVideoRef}
+              ref={remoteVideoRef}
               autoPlay
               playsInline
               muted
               style={{
                 width: "100%",
                 height: "100%",
-                objectFit: "cover",
-                transform: isScreenSharing ? "none" : "scaleX(-1)",
-                display: videoOff ? "none" : "block",
+                objectFit: "contain",
+                position: "absolute",
+                inset: 0,
+                opacity: showRemoteVideo ? 1 : 0,
+                transition: "opacity 0.4s ease",
+                pointerEvents: "none",
+                zIndex: 1,
               }}
             />
-            {videoOff && (
+
+            {mediaWarning && (
               <div
+                role="alert"
                 style={{
-                  width: "100%",
-                  height: "100%",
+                  position: "absolute",
+                  bottom: 14,
+                  left: 14,
+                  maxWidth: "min(460px, calc(100% - 210px))",
+                  zIndex: 12,
+                  background: "rgba(23, 25, 21, 0.92)",
+                  border: `1.5px solid ${COLORS.yellow}`,
+                  color: "#fef3c7",
+                  borderRadius: 10,
+                  padding: "8px 12px",
+                  fontSize: "0.78rem",
+                  lineHeight: 1.4,
                   display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "#262a24",
-                  color: "#9ca3af",
-                  fontSize: "0.75rem",
-                  flexDirection: "column",
-                  gap: "4px",
+                  gap: 8,
+                  alignItems: "flex-start",
                 }}
               >
-                <VideoOff size={18} color="#FF85A1" />
-                <span>Camera off</span>
+                <AlertCircle size={16} color={COLORS.yellow} style={{ flexShrink: 0, marginTop: 1 }} />
+                <span>{mediaWarning}</span>
               </div>
             )}
+
+            {needsUserTapForSound && (
+              <button
+                type="button"
+                onClick={enableUserAudio}
+                style={{
+                  position: "absolute",
+                  top: 16,
+                  zIndex: 25,
+                  background: COLORS.yellow,
+                  color: COLORS.ink,
+                  border: `2px solid ${COLORS.ink}`,
+                  borderRadius: 24,
+                  padding: "8px 18px",
+                  fontWeight: 800,
+                  fontSize: "0.85rem",
+                  boxShadow: `3px 3px 0 ${COLORS.ink}`,
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <span aria-hidden>🔊</span> Sound paused by browser. Click to hear {partnerName}
+              </button>
+            )}
+
+            {/* GPS & cryptographic watermark */}
+            {isLive && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 14,
+                  left: 14,
+                  right: 14,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  zIndex: 10,
+                  flexWrap: "wrap",
+                  gap: 8,
+                  pointerEvents: "none",
+                }}
+              >
+                <div
+                  style={{
+                    background: "rgba(23, 25, 21, 0.88)",
+                    backdropFilter: "blur(6px)",
+                    border: "1.5px solid #2ed573",
+                    borderRadius: 8,
+                    padding: "5px 12px",
+                    color: "#E2E8F0",
+                    fontFamily: "monospace",
+                    fontSize: "0.74rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    flexWrap: "wrap",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
+                  }}
+                >
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#2ed573", display: "inline-block", boxShadow: "0 0 6px #2ed573" }} />
+                  <span>
+                    <strong>GPS:</strong> {geoData ? `${geoData.lat}° N, ${geoData.lng}° E` : "Locating..."}
+                  </span>
+                  <span>•</span>
+                  <span>
+                    <strong>UTC:</strong> {geoData?.timestamp || "—"}
+                  </span>
+                  <span>•</span>
+                  <span style={{ color: COLORS.yellow }}>
+                    <strong>NONCE:</strong> {sessionNonce}
+                  </span>
+                  <span>•</span>
+                  <span style={{ color: "#2ed573", fontWeight: 700 }}>✓ TAMPER-SEALED</span>
+                </div>
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  {remoteMedia.audioMuted && (
+                    <span style={{ background: COLORS.pink, border: `1px solid ${COLORS.panel}`, borderRadius: 6, padding: "4px 8px", color: COLORS.ink, fontWeight: 700, fontSize: "0.72rem", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      <MicOff size={12} /> {partnerName} muted
+                    </span>
+                  )}
+                  <span
+                    style={{
+                      background: challengeStatus === "passed" ? "#2ed573" : "#0F766E",
+                      border: `1px solid ${COLORS.panel}`,
+                      borderRadius: 6,
+                      padding: "4px 8px",
+                      color: "#fff",
+                      fontWeight: 700,
+                      fontSize: "0.72rem",
+                    }}
+                  >
+                    {challengeStatus === "passed" ? "✓ LIVENESS PASSED" : "🛡️ ANTI-SPOOF ACTIVE"}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {activeChallenge && isLive && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 64,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  background: "#FFFDF8",
+                  border: `2px solid ${COLORS.panel}`,
+                  borderRadius: 12,
+                  padding: "12px 18px",
+                  zIndex: 20,
+                  maxWidth: 520,
+                  width: "90%",
+                  boxShadow: `3px 3px 0 ${COLORS.panel}`,
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6, gap: 8 }}>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "#D97706", textTransform: "uppercase" }}>
+                    ⚡ Live Asset Liveness Challenge (Anti-Deepfake / Anti-Spoofing)
+                  </span>
+                  <span style={{ fontSize: "0.72rem", background: "#FEF3C7", padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>
+                    Active Challenge
+                  </span>
+                </div>
+                <p style={{ margin: "6px 0 12px", fontSize: "0.88rem", fontWeight: 700, color: COLORS.panel }}>"{activeChallenge}"</p>
+                <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                  <button
+                    type="button"
+                    style={{ padding: "5px 14px", background: "#2ed573", color: COLORS.panel, border: `1.5px solid ${COLORS.panel}`, borderRadius: 6, fontWeight: 800, fontSize: "0.78rem", cursor: "pointer", boxShadow: `1px 1px 0 ${COLORS.panel}` }}
+                    onClick={() => {
+                      setActiveChallenge(null);
+                      setChallengeStatus("passed");
+                    }}
+                  >
+                    ✓ Verification Passed
+                  </button>
+                  <button
+                    type="button"
+                    style={{ padding: "5px 14px", background: "#ff4757", color: "#fff", border: `1.5px solid ${COLORS.panel}`, borderRadius: 6, fontWeight: 800, fontSize: "0.78rem", cursor: "pointer", boxShadow: `1px 1px 0 ${COLORS.panel}` }}
+                    onClick={() => {
+                      setActiveChallenge(null);
+                      setChallengeStatus("failed");
+                    }}
+                  >
+                    ✕ Flag Discrepancy
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Connected but remote camera is off */}
+            {inCall && !showRemoteVideo && (
+              <StageNotice
+                icon={<Avatar letter={initial} size={96} background={COLORS.teal} glow />}
+                title={isReconnecting ? `Reconnecting with ${partnerName}...` : partnerName}
+                body={
+                  isReconnecting
+                    ? "The connection dropped — trying to restore audio and video."
+                    : remoteMedia.videoOff
+                      ? `${partnerName}'s camera is off`
+                      : "Waiting for video..."
+                }
+              />
+            )}
+
+            {isRinging && (
+              <StageNotice
+                icon={
+                  <div style={{ animation: "bounce 2s infinite" }}>
+                    <Avatar letter={partnerName ? initial : <PhoneCall size={44} />} size={96} background={COLORS.yellow} glow />
+                  </div>
+                }
+                title={`Calling ${partnerName}...`}
+                body={`A video call request was sent to ${partnerName}. Waiting for them to accept...`}
+              />
+            )}
+
+            {callState === "connecting" && (
+              <StageNotice
+                icon={<Avatar letter={partnerName ? initial : <User size={40} />} size={88} background={COLORS.teal} glow />}
+                title={`Connecting with ${partnerName}...`}
+                body="Establishing encrypted peer-to-peer WebRTC stream"
+              />
+            )}
+
+            {callState === "declined" && (
+              <StageNotice
+                icon={<Avatar letter={<PhoneOff size={38} color={COLORS.ink} />} size={80} background={COLORS.pink} />}
+                title="Call Declined"
+                titleColor={COLORS.pink}
+                body={`${partnerName} is unable to join the video call right now. You can continue negotiating via chat.`}
+              />
+            )}
+
+            {callState === "timeout" && (
+              <StageNotice
+                icon={<Avatar letter={<Clock size={38} color={COLORS.ink} />} size={80} background={COLORS.yellow} />}
+                title="No Response"
+                titleColor={COLORS.yellow}
+                body={`${partnerName} did not answer the video call. Please try again later or leave a message.`}
+              />
+            )}
+
+            {callState === "ended" && (
+              <StageNotice
+                icon={<PhoneOff size={44} color={COLORS.muted} />}
+                title="Call ended"
+                body={`Total duration: ${formatDuration(duration)}`}
+              />
+            )}
+
+            {callState === "error" && (
+              <StageNotice
+                icon={<AlertCircle size={46} color={COLORS.pink} />}
+                title="Call setup notice"
+                titleColor={COLORS.pink}
+                body={errorMessage || "Unable to establish video connection."}
+              >
+                <ControlButton
+                  onClick={() => endCall(false)}
+                  icon={<PhoneOff size={16} />}
+                  label="Close window"
+                  title="Close video call"
+                  background={COLORS.yellow}
+                  strong
+                />
+              </StageNotice>
+            )}
+
             <div
               style={{
                 position: "absolute",
-                bottom: "4px",
-                left: "6px",
-                fontSize: "0.65rem",
-                background: "rgba(0,0,0,0.65)",
-                color: "#fff",
-                padding: "1px 5px",
-                borderRadius: "4px",
-                fontWeight: 600,
+                right: 12,
+                bottom: 12,
+                width: "clamp(110px, 25vw, 180px)",
+                aspectRatio: "16 / 10",
+                overflow: "hidden",
+                border: `2px solid ${COLORS.yellow}`,
+                borderRadius: 12,
+                background: COLORS.panel,
+                boxShadow: `3px 3px 0 ${COLORS.ink}`,
+                zIndex: 10,
               }}
             >
-              You {audioMuted && "🔇"}
+              <video
+                ref={localVideoRef}
+                autoPlay
+                playsInline
+                muted
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  transform: isScreenSharing ? "none" : "scaleX(-1)",
+                  display: videoOff || !hasLocalVideo ? "none" : "block",
+                }}
+              />
+              {(videoOff || !hasLocalVideo) && (
+                <div style={{ height: "100%", display: "grid", placeItems: "center", color: COLORS.muted, fontSize: "0.75rem" }}>
+                  <span><VideoOff size={18} color={COLORS.pink} /> Camera unavailable</span>
+                </div>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* Bottom Interactive Control Dock */}
-        <div
-          style={{
-            padding: "14px 20px",
-            background: "#1e211c",
-            borderTop: "2px solid #2d312c",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "14px",
-            flexWrap: "wrap",
-          }}
-        >
-          {/* Mute Mic */}
-          <button
-            type="button"
-            onClick={toggleAudio}
+          <div
             style={{
+              padding: "14px 20px",
+              background: COLORS.dock,
+              borderTop: `2px solid ${COLORS.divider}`,
               display: "flex",
               alignItems: "center",
-              gap: "8px",
-              background: audioMuted ? "#FF85A1" : "#FAF8F5",
-              color: "#20201e",
-              border: "2px solid #20201e",
-              borderRadius: "12px",
-              padding: "10px 16px",
-              fontWeight: 700,
-              fontSize: "0.85rem",
-              cursor: "pointer",
-              boxShadow: "2px 2px 0 #20201e",
+              justifyContent: "center",
+              gap: 12,
+              flexWrap: "wrap",
             }}
-            title={audioMuted ? "Unmute Microphone" : "Mute Microphone"}
           >
-            {audioMuted ? <MicOff size={18} /> : <Mic size={18} />}
-            <span>{audioMuted ? "Unmute" : "Mute"}</span>
-          </button>
-
-          {/* Toggle Camera */}
-          <button
-            type="button"
-            onClick={toggleVideo}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              background: videoOff ? "#FF85A1" : "#FAF8F5",
-              color: "#20201e",
-              border: "2px solid #20201e",
-              borderRadius: "12px",
-              padding: "10px 16px",
-              fontWeight: 700,
-              fontSize: "0.85rem",
-              cursor: "pointer",
-              boxShadow: "2px 2px 0 #20201e",
-            }}
-            title={videoOff ? "Turn Camera On" : "Turn Camera Off"}
-          >
-            {videoOff ? <VideoOff size={18} /> : <VideoIcon size={18} />}
-            <span>{videoOff ? "Start Video" : "Stop Video"}</span>
-          </button>
-
-          {/* Screen Share */}
-          <button
-            type="button"
-            onClick={toggleScreenShare}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              background: isScreenSharing ? "#C3B1E1" : "#FAF8F5",
-              color: "#20201e",
-              border: "2px solid #20201e",
-              borderRadius: "12px",
-              padding: "10px 16px",
-              fontWeight: 700,
-              fontSize: "0.85rem",
-              cursor: "pointer",
-              boxShadow: "2px 2px 0 #20201e",
-            }}
-            title="Share Screen"
-          >
-            <Monitor size={18} />
-            <span>{isScreenSharing ? "Stop Sharing" : "Share Screen"}</span>
-          </button>
-
-          {/* Anti-Spoof Liveness Challenge */}
-          <button
-            type="button"
-            onClick={triggerLivenessChallenge}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              background: "#FFE66D",
-              color: "#20201e",
-              border: "2px solid #20201e",
-              borderRadius: "12px",
-              padding: "10px 16px",
-              fontWeight: 700,
-              fontSize: "0.85rem",
-              cursor: "pointer",
-              boxShadow: "2px 2px 0 #20201e",
-            }}
-            title="Challenge provider to prove live physical presence and asset custody"
-          >
-            <ShieldCheck size={18} />
-            <span>Liveness Test</span>
-          </button>
-
-          {/* End Call / Cancel Button */}
-          <button
-            type="button"
-            onClick={() => handleEndCall(true)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              background: "#ef4444",
-              color: "#fff",
-              border: "2px solid #20201e",
-              borderRadius: "12px",
-              padding: "10px 20px",
-              fontWeight: 800,
-              fontSize: "0.9rem",
-              cursor: "pointer",
-              boxShadow: "3px 3px 0 #20201e",
-            }}
-            title={callState === "calling" ? "Cancel Call" : "Hang Up"}
-          >
-            <PhoneOff size={18} />
-            <span>{callState === "calling" ? "Cancel Call" : "End Call"}</span>
-          </button>
+            <ControlButton
+              onClick={toggleAudio}
+              icon={audioMuted ? <MicOff size={18} /> : <Mic size={18} />}
+              label={audioMuted ? "Unmute" : "Mute"}
+              title={audioMuted ? "Unmute microphone" : "Mute microphone"}
+              background={audioMuted ? COLORS.pink : COLORS.paper}
+              disabled={!hasLocalAudio}
+            />
+            <ControlButton
+              onClick={toggleVideo}
+              icon={videoOff ? <VideoOff size={18} /> : <VideoIcon size={18} />}
+              label={videoOff ? "Start video" : "Stop video"}
+              title={videoOff ? "Turn camera on" : "Turn camera off"}
+              background={videoOff ? COLORS.pink : COLORS.paper}
+              disabled={!hasLocalVideo}
+            />
+            <ControlButton
+              onClick={toggleScreenShare}
+              icon={<Monitor size={18} />}
+              label={isScreenSharing ? "Stop sharing" : "Share screen"}
+              title={isScreenSharing ? "Stop screen sharing" : "Share your screen"}
+              background={isScreenSharing ? COLORS.lilac : COLORS.paper}
+              disabled={!isLive || !hasLocalVideo}
+            />
+            <ControlButton
+              onClick={triggerLivenessChallenge}
+              icon={<ShieldCheck size={18} />}
+              label="Liveness test"
+              title="Start an asset liveness challenge"
+              background={COLORS.yellow}
+              disabled={!isLive}
+            />
+            <ControlButton
+              onClick={() => endCall(true)}
+              icon={<PhoneOff size={18} />}
+              label={isRinging ? "Cancel call" : "End call"}
+              title={isRinging ? "Cancel call" : "End call"}
+              background={COLORS.red}
+              color="#fff"
+              strong
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

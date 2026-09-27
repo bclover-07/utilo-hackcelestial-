@@ -365,7 +365,7 @@ export default function DashboardShell({ children, admin = false }) {
       >
         <div className="sidebar-top-row">
           <Link className="brand" href="/" onClick={() => setMenu(false)}>
-            <span>U</span>utlio<span className="brand-dot">✳</span>
+            <span>U</span>utilo<span className="brand-dot">✳</span>
           </Link>
           <button
             className="sidebar-close quiet"
@@ -446,7 +446,7 @@ export default function DashboardShell({ children, admin = false }) {
             <div className="workspace-brand-badge">
               <span className="live-dot" />
               <Link href="/" className="workspace-title-link">
-                <strong>UTLIO</strong>
+                <strong>UTILO</strong>
                 <span className="workspace-doodle-star">✳</span>
               </Link>
               <span className="workspace-nav-divider">/</span>
@@ -583,7 +583,7 @@ export default function DashboardShell({ children, admin = false }) {
         {/* Footer */}
         <footer className="workspace-footer">
           <div>
-            UTLIO B2B EXCHANGE <span>· Less idle. More possible.</span>
+            UTILO B2B EXCHANGE <span>· Less idle. More possible.</span>
           </div>
           <div className="footer-links">
             <Link href="/">Home</Link>

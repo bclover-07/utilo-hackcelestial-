@@ -255,7 +255,7 @@ function EcosystemImpactBanner({ impact, city }) {
     <div className="dt-ecosystem-banner">
       <div className="dt-eco-header">
         <Shield size={18} />
-        <h4>Utlio Ecosystem Operational Impact & Recommendations</h4>
+        <h4>Utilo Ecosystem Operational Impact & Recommendations</h4>
         <span className="dt-eco-badge">Active Digital Twin Intelligence</span>
       </div>
       <div className="dt-eco-grid">
