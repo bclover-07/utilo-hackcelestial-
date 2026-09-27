@@ -4,11 +4,14 @@ import { money } from "./ui";
 
 export default function ConductorVisuals({ plan, option }) {
   const titleId = useId();
-  const requirements = plan.input.items;
-  const suppliers = [...new Set(option.allocations.map(a => a.providerId))];
+  if (!plan || !option) return null;
+  const requirements = plan.input?.items || [];
+  const allocations = Array.isArray(option.allocations) ? option.allocations : [];
+  const suppliers = [...new Set(allocations.map(a => a.providerId))];
   const height = Math.max(320, requirements.length * 74 + 50, suppliers.length * 74 + 50);
-  const y = (index, count) => 40 + (index + .5) * (height - 80) / count;
+  const y = (index, count) => 40 + (index + .5) * (height - 80) / Math.max(1, count);
   const colors = ["#B6E880", "#C8BEFF", "#FFB7CE", "#89CFF0", "#FFE66D", "#FFCBA4"];
+  const budget = plan.input?.filters?.budget || option.total || 1;
   return <section className="panel conductor-map"><div className="section-heading"><div><span className="eyebrow">THE EVENT RESOURCE GRAPH</span><h2>See the connections.</h2><p>Every line is a selected allocation. Inspect the source listings in the allocation cards below.</p></div><span className="badge">LIVE PLAN DATA</span></div>
     <div className="conductor-graph-scroll"><svg viewBox={`0 0 900 ${height}`} role="img" aria-labelledby={titleId} className="conductor-graph"><title id={titleId}>Resource allocation diagram: {requirements.length} requirements connected to {suppliers.length} suppliers, estimated cost {money(option.total)}.</title>
       {option.allocations.map((row, index) => { const supplier = suppliers.indexOf(row.providerId); return <path key={`${row.itemIndex}-${row.listingId}`} d={`M 266 ${y(row.itemIndex, requirements.length)} C 410 ${y(row.itemIndex, requirements.length)}, 490 ${y(supplier, suppliers.length)}, 634 ${y(supplier, suppliers.length)}`} fill="none" stroke={colors[supplier % colors.length]} strokeWidth={7} className="conductor-connection" style={{ animationDelay: `${index * 70}ms` }}><title>{row.quantity} × {row.title} for {requirements[row.itemIndex].label}</title></path>; })}
@@ -57,6 +60,6 @@ export default function ConductorVisuals({ plan, option }) {
       </div>
     )}
 
-    <div className="conductor-budget-visual"><div><strong>Package cost against budget</strong><span>{money(option.total)} / {money(plan.input.filters.budget)}</span></div><div className="conductor-budget-track" role="meter" aria-label="Package cost as percentage of budget, capped at 100" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, Math.round(option.total / plan.input.filters.budget * 100))}><span className={option.feasible ? "" : "is-over-budget"} style={{ width: `${Math.min(100, option.total / plan.input.filters.budget * 100)}%` }} /></div><small>{option.feasible ? `${money(option.budgetRemaining)} remains within your rental and delivery budget.` : `${money(-option.budgetRemaining)} above your budget.`} Deposits are separate.</small></div>
+    <div className="conductor-budget-visual"><div><strong>Package cost against budget</strong><span>{money(option.total)} / {money(budget)}</span></div><div className="conductor-budget-track" role="meter" aria-label="Package cost as percentage of budget, capped at 100" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100, Math.round(option.total / budget * 100))}><span className={option.feasible ? "" : "is-over-budget"} style={{ width: `${Math.min(100, option.total / budget * 100)}%` }} /></div><small>{option.feasible ? `${money(option.budgetRemaining)} remains within your rental and delivery budget.` : `${money(-option.budgetRemaining)} above your budget.`} Deposits are separate.</small></div>
   </section>;
 }

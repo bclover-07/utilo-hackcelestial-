@@ -105,14 +105,18 @@ export function NegotiationsPage() {
                     className={`thread-tab ${q._id === current?._id ? "selected" : ""}`}
                     onClick={() => setSelectedId(q._id)}
                   >
-                    <Badge>{q.status}</Badge>
-                    <strong>{q.listing?.title}</strong>
-                    <small>{q.request?.title}</small>
-                    <span>
-                      {q.offers.length
-                        ? money(q.offers.at(-1).price)
-                        : "Awaiting first offer"}
-                    </span>
+                    <div className="thread-tab-top">
+                      <span className="thread-status-badge">
+                        {q.status}
+                      </span>
+                      <span className="thread-price-tag">
+                        {q.offers.length
+                          ? money(q.offers.at(-1).price)
+                          : "Pending offer"}
+                      </span>
+                    </div>
+                    <strong className="thread-title">{q.listing?.title}</strong>
+                    <small className="thread-sub">{q.request?.title}</small>
                   </button>
                 ))}
               </aside>

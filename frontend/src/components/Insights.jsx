@@ -48,21 +48,21 @@ function ActivityPipelineVisual({ data, admin, dashboardRole, user }) {
       badge: admin ? "Supply Pool" : seeker ? "Saved Supply" : "Active Inventory",
       val: admin ? data.businesses : seeker ? (user.favorites?.length || 0) : data.listings,
       label: admin ? "Registered businesses" : seeker ? "Saved items to book" : "Listed resources",
-      color: "var(--yellow)",
+      color: "var(--yellow, #FFE66D)",
     },
     {
       step: "02",
       badge: "In Negotiation",
       val: data.quotes,
       label: "Active RFQ threads",
-      color: "var(--teal)",
+      color: "var(--teal, #4ECDC4)",
     },
     {
       step: "03",
       badge: "Agreed booking value",
       val: money(data.totalValue),
       label: "Committed exchange value",
-      color: "var(--lavender)",
+      color: "var(--lavender, #C9B5EE)",
     },
     {
       step: "04",
@@ -70,27 +70,34 @@ function ActivityPipelineVisual({ data, admin, dashboardRole, user }) {
       val: data.fulfillmentRate === null ? "No requests yet" : `${data.fulfillmentRate}%`,
       label: "Fully confirmed requirements",
       meter: data.fulfillmentRate,
-      color: "var(--mint)",
+      color: "var(--mint, #A8E6CF)",
     },
   ];
 
   return (
     <div className="activity-pipeline-deck">
       {stages.map((st, i) => (
-        <div key={i} className="pipeline-card" style={{ border: "1.5px solid #171915", boxShadow: "2px 2px 0 #171915" }}>
+        <div key={i} className="pipeline-card">
           <div className="pipeline-top">
-            <span className="pipeline-step-badge">{st.badge}</span>
-            <span className="live-dot" />
+            <span className="pipeline-stage-tag">STAGE {st.step}</span>
+            <span className="pipeline-step-badge" style={{ backgroundColor: st.color }}>
+              {st.badge}
+            </span>
           </div>
-          <div>
-            <div className="pipeline-val">{st.val}</div>
+          <div className="pipeline-body">
+            <div className="pipeline-val-row">
+              <span className="pipeline-val">{st.val}</span>
+              <span className="live-dot" />
+            </div>
             <div className="pipeline-label">{st.label}</div>
-            {st.meter != null && <div className="pipeline-meter-bar">
-              <div
-                className="pipeline-meter-fill"
-                style={{ width: `${st.meter}%`, background: st.color }}
-              />
-            </div>}
+            {st.meter != null && (
+              <div className="pipeline-meter-bar">
+                <div
+                  className="pipeline-meter-fill"
+                  style={{ width: `${Math.min(Math.max(st.meter, 0), 100)}%`, background: st.color }}
+                />
+              </div>
+            )}
           </div>
         </div>
       ))}
@@ -102,14 +109,14 @@ function RoleCommandDeck({ dashboardRole, admin }) {
   if (admin) {
     return (
       <div className="command-deck-grid">
-        <div className="command-card" style={{ background: "var(--yellow)" }}>
+        <div className="command-card" style={{ background: "var(--yellow, #FFE66D)" }}>
           <div className="command-header">
-            <div className="command-icon-wrap"><ShieldCheck size={22} /></div>
+            <div className="command-icon-wrap"><ShieldCheck size={20} /></div>
             <span className="command-pill">KYC Queue</span>
           </div>
-          <div>
+          <div className="command-content">
             <h3 className="command-title">Business Verifications</h3>
-            <p className="command-desc">Review submitted business identity and compliance proofs.</p>
+            <p className="command-desc">Review submitted business identity, compliance proofs and merchant KYC.</p>
           </div>
           <Link href="/admin/verifications" className="command-action-btn">
             <span>Review Queue</span>
@@ -117,12 +124,12 @@ function RoleCommandDeck({ dashboardRole, admin }) {
           </Link>
         </div>
 
-        <div className="command-card" style={{ background: "var(--teal)" }}>
+        <div className="command-card" style={{ background: "var(--teal, #4ECDC4)" }}>
           <div className="command-header">
-            <div className="command-icon-wrap"><Bot size={22} /></div>
+            <div className="command-icon-wrap"><Bot size={20} /></div>
             <span className="command-pill">AI Engine</span>
           </div>
-          <div>
+          <div className="command-content">
             <h3 className="command-title">AI Ops & Supervisor</h3>
             <p className="command-desc">Audit Conductor execution, Monte Carlo resilience & critic reflections.</p>
           </div>
@@ -132,12 +139,12 @@ function RoleCommandDeck({ dashboardRole, admin }) {
           </Link>
         </div>
 
-        <div className="command-card" style={{ background: "var(--lavender)" }}>
+        <div className="command-card" style={{ background: "var(--lavender, #C9B5EE)" }}>
           <div className="command-header">
-            <div className="command-icon-wrap"><TrendingUp size={22} /></div>
+            <div className="command-icon-wrap"><TrendingUp size={20} /></div>
             <span className="command-pill">Marketplace</span>
           </div>
-          <div>
+          <div className="command-content">
             <h3 className="command-title">Liquidity & Policy</h3>
             <p className="command-desc">Manage regional fee structures, escrow terms & categories.</p>
           </div>
@@ -153,14 +160,14 @@ function RoleCommandDeck({ dashboardRole, admin }) {
   if (dashboardRole === "provider") {
     return (
       <div className="command-deck-grid">
-        <div className="command-card" style={{ background: "var(--yellow)" }}>
+        <div className="command-card" style={{ background: "var(--yellow, #FFE66D)" }}>
           <div className="command-header">
-            <div className="command-icon-wrap"><Zap size={22} /></div>
+            <div className="command-icon-wrap"><Zap size={20} /></div>
             <span className="command-pill">AUTO-PILOT ACTIVE</span>
           </div>
-          <div>
+          <div className="command-content">
             <h3 className="command-title">Smart Pricing Advisor</h3>
-            <p className="command-desc">Dynamic weekend yield (+35%) with strict floor bounds & cannibalization shields.</p>
+            <p className="command-desc">Dynamic yield optimization with floor bounds & cannibalization shields.</p>
           </div>
           <Link href="/dashboard/smart-pricing" className="command-action-btn">
             <span>Tune Pricing Strategy</span>
@@ -168,12 +175,12 @@ function RoleCommandDeck({ dashboardRole, admin }) {
           </Link>
         </div>
 
-        <div className="command-card" style={{ background: "var(--teal)" }}>
+        <div className="command-card" style={{ background: "var(--teal, #4ECDC4)" }}>
           <div className="command-header">
-            <div className="command-icon-wrap"><Calendar size={22} /></div>
+            <div className="command-icon-wrap"><Calendar size={20} /></div>
             <span className="command-pill">CALENDAR SYNC</span>
           </div>
-          <div>
+          <div className="command-content">
             <h3 className="command-title">Availability & Calendar</h3>
             <p className="command-desc">Manage blackout dates, delivery slots & reserve unit quantities with zero overlap.</p>
           </div>
@@ -183,12 +190,12 @@ function RoleCommandDeck({ dashboardRole, admin }) {
           </Link>
         </div>
 
-        <div className="command-card" style={{ background: "var(--lavender)" }}>
+        <div className="command-card" style={{ background: "var(--lavender, #C9B5EE)" }}>
           <div className="command-header">
-            <div className="command-icon-wrap"><Bot size={22} /></div>
+            <div className="command-icon-wrap"><Bot size={20} /></div>
             <span className="command-pill">SUPERVISOR ON</span>
           </div>
-          <div>
+          <div className="command-content">
             <h3 className="command-title">Autonomous Agent Studio</h3>
             <p className="command-desc">Inspect multi-agent workflows, working memory preferences, and market radar.</p>
           </div>
@@ -204,12 +211,12 @@ function RoleCommandDeck({ dashboardRole, admin }) {
   // Seeker Mode
   return (
     <div className="command-deck-grid">
-      <div className="command-card" style={{ background: "var(--teal)" }}>
+      <div className="command-card" style={{ background: "var(--teal, #4ECDC4)" }}>
         <div className="command-header">
-          <div className="command-icon-wrap"><Sparkles size={22} /></div>
+          <div className="command-icon-wrap"><Sparkles size={20} /></div>
           <span className="command-pill">MONTE CARLO READY</span>
         </div>
-        <div>
+        <div className="command-content">
           <h3 className="command-title">Event Conductor AI</h3>
           <p className="command-desc">Describe your event to assemble a multi-supplier bundle with resilience testing.</p>
         </div>
@@ -219,12 +226,12 @@ function RoleCommandDeck({ dashboardRole, admin }) {
         </Link>
       </div>
 
-      <div className="command-card" style={{ background: "var(--yellow)" }}>
+      <div className="command-card" style={{ background: "var(--yellow, #FFE66D)" }}>
         <div className="command-header">
-          <div className="command-icon-wrap"><Search size={22} /></div>
+          <div className="command-icon-wrap"><Search size={20} /></div>
           <span className="command-pill">HOTEL & VENUE HUBS</span>
         </div>
-        <div>
+        <div className="command-content">
           <h3 className="command-title">Resource Discovery</h3>
           <p className="command-desc">Search verified banquets, LED walls, audio rigs, and transport across corridors.</p>
         </div>
@@ -234,12 +241,12 @@ function RoleCommandDeck({ dashboardRole, admin }) {
         </Link>
       </div>
 
-      <div className="command-card" style={{ background: "var(--pink)" }}>
+      <div className="command-card" style={{ background: "var(--pink, #F7A7C2)" }}>
         <div className="command-header">
-          <div className="command-icon-wrap"><MessageSquare size={22} /></div>
+          <div className="command-icon-wrap"><MessageSquare size={20} /></div>
           <span className="command-pill">ZOPA CONVERGENCE</span>
         </div>
-        <div>
+        <div className="command-content">
           <h3 className="command-title">Active Negotiations</h3>
           <p className="command-desc">Bilateral surplus optimization, contract protection audit & 1-click counter-offers.</p>
         </div>
@@ -557,18 +564,58 @@ function Stats({ data, admin }) {
     </div>
   );
 }
+const CustomTrendTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    const val = payload[0].value;
+    return (
+      <div className="custom-chart-tooltip-neo">
+        <div className="tooltip-tag">📅 Month: {label}</div>
+        <div className="tooltip-main-val">{money(val)}</div>
+        <div className="tooltip-sub-info">
+          <span className="live-dot" /> Confirmed Booking Velocity
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+const CustomDonutTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const d = payload[0];
+    return (
+      <div className="custom-chart-tooltip-neo">
+        <div className="tooltip-tag" style={{ textTransform: "capitalize" }}>
+          {d.name?.replaceAll("_", " ")}
+        </div>
+        <div className="tooltip-main-val">{d.value} Agreements</div>
+        <div className="tooltip-sub-info">Status share in pipeline</div>
+      </div>
+    );
+  }
+  return null;
+};
+
 function BookingMix({ data }) {
   const total = data.bookings.reduce((sum, row) => sum + row.count, 0);
   if (!total) return null;
+
+  const palette = ["#F8DC60", "#79D9C5", "#C9B5EE", "#F7A7C2", "#FFAAA6", "#A8E6CF"];
+
   return (
-    <section className="panel">
+    <section className="panel booking-mix-panel">
       <div className="section-heading">
         <div>
-          <span className="eyebrow">EVERY AGREEMENT HAS A JOURNEY</span>
-          <h2 style={{ marginTop: 10 }}>From confirmed to celebrated.</h2>
+          <span className="eyebrow" style={{ color: "#7B61A8" }}>PIPELINE DYNAMICS</span>
+          <h2 style={{ marginTop: 6, fontSize: "1.25rem", letterSpacing: "-0.02em" }}>
+            From confirmed to celebrated.
+          </h2>
         </div>
-        <Badge>{total} bookings</Badge>
+        <Badge style={{ background: "var(--yellow, #FFE66D)", border: "1.5px solid #171915" }}>
+          {total} bookings
+        </Badge>
       </div>
+
       <div className="booking-mix">
         <div
           className="booking-donut"
@@ -581,77 +628,152 @@ function BookingMix({ data }) {
                 data={data.bookings}
                 dataKey="count"
                 nameKey="_id"
-                innerRadius="58%"
-                outerRadius="85%"
-                paddingAngle={4}
+                innerRadius="65%"
+                outerRadius="90%"
+                paddingAngle={6}
                 cornerRadius={8}
                 stroke="#171915"
-                strokeWidth={3}
-                isAnimationActive={false}
+                strokeWidth={2.5}
+                isAnimationActive={true}
+                animationDuration={900}
               >
                 {data.bookings.map((row, index) => (
-                  <Cell key={row._id} fill={colors[index % colors.length]} />
+                  <Cell
+                    key={row._id}
+                    fill={palette[index % palette.length]}
+                    style={{ filter: "drop-shadow(2px 2px 0px #171915)" }}
+                  />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip content={<CustomDonutTooltip />} />
             </PieChart>
           </ResponsiveContainer>
           <div className="donut-label">
-            <strong>{total}</strong>
-            <small>agreements</small>
+            <span className="donut-count">{total}</span>
+            <span className="donut-sub">{total === 1 ? "agreement" : "agreements"}</span>
           </div>
         </div>
+
         <div className="booking-legend">
-          {data.bookings.map((row, index) => (
-            <div key={row._id}>
-              <span
-                className="legend-swatch"
-                style={{ background: colors[index % colors.length] }}
-              />
-              <span>{row._id.replaceAll("_", " ")}</span>
-              <strong>{row.count}</strong>
-              <small>{Math.round((row.count / total) * 100)}%</small>
-            </div>
-          ))}
+          {data.bookings.map((row, index) => {
+            const pct = Math.round((row.count / total) * 100);
+            const color = palette[index % palette.length];
+            return (
+              <div key={row._id} className="legend-row-card">
+                <div className="legend-row-top">
+                  <div className="legend-name-wrap">
+                    <span
+                      className="legend-swatch"
+                      style={{ background: color }}
+                    />
+                    <span className="legend-status-name">{row._id.replaceAll("_", " ")}</span>
+                  </div>
+                  <div className="legend-count-wrap">
+                    <strong>{row.count}</strong>
+                    <span className="legend-pct-pill">{pct}%</span>
+                  </div>
+                </div>
+                <div className="legend-track">
+                  <div
+                    className="legend-fill"
+                    style={{ width: `${pct}%`, background: color }}
+                  />
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
   );
 }
+
 function Trend({ data }) {
+  const trendData = data.trend || [];
+  const totalValue = trendData.reduce((sum, item) => sum + (item.value || 0), 0);
+  const avgValue = trendData.length ? Math.round(totalValue / trendData.length) : 0;
+  const peakValue = trendData.length ? Math.max(...trendData.map((d) => d.value || 0)) : 0;
+
   return (
     <section className="panel chart-panel-neo">
       <div className="section-heading">
-        <h2>Booking Activity Velocity</h2>
-        <Badge>{data.scope}</Badge>
-      </div>
-      {data.trend?.length ? (
-        <div className="chart" style={{ height: 260 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data.trend}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e0cf" />
-              <XAxis dataKey="_id" stroke="#171915" tick={{ fill: "#171915", fontSize: 12, fontWeight: 700 }} />
-              <YAxis stroke="#171915" tick={{ fill: "#171915", fontSize: 12, fontWeight: 700 }} />
-              <Tooltip
-                contentStyle={{
-                  background: "#fffef8",
-                  border: "1.5px solid #171915",
-                  borderRadius: 12,
-                  boxShadow: "2px 2px 0 #171915",
-                  fontWeight: 800,
-                }}
-              />
-              <Bar
-                dataKey="value"
-                name="Agreed INR"
-                fill="#4ECDC4"
-                stroke="#171915"
-                strokeWidth={1.5}
-                radius={[8, 8, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+        <div>
+          <span className="eyebrow" style={{ color: "#2B8A80" }}>TRANSACTION VOLUME</span>
+          <h2 style={{ marginTop: 6, fontSize: "1.25rem", letterSpacing: "-0.02em" }}>
+            Booking Activity Velocity
+          </h2>
         </div>
+        <Badge style={{ background: "#4ECDC4", border: "1.5px solid #171915" }}>
+          {data.scope || "Active Scope"}
+        </Badge>
+      </div>
+
+      {trendData.length ? (
+        <>
+          <div className="trend-kpi-bar">
+            <div className="trend-kpi-pill">
+              <span className="kpi-tag">Total Velocity</span>
+              <strong className="kpi-val">{money(totalValue)}</strong>
+            </div>
+            <div className="trend-kpi-pill">
+              <span className="kpi-tag">Monthly Avg</span>
+              <strong className="kpi-val">{money(avgValue)}</strong>
+            </div>
+            <div className="trend-kpi-pill">
+              <span className="kpi-tag">Peak Window</span>
+              <strong className="kpi-val">{money(peakValue)}</strong>
+            </div>
+          </div>
+
+          <div className="chart" style={{ height: 250, marginTop: 12 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={trendData}
+                margin={{ top: 15, right: 15, left: -5, bottom: 5 }}
+              >
+                <defs>
+                  <linearGradient id="trendBarGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#79D9C5" />
+                    <stop offset="100%" stopColor="#4ECDC4" />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="4 4"
+                  vertical={false}
+                  stroke="#E8E2D2"
+                />
+                <XAxis
+                  dataKey="_id"
+                  stroke="#171915"
+                  tickLine={false}
+                  tick={{ fill: "#171915", fontSize: 11.5, fontWeight: 800 }}
+                  dy={6}
+                />
+                <YAxis
+                  stroke="#171915"
+                  tickLine={false}
+                  tick={{ fill: "#595852", fontSize: 11, fontWeight: 700 }}
+                  tickFormatter={(val) =>
+                    val >= 1000 ? `₹${(val / 1000).toFixed(0)}k` : `₹${val}`
+                  }
+                  dx={-4}
+                />
+                <Tooltip content={<CustomTrendTooltip />} cursor={{ fill: "rgba(248, 220, 96, 0.15)" }} />
+                <Bar
+                  dataKey="value"
+                  name="Agreed INR"
+                  fill="url(#trendBarGradient)"
+                  stroke="#171915"
+                  strokeWidth={2}
+                  maxBarSize={52}
+                  radius={[8, 8, 0, 0]}
+                  isAnimationActive={true}
+                  animationDuration={1100}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </>
       ) : (
         <Empty
           title="Your story is still starting."
