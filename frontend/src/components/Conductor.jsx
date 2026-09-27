@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Sparkles, GitBranch, ShieldCheck, RotateCcw, ArrowUpRight, Plus, X, Check, AlertTriangle, Network } from "lucide-react";
+import { Sparkles, GitBranch, RotateCcw, ArrowUpRight, Plus, X, Check, AlertTriangle, Network, ShieldCheck } from "lucide-react";
 import { api, streamPlan } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { Heading, Field, Badge, money, date, useData, ActionForm } from "./ui";

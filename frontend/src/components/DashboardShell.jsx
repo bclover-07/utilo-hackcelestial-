@@ -39,7 +39,7 @@ import { useTranslation } from "@/lib/i18n";
 import { getSocket } from "@/lib/socket";
 import { IncomingCallModal } from "./IncomingCallModal";
 import { VideoCallModal } from "./VideoCallModal";
-import NugenAssistant from "./NugenAssistant";
+
 
 const providerSections = [
   {
@@ -413,6 +413,14 @@ export default function DashboardShell({ children, admin = false }) {
           ))}
         </nav>
 
+        {/* Nugen Intelligence Badge */}
+        <div style={{ padding: "8px 16px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.68rem", color: "#7B61A8", fontWeight: 700, letterSpacing: "0.04em" }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7B61A8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <span>Powered by <a href="https://nugen.in" target="_blank" rel="noopener noreferrer" style={{ color: "#7B61A8", textDecoration: "underline" }}>Nugen Intelligence</a></span>
+          </div>
+        </div>
+
         {/* Sidebar Footer with User Info */}
         <div className="sidebar-bottom">
           <div className="sidebar-user-info">
@@ -776,8 +784,6 @@ export default function DashboardShell({ children, admin = false }) {
         </AnimatePresence>
       </div>
 
-      {/* Floating Nugen Intelligence Copilot & Alignment Studio */}
-      <NugenAssistant />
     </div>
   );
 }

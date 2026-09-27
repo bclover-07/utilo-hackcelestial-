@@ -311,13 +311,8 @@ export default function AgentStudio({ admin = false }) {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "8px", alignSelf: "center" }}>
-            <button
-              onClick={() => {
-                if (typeof window !== "undefined") {
-                  window.dispatchEvent(new CustomEvent("utilo:open-nugen-assistant", { detail: { tab: "chat" } }));
-                  window.dispatchEvent(new CustomEvent("utlio:open-nugen-assistant", { detail: { tab: "chat" } }));
-                }
-              }}
+            <Link
+              href="/dashboard/planner"
               style={{
                 padding: "10px 18px",
                 background: "#C3B1E1",
@@ -331,18 +326,14 @@ export default function AgentStudio({ admin = false }) {
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
+                textDecoration: "none",
               }}
             >
               <Bot size={16} />
-              <span>Launch Aligned Copilot</span>
-            </button>
-            <button
-              onClick={() => {
-                if (typeof window !== "undefined") {
-                  window.dispatchEvent(new CustomEvent("utilo:open-nugen-assistant", { detail: { tab: "pipeline" } }));
-                  window.dispatchEvent(new CustomEvent("utlio:open-nugen-assistant", { detail: { tab: "pipeline" } }));
-                }
-              }}
+              <span>Launch AI Conductor</span>
+            </Link>
+            <Link
+              href="/dashboard/search"
               style={{
                 padding: "8px 14px",
                 background: "transparent",
@@ -356,11 +347,12 @@ export default function AgentStudio({ admin = false }) {
                 alignItems: "center",
                 justifyContent: "center",
                 gap: "6px",
+                textDecoration: "none",
               }}
             >
-              <Layers size={14} />
-              <span>View Alignment Pipeline & Loss</span>
-            </button>
+              <Search size={14} />
+              <span>Discover Resources</span>
+            </Link>
           </div>
         </div>
       </section>
