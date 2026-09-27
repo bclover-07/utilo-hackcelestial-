@@ -217,7 +217,6 @@ class ListingCard extends StatelessWidget {
             ),
           ),
 
-
           if (meaningfulReasons.isNotEmpty) ...[
             const SizedBox(height: 8),
             Wrap(

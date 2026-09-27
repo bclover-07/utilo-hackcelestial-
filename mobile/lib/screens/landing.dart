@@ -892,7 +892,13 @@ class _LandingScreenState extends State<LandingScreen> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(matrix['simTitle'] as String, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                                  Expanded(
+                                    child: Text(
+                                      matrix['simTitle'] as String,
+                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
                                   Text(matrix['score'] as String, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Color(0xff16a34a))),
                                 ],
                               ),
