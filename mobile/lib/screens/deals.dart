@@ -5,7 +5,6 @@ import '../core/api.dart';
 import '../ui/widgets.dart';
 import '../ui/theme.dart';
 import '../services/local_ai.dart';
-import 'resources.dart';
 import 'video_call.dart';
 
 Future<void> shareDownload(
@@ -35,11 +34,14 @@ class QuotesScreen extends StatelessWidget {
         api: session.api,
         path: '/quotes',
         builder: (data, reload) {
-          final rows = records(data)
-              .where(
-                (q) => identity(q[session.mode]['_id']) == session.user?['_id'],
-              )
-              .toList();
+          final myId = session.user?['_id']?.toString() ?? '';
+          final rows = records(data).where((q) {
+            final participant = q[session.mode];
+            final pId = participant is Map
+                ? participant['_id']?.toString()
+                : participant?.toString();
+            return pId == myId;
+          }).toList();
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -346,13 +348,18 @@ class _QuoteScreenState extends State<QuoteScreen> {
             ).where((q) => q['_id'] == widget.id).firstOrNull;
             if (q == null) return const Empty(text: 'Quote unavailable.');
             final offers = records(q['offers']), last = offers.lastOrNull;
-            final mine = last?['by']?['_id'] == widget.session.user?['_id'];
+            final byObj = last?['by'];
+            final lastBy = byObj is Map ? byObj['_id']?.toString() : byObj?.toString();
+            final myId = widget.session.user?['_id']?.toString() ?? '';
+            final mine = lastBy != null && lastBy == myId;
             final open = ['invited', 'offered'].contains(q['status']);
+            final provObj = q['provider'];
+            final providerId = provObj is Map ? provObj['_id']?.toString() : provObj?.toString();
             final canOffer =
                 open &&
                 (last != null
                     ? !mine
-                    : q['provider']['_id'] == widget.session.user?['_id']);
+                    : providerId == myId);
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -1065,9 +1072,14 @@ class BookingsScreen extends StatelessWidget {
         api: session.api,
         path: '/bookings',
         builder: (data, reload) {
-          final rows = records(data)
-              .where((b) => b[session.mode]?['_id'] == session.user?['_id'])
-              .toList();
+          final myId = session.user?['_id']?.toString() ?? '';
+          final rows = records(data).where((b) {
+            final participant = b[session.mode];
+            final pId = participant is Map
+                ? participant['_id']?.toString()
+                : participant?.toString();
+            return pId == myId;
+          }).toList();
           return Column(
             children: [
               AsyncButton(
@@ -1077,9 +1089,10 @@ class BookingsScreen extends StatelessWidget {
               ),
               if (rows.isEmpty) const Empty(),
               ...rows.map((b) {
-                final provider = b['provider']?['_id'] == session.user?['_id'];
-                final start = DateTime.parse(b['start']),
-                    end = DateTime.parse(b['end']);
+                final providerId = b['provider'] is Map ? b['provider']['_id']?.toString() : b['provider']?.toString();
+                final provider = providerId == myId;
+                final start = DateTime.tryParse('${b['start']}') ?? DateTime.now(),
+                    end = DateTime.tryParse('${b['end']}') ?? DateTime.now().add(const Duration(days: 1));
                 return Panel(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,

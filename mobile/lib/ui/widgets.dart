@@ -1671,3 +1671,43 @@ class _CircularGaugePainter extends CustomPainter {
   bool shouldRepaint(covariant _CircularGaugePainter oldDelegate) => true;
 }
 
+class AiResultButton extends StatefulWidget {
+  const AiResultButton({
+    super.key,
+    required this.api,
+    required this.path,
+    required this.body,
+    required this.title,
+  });
+  final Api api;
+  final String path, title;
+  final Json body;
+  @override
+  State<AiResultButton> createState() => _AiResultButtonState();
+}
+
+class _AiResultButtonState extends State<AiResultButton> {
+  dynamic result;
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      AsyncButton(
+        text: widget.title,
+        icon: Icons.auto_awesome,
+        run: () async {
+          final r = await widget.api.call(
+            widget.path,
+            method: 'POST',
+            body: widget.body,
+          );
+          if (mounted) setState(() => result = r);
+          return 'Analysis ready.';
+        },
+      ),
+      if (result != null) Panel(color: lavender, child: DataView(result)),
+    ],
+  );
+}
+
+

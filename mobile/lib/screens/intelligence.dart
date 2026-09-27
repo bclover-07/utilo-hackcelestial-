@@ -142,46 +142,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   onNavigate: widget.onNavigate,
                 ),
                 const SizedBox(height: 16),
-                Bars(
-                  title: 'Monthly agreed booking value (INR)',
-                  rows: records(data['trend']),
-                  nameKey: '_id',
-                  valueKey: 'value',
-                ),
-                Bars(
-                  title: 'Bookings by status',
-                  rows: records(data['bookings']),
-                  nameKey: '_id',
-                  valueKey: 'count',
-                ),
-                const SizedBox(height: 12),
+                _TrendVelocityChartWidget(trend: records(data['trend'])),
+                const SizedBox(height: 8),
+                _BookingMixDonutWidget(bookings: records(data['bookings'])),
+                const SizedBox(height: 8),
                 _MarketDemandRadarWidget(demand: records(data['demand'])),
               ],
               if (section == 'analytics') ...[
-                Bars(
-                  title: 'Current demand (units)',
-                  rows: records(data['demand']),
-                  nameKey: 'category',
-                  valueKey: 'totalUnits',
-                ),
-                Bars(
-                  title: 'Recorded utilization (%)',
-                  rows: records(data['supply']),
-                  nameKey: 'title',
-                  valueKey: 'utilizationPercent',
-                ),
-                Bars(
-                  title: 'Monthly booking value (INR)',
-                  rows: records(data['revenue']),
-                  nameKey: 'period',
-                  valueKey: 'revenue',
-                ),
-                Bars(
-                  title: 'Requirement coverage',
-                  rows: records(data['coverage']),
-                  nameKey: 'status',
-                  valueKey: 'count',
-                ),
+                _CategoryDemandChartWidget(demand: records(data['demand'])),
+                const SizedBox(height: 8),
+                _RecordedUtilizationChartWidget(supply: records(data['supply'])),
+                const SizedBox(height: 8),
+                _TrendVelocityChartWidget(trend: records(data['revenue'])),
               ],
               if (section == 'market-pulse') ...[
                 if (data['snapshot'] != null)
@@ -845,7 +817,250 @@ class Bars extends StatelessWidget {
   }
 }
 
+class _TrendVelocityChartWidget extends StatelessWidget {
+  const _TrendVelocityChartWidget({required this.trend});
+  final List<Json> trend;
 
+  @override
+  Widget build(BuildContext context) {
+    if (trend.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    double totalVal = 0;
+    final items = <NeoBarItem>[];
+    for (int i = 0; i < trend.length; i++) {
+      final t = trend[i];
+      final val = (t['value'] ?? t['revenue']) is num ? ((t['value'] ?? t['revenue']) as num).toDouble() : 0.0;
+      totalVal += val;
+      final period = '${t['_id'] ?? t['period'] ?? 'P${i + 1}'}'.replaceAll('_', ' ');
+      items.add(
+        NeoBarItem(
+          label: period,
+          value: val,
+          color: palette[i % palette.length],
+          valueLabel: money(val.toInt()),
+        ),
+      );
+    }
+
+    return FeatureChartPanel(
+      eyebrow: 'DEAL FLOW VELOCITY',
+      title: 'Agreed Booking Value Trend',
+      badges: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: mint,
+            border: Border.all(color: ink, width: 1.5),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            money(totalVal.toInt()),
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11, color: ink),
+          ),
+        ),
+      ],
+      child: NeoBarChart(
+        items: items,
+        height: 140,
+      ),
+    );
+  }
+}
+
+class _BookingMixDonutWidget extends StatelessWidget {
+  const _BookingMixDonutWidget({required this.bookings});
+  final List<Json> bookings;
+
+  @override
+  Widget build(BuildContext context) {
+    if (bookings.isEmpty) return const SizedBox.shrink();
+
+    final pieItems = <NeoPieItem>[];
+    int totalCount = 0;
+    for (int i = 0; i < bookings.length; i++) {
+      final b = bookings[i];
+      final cnt = (b['count'] is num) ? (b['count'] as num).toDouble() : 0.0;
+      totalCount += cnt.toInt();
+      final status = '${b['_id'] ?? 'status'}'.replaceAll('_', ' ').toUpperCase();
+      Color col = teal;
+      if (status.contains('CONFIRM')) {
+        col = mint;
+      } else if (status.contains('PROGRESS') || status.contains('ACTIVE')) {
+        col = yellow;
+      } else if (status.contains('COMPLETE')) {
+        col = sky;
+      } else if (status.contains('CANCEL')) {
+        col = pink;
+      } else {
+        col = palette[i % palette.length];
+      }
+
+      pieItems.add(NeoPieItem(label: status, value: cnt, color: col));
+    }
+
+    return FeatureChartPanel(
+      eyebrow: 'PORTFOLIO FULFILMENT',
+      title: 'Agreements by Status & Lifecycle',
+      badges: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: yellow,
+            border: Border.all(color: ink, width: 1.5),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '$totalCount Deals',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+          ),
+        ),
+      ],
+      child: NeoDonutChart(
+        items: pieItems,
+        centerText: '$totalCount',
+        centerSubtext: 'Total Deals',
+        size: 130,
+      ),
+    );
+  }
+}
+
+class _CategoryDemandChartWidget extends StatelessWidget {
+  const _CategoryDemandChartWidget({required this.demand});
+  final List<Json> demand;
+
+  @override
+  Widget build(BuildContext context) {
+    if (demand.isEmpty) return const SizedBox.shrink();
+
+    final barItems = <NeoBarItem>[];
+    double totalDemand = 0;
+    for (int i = 0; i < demand.length; i++) {
+      final d = demand[i];
+      final units = (d['totalUnits'] is num) ? (d['totalUnits'] as num).toDouble() : 0.0;
+      totalDemand += units;
+      final cat = '${d['category'] ?? 'Category'}'.replaceAll('_', ' ');
+      barItems.add(
+        NeoBarItem(
+          label: cat,
+          value: units,
+          color: palette[i % palette.length],
+          valueLabel: '${units.toInt()} units',
+        ),
+      );
+    }
+
+    return FeatureChartPanel(
+      eyebrow: 'MARKET DEMAND VOLUME',
+      title: 'Category Unit Demand (Aggregated)',
+      badges: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: sky,
+            border: Border.all(color: ink, width: 1.5),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '${totalDemand.toInt()} Total Units',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+          ),
+        ),
+      ],
+      child: NeoBarChart(
+        items: barItems,
+        height: 140,
+      ),
+    );
+  }
+}
+
+class _RecordedUtilizationChartWidget extends StatelessWidget {
+  const _RecordedUtilizationChartWidget({required this.supply});
+  final List<Json> supply;
+
+  @override
+  Widget build(BuildContext context) {
+    if (supply.isEmpty) return const SizedBox.shrink();
+
+    final barItems = <NeoBarItem>[];
+    for (int i = 0; i < supply.take(6).length; i++) {
+      final s = supply[i];
+      final util = (s['utilizationPercent'] is num) ? (s['utilizationPercent'] as num).toDouble() : 0.0;
+      final title = '${s['title'] ?? 'Listing ${i + 1}'}';
+      final shortTitle = title.length > 10 ? title.substring(0, 10) : title;
+      barItems.add(
+        NeoBarItem(
+          label: shortTitle,
+          value: util,
+          color: util > 70 ? mint : (util > 40 ? yellow : peach),
+          valueLabel: '${util.toInt()}%',
+        ),
+      );
+    }
+
+    return FeatureChartPanel(
+      eyebrow: 'RESOURCE CAPACITY UTILIZATION',
+      title: 'Recorded Equipment & Venue Utilization (%)',
+      child: NeoBarChart(
+        items: barItems,
+        height: 130,
+        maxValue: 100,
+        unitSuffix: '%',
+      ),
+    );
+  }
+}
+
+class _PlannerPackageComparisonChartWidget extends StatelessWidget {
+  const _PlannerPackageComparisonChartWidget({required this.alternatives});
+  final List<Json> alternatives;
+
+  @override
+  Widget build(BuildContext context) {
+    if (alternatives.isEmpty) return const SizedBox.shrink();
+
+    final barItems = <NeoBarItem>[];
+    for (int i = 0; i < alternatives.length; i++) {
+      final p = alternatives[i];
+      final total = (p['total'] is num) ? (p['total'] as num).toDouble() : 0.0;
+      final label = '${p['label'] ?? p['id'] ?? 'Option ${i + 1}'}';
+      final isFeasible = p['feasible'] == true;
+      barItems.add(
+        NeoBarItem(
+          label: label,
+          value: total,
+          color: isFeasible ? mint : peach,
+          valueLabel: money(total.toInt()),
+        ),
+      );
+    }
+
+    return FeatureChartPanel(
+      eyebrow: 'SUPERVISOR PACKAGE MATRIX',
+      title: 'Engineered Packages Cost Comparison',
+      badges: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: mint,
+            border: Border.all(color: ink, width: 1.5),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '${alternatives.length} Options',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+          ),
+        ),
+      ],
+      child: NeoBarChart(
+        items: barItems,
+        height: 130,
+      ),
+    );
+  }
+}
 
 class DynamicSurgeCurveWidget extends StatelessWidget {
   const DynamicSurgeCurveWidget({super.key, required this.autoPilot});
@@ -1840,17 +2055,21 @@ class _PlanResultState extends State<PlanResult> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          '${widget.plan['input']['title']} • Version ${widget.plan['version']}',
+          '${widget.plan['input']?['title'] ?? 'Event Plan'} • Version ${widget.plan['version'] ?? 1}',
           style: Theme.of(context).textTheme.titleLarge,
         ),
-
+        if (widget.plan['result']?['summary'] != null)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Text(
-              '${widget.plan['result']['summary']}',
+              '${widget.plan['result']?['summary']}',
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
+        const SizedBox(height: 10),
+        _PlannerPackageComparisonChartWidget(
+          alternatives: records(widget.plan['result']?['alternatives']),
+        ),
         const SizedBox(height: 10),
         const Text(
           'Engineered Packages',
@@ -1947,7 +2166,6 @@ class _PlanResultState extends State<PlanResult> {
               style: const TextStyle(fontWeight: FontWeight.w800),
             ),
           )
-
         else ...[
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,
@@ -1957,7 +2175,7 @@ class _PlanResultState extends State<PlanResult> {
               'I reviewed the package, conditions, deposits and availability limitations. Create invitations for this package.',
             ),
           ),
-          ...records(widget.plan['result']['alternatives']).map(
+          ...records(widget.plan['result']?['alternatives']).map(
             (p) => AsyncButton(
               text: 'Create RFQ: ${p['label'] ?? p['id']} • ₹${p['total']}',
               enabled: p['feasible'] == true && acknowledged,

@@ -1825,6 +1825,137 @@ class ListingDetail extends StatelessWidget {
   );
 }
 
+class _SavedListingsCompareMatrixWidget extends StatelessWidget {
+  const _SavedListingsCompareMatrixWidget({
+    required this.listings,
+    required this.session,
+    required this.onReload,
+  });
+  final List<Json> listings;
+  final Session session;
+  final Future<void> Function() onReload;
+
+  @override
+  Widget build(BuildContext context) {
+    if (listings.length < 2) return const SizedBox.shrink();
+
+    final barItems = <NeoBarItem>[];
+    for (int i = 0; i < listings.length; i++) {
+      final l = listings[i];
+      final price = (l['price'] is num) ? (l['price'] as num).toDouble() : 0.0;
+      final title = '${l['title'] ?? 'Listing ${i + 1}'}';
+      final shortTitle = title.length > 10 ? title.substring(0, 10) : title;
+      barItems.add(
+        NeoBarItem(
+          label: shortTitle,
+          value: price,
+          color: palette[i % palette.length],
+          valueLabel: money(price.toInt()),
+        ),
+      );
+    }
+
+    return FeatureChartPanel(
+      eyebrow: 'MULTI-RESOURCE SIDE-BY-SIDE BENCHMARK',
+      title: 'Price & Specification Comparison Matrix',
+      badges: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: yellow,
+            border: Border.all(color: ink, width: 1.5),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            '${listings.length} In Comparison',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: ink),
+          ),
+        ),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          NeoBarChart(
+            items: barItems,
+            height: 140,
+          ),
+          const SizedBox(height: 12),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: listings.map((l) {
+                final price = (l['price'] is num) ? (l['price'] as num).toInt() : 0;
+                final qty = (l['quantity'] is num) ? (l['quantity'] as num).toInt() : 1;
+                final city = l['city']?.toString() ?? 'Regional';
+                final cat = '${l['category'] ?? ''}'.replaceAll('_', ' ').toUpperCase();
+                return Container(
+                  width: 170,
+                  margin: const EdgeInsets.only(right: 10),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: paperCard,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: ink, width: 1.4),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        cat,
+                        style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xFF0F766E)),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${l['title']}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: ink),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${money(price)}/${l['unit'] ?? 'unit'}',
+                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: Color(0xFF2E7D32)),
+                      ),
+                      Text(
+                        '📍 $city • $qty units',
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.grey.shade700),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: yellow,
+                            foregroundColor: ink,
+                            side: const BorderSide(color: ink, width: 1.2),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                          ),
+                          onPressed: () => showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (_) => RapidoNegotiateModal(
+                              session: session,
+                              listing: l,
+                              onSuccess: onReload,
+                            ),
+                          ),
+                          child: const Text('⚡ Offer', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class SavedScreen extends StatelessWidget {
   const SavedScreen({super.key, required this.session});
   final Session session;
@@ -1836,39 +1967,78 @@ class SavedScreen extends StatelessWidget {
       Remote(
         api: session.api,
         path: '/favorites',
-        builder: (data, reload) => Column(
-          children: [
-            if (records(data).isEmpty)
-              const Empty(
-                text: 'Save resources from Discover to compare them here.',
-              ),
-            ...records(data).map(
-              (l) => ListingCard(
-                listing: l,
-                actions: [
-                  FilledButton(
-                    onPressed: () => openScreen(
-                      context,
-                      ListingDetail(session: session, listing: l),
+        builder: (data, reload) {
+          final favs = records(data);
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (favs.isEmpty)
+                const Empty(
+                  text: 'Save resources from Discover to compare them here.',
+                ),
+              if (favs.length >= 2) ...[
+                _SavedListingsCompareMatrixWidget(
+                  listings: favs,
+                  session: session,
+                  onReload: reload,
+                ),
+                const SizedBox(height: 12),
+              ],
+              ...favs.map(
+                (l) => ListingCard(
+                  listing: l,
+                  actions: [
+                    FilledButton(
+                      onPressed: () => openScreen(
+                        context,
+                        ListingDetail(session: session, listing: l),
+                      ),
+                      child: const Text('Compare details'),
                     ),
-                    child: const Text('Compare details'),
-                  ),
-                  AsyncButton(
-                    text: 'Remove saved',
-                    run: () async {
-                      await session.api.call(
-                        '/favorites/${l['_id']}',
-                        method: 'POST',
-                      );
-                      await reload();
-                      return 'Removed.';
-                    },
-                  ),
-                ],
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: ink, width: 1.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      icon: const Text('⚡', style: TextStyle(fontSize: 12)),
+                      label: const Text(
+                        'Direct Offer',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12,
+                          color: ink,
+                        ),
+                      ),
+                      onPressed: () => showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => RapidoNegotiateModal(
+                          session: session,
+                          listing: l,
+                          onSuccess: reload,
+                        ),
+                      ),
+                    ),
+                    AsyncButton(
+                      text: 'Remove saved',
+                      run: () async {
+                        await session.api.call(
+                          '/favorites/${l['_id']}',
+                          method: 'POST',
+                        );
+                        await reload();
+                        return 'Removed.';
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          );
+        },
       ),
       Remote(
         api: session.api,
@@ -2298,41 +2468,3 @@ class RequestsScreen extends StatelessWidget {
   );
 }
 
-class AiResultButton extends StatefulWidget {
-  const AiResultButton({
-    super.key,
-    required this.api,
-    required this.path,
-    required this.body,
-    required this.title,
-  });
-  final Api api;
-  final String path, title;
-  final Json body;
-  @override
-  State<AiResultButton> createState() => _AiResultButtonState();
-}
-
-class _AiResultButtonState extends State<AiResultButton> {
-  dynamic result;
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      AsyncButton(
-        text: widget.title,
-        icon: Icons.auto_awesome,
-        run: () async {
-          final r = await widget.api.call(
-            widget.path,
-            method: 'POST',
-            body: widget.body,
-          );
-          if (mounted) setState(() => result = r);
-          return 'Analysis ready.';
-        },
-      ),
-      if (result != null) Panel(color: lavender, child: DataView(result)),
-    ],
-  );
-}
