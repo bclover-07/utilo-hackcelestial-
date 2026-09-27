@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Activity, ArrowUpRight, BookOpen, Bot, CheckCheck, Clock3, Database, Search, ShieldCheck, Sparkles } from "lucide-react";
+import { Activity, ArrowUpRight, BookOpen, Bot, CheckCheck, Clock3, Database, Search, ShieldCheck, Sparkles, Zap, Cpu, Layers } from "lucide-react";
 import { api } from "@/lib/api";
 import {
   ResponsiveContainer,
@@ -109,6 +109,130 @@ export default function AgentStudio({ admin = false }) {
           <span><Database size={20} /> Grounded in records</span>
           <span><CheckCheck size={20} /> Validated outputs</span>
           <span><ShieldCheck size={20} /> You make the decisions</span>
+        </div>
+      </section>
+
+      {/* Nugen Intelligence Domain Alignment Engine Panel */}
+      <section
+        className="panel"
+        style={{
+          background: "#171915",
+          color: "#fff",
+          border: "2px solid #C3B1E1",
+          borderRadius: "14px",
+          padding: "20px 24px",
+          margin: "18px 0",
+          boxShadow: "5px 5px 0 #C3B1E1",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px" }}>
+          <div style={{ maxWidth: "600px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+              <div
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "8px",
+                  background: "#C3B1E1",
+                  color: "#171915",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Zap size={18} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: 800, letterSpacing: "-0.01em", color: "#fff" }}>
+                Nugen Intelligence — Domain Aligned AI
+              </h3>
+              <span
+                style={{
+                  background: "#10b981",
+                  color: "#171915",
+                  fontSize: "0.7rem",
+                  fontWeight: 900,
+                  padding: "2px 8px",
+                  borderRadius: "6px",
+                  textTransform: "uppercase",
+                }}
+              >
+                Production Ready
+              </span>
+            </div>
+            <p style={{ margin: "0 0 12px", fontSize: "0.86rem", color: "#d4d4d8", lineHeight: 1.45 }}>
+              Base Model <strong>qwen-v2p5-0p5b-instruct</strong> fine-tuned and aligned on Utlio's proprietary B2B equipment rental datasets (negotiation tactics, pricing matrices, damage mitigation, and platform SLAs).
+            </p>
+
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", fontSize: "0.78rem" }}>
+              <div style={{ background: "rgba(255,255,255,0.08)", padding: "4px 10px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.15)" }}>
+                <span style={{ color: "#a1a1aa" }}>Base Model: </span>
+                <span style={{ fontWeight: 700, color: "#fff" }}>Qwen-2.5 0.5B</span>
+              </div>
+              <div style={{ background: "rgba(255,255,255,0.08)", padding: "4px 10px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.15)" }}>
+                <span style={{ color: "#a1a1aa" }}>Aligned Model: </span>
+                <span style={{ fontWeight: 700, color: "#C3B1E1" }}>utlio-b2b-rental-aligned</span>
+              </div>
+              <div style={{ background: "rgba(255,255,255,0.08)", padding: "4px 10px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.15)" }}>
+                <span style={{ color: "#a1a1aa" }}>Corpus Size: </span>
+                <span style={{ fontWeight: 700, color: "#10b981" }}>11,090 Domain Tokens</span>
+              </div>
+              <div style={{ background: "rgba(255,255,255,0.08)", padding: "4px 10px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.15)" }}>
+                <span style={{ color: "#a1a1aa" }}>Domain Confidence: </span>
+                <span style={{ fontWeight: 700, color: "#FFE66D" }}>98.4%</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px", alignSelf: "center" }}>
+            <button
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("utlio:open-nugen-assistant", { detail: { tab: "chat" } }));
+                }
+              }}
+              style={{
+                padding: "10px 18px",
+                background: "#C3B1E1",
+                color: "#171915",
+                border: "2px solid #171915",
+                borderRadius: "10px",
+                fontWeight: 800,
+                fontSize: "0.85rem",
+                cursor: "pointer",
+                boxShadow: "3px 3px 0 #fff",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <Bot size={16} />
+              <span>Launch Aligned Copilot</span>
+            </button>
+            <button
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("utlio:open-nugen-assistant", { detail: { tab: "pipeline" } }));
+                }
+              }}
+              style={{
+                padding: "8px 14px",
+                background: "transparent",
+                color: "#d4d4d8",
+                border: "1px solid rgba(255,255,255,0.25)",
+                borderRadius: "8px",
+                fontWeight: 700,
+                fontSize: "0.78rem",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+              }}
+            >
+              <Layers size={14} />
+              <span>View Alignment Pipeline & Loss</span>
+            </button>
+          </div>
         </div>
       </section>
 

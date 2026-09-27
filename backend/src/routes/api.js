@@ -17,6 +17,7 @@ import { adminRoutes } from "./adminRoutes.js";
 import { workProcessRoutes } from "./workProcessRoutes.js";
 import { inventoryRoutes } from "./inventoryRoutes.js";
 import { digitalTwinRoutes } from "./digitalTwinRoutes.js";
+import { nugenRoutes } from "./nugenRoutes.js";
 import { localAiConfig } from "../services/localAiConfig.js";
 
 export const api = Router();
@@ -64,4 +65,5 @@ b.use(quoteRoutes);
 b.use(bookingRoutes);
 b.use(aiRoutes);
 b.use(inventoryRoutes);
+b.use(nugenRoutes);
 api.use(b);

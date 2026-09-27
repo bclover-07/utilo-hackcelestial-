@@ -39,6 +39,7 @@ import { useTranslation } from "@/lib/i18n";
 import { getSocket } from "@/lib/socket";
 import { IncomingCallModal } from "./IncomingCallModal";
 import { VideoCallModal } from "./VideoCallModal";
+import NugenAssistant from "./NugenAssistant";
 
 const providerSections = [
   {
@@ -770,6 +771,9 @@ export default function DashboardShell({ children, admin = false }) {
           })}
         </AnimatePresence>
       </div>
+
+      {/* Floating Nugen Intelligence Copilot & Alignment Studio */}
+      <NugenAssistant />
     </div>
   );
 }

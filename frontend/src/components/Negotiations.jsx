@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { getSocket } from "@/lib/socket";
 import { useAuth } from "@/context/AuthContext";
-import { Video, PhoneCall, PhoneOff } from "lucide-react";
+import { Video, PhoneCall, PhoneOff, Bot, Sparkles } from "lucide-react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -852,6 +852,34 @@ function QuoteDetail({ q, reload }) {
           💡 Optional: AI Counter-Offer Assistance & Bargaining Zone (ZOPA)
         </summary>
         <div style={{ marginTop: "1rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "8px" }}>
+            <span style={{ fontSize: "0.8rem", color: "#52525b" }}>Need deep domain pricing strategy or contract risk analysis?</span>
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("utlio:open-nugen-assistant", { detail: { tab: "negotiate" } }));
+                }
+              }}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "6px 12px",
+                background: "#171915",
+                color: "#fff",
+                border: "1.5px solid #171915",
+                borderRadius: "8px",
+                fontSize: "0.78rem",
+                fontWeight: 800,
+                cursor: "pointer",
+                boxShadow: "2px 2px 0 #C3B1E1",
+              }}
+            >
+              <Bot size={14} color="#C3B1E1" />
+              <span>Nugen Domain Deal Advisor</span>
+            </button>
+          </div>
           <ActionForm
             label="Ask for pricing trade-offs"
             onSubmit={async (form) => {
