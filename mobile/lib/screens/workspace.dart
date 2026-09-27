@@ -6,6 +6,7 @@ import 'resources.dart';
 import 'deals.dart';
 import 'intelligence.dart';
 import 'account_admin.dart';
+import 'weather_twin.dart';
 
 class Destination {
   const Destination(this.path, this.title, this.icon);
@@ -64,6 +65,7 @@ class _WorkspaceState extends State<Workspace> {
           Destination('analytics', 'Marketplace liquidity', Icons.bar_chart),
           Destination('settings', 'Policies & integrations', Icons.settings_outlined),
           Destination('agents', 'AI operations & agents', Icons.auto_awesome),
+          Destination('weather-twin', 'Weather Digital Twin', Icons.cloud_outlined),
         ]),
       ];
     }
@@ -87,6 +89,7 @@ class _WorkspaceState extends State<Workspace> {
           Destination('disputes', 'Disputes & mediation', Icons.flag_outlined),
         ]),
         NavSection('MARKET INTELLIGENCE', [
+          Destination('weather-twin', 'Weather Digital Twin', Icons.cloud_outlined),
           Destination('agents', 'Agent Studio', Icons.auto_awesome),
           Destination('market-pulse', 'Live market pulse', Icons.radar),
           Destination('analytics', 'Market analytics', Icons.bar_chart),
@@ -115,6 +118,7 @@ class _WorkspaceState extends State<Workspace> {
         Destination('disputes', 'Disputes & claims', Icons.flag_outlined),
       ]),
       NavSection('MARKET INTELLIGENCE', [
+        Destination('weather-twin', 'Weather Digital Twin', Icons.cloud_outlined),
         Destination('agents', 'Agent Studio', Icons.auto_awesome),
         Destination('market-pulse', 'Live market pulse', Icons.radar),
         Destination('analytics', 'Market analytics', Icons.bar_chart),
@@ -804,6 +808,8 @@ class _WorkspaceState extends State<Workspace> {
         return NotificationsScreen(session: s, onNavigate: go);
       case 'planner':
         return PlannerScreen(session: s);
+      case 'weather-twin':
+        return WeatherTwinScreen(session: s);
       case 'smart-pricing':
       case 'forecast':
       case 'agents':
