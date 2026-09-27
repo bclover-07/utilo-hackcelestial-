@@ -31,7 +31,11 @@ export const authController = {
       { _id: req.user._id },
       { $inc: { sessionVersion: 1 } },
     );
-    res.clearCookie("utlio_session", { path: "/" });
+    res.clearCookie("utlio_session", {
+      path: "/",
+      sameSite: config.production ? "none" : "lax",
+      secure: config.production,
+    });
     return { ok: true };
   }),
 

@@ -41,9 +41,32 @@ export function verifiedBusiness(req, res, next) {
 
 export function isAllowedOrigin(origin) {
   if (!origin) return true;
-  if (origin === config.origin) return true;
+  const cleanOrigin = origin.replace(/\/+$/, "").toLowerCase();
+
+  // Parse config.origin which may be comma-separated
+  const configuredList = (config.origin || "http://localhost:3000")
+    .split(",")
+    .map((o) => o.trim().replace(/\/+$/, "").toLowerCase())
+    .filter(Boolean);
+
+  if (configuredList.includes(cleanOrigin)) return true;
+
+  // Always permit production Utlio frontend Vercel deployments & previews
+  if (
+    cleanOrigin === "https://utilo-hackcelestial-frontend.vercel.app" ||
+    /^https:\/\/utilo-hackcelestial-frontend(-[a-z0-9-]+)?\.vercel\.app$/.test(cleanOrigin)
+  ) {
+    return true;
+  }
+
   if (!config.production) {
-    if (/^https?:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/.test(origin)) return true;
+    if (
+      /^https?:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/.test(
+        cleanOrigin,
+      )
+    ) {
+      return true;
+    }
   }
   return false;
 }

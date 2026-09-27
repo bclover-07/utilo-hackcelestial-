@@ -62,9 +62,28 @@ export async function api<T = unknown>(
       );
     throw new Error("Cannot reach Utlio. Check your connection and retry.");
   }
-  let data;
-  try { data = await response.json(); }
-  catch { throw new Error("The server returned an unreadable response. Please retry; check your records before repeating a change."); }
+  let data: any;
+  try {
+    data = await response.json();
+  } catch {
+    if (!response.ok) {
+      if (response.status === 502 || response.status === 504) {
+        throw new Error(
+          `Backend server is unreachable (HTTP ${response.status}). Ensure API_ORIGIN is set to your deployed backend URL in Vercel.`,
+        );
+      }
+      if (response.status === 403) {
+        throw new Error("Access forbidden (HTTP 403). Backend rejected request origin.");
+      }
+      if (response.status === 404) {
+        throw new Error(`API endpoint not found (HTTP 404: /api${path}). Check backend deployment.`);
+      }
+      throw new Error(`The server returned an HTTP ${response.status} error response.`);
+    }
+    throw new Error(
+      "The server returned an unreadable response. Please retry; check your records before repeating a change.",
+    );
+  }
   if (!response.ok) {
     if (
       response.status === 401 &&
@@ -73,7 +92,7 @@ export async function api<T = unknown>(
     ) {
       window.dispatchEvent(new Event("utlio:session-expired"));
     }
-    const error = Object.assign(new Error(data.error || "Request failed."), {
+    const error = Object.assign(new Error(data?.error || `Request failed (${response.status}).`), {
       status: response.status,
     });
     throw error;

@@ -21,7 +21,7 @@ export function session(res, user) {
   });
   res.cookie("utlio_session", token, {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: config.production ? "none" : "lax",
     secure: config.production,
     maxAge: 8 * 3600000,
     path: "/",

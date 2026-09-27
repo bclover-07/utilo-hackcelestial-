@@ -7,6 +7,7 @@ import { csrf, isAllowedOrigin } from "./middlewares/auth.js";
 import { ApiError, errorHandler } from "./middlewares/errors.js";
 import { api } from "./routes/api.js";
 export const app = express();
+app.set("trust proxy", 1);
 app.disable("x-powered-by");
 app.use(helmet());
 app.use(
