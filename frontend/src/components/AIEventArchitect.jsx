@@ -118,25 +118,22 @@ export default function AIEventArchitect({ onApplyToConductor, defaultCity = "Mu
             }}>
               <BrainCircuit size={14} /> AUTONOMOUS AI AGENT
             </span>
-            <button
-              type="button"
-              onClick={() => window.dispatchEvent(new CustomEvent("utlio:open-nugen-assistant", { detail: { tab: "pipeline" } }))}
+            <span
               style={{
-                background: "#c8beff",
-                border: "1.5px solid #171915",
+                background: "#f0ecfc",
+                color: "#6c38cc",
+                border: "1.5px solid #d4c4fb",
                 borderRadius: "99px",
                 padding: "4px 10px",
                 fontSize: "0.75rem",
                 fontWeight: 800,
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "4px",
-                cursor: "pointer",
+                gap: "5px",
               }}
-              title="Click to view Nugen Training Corpus and Pipeline"
             >
-              <Zap size={14} /> NUGEN ALIGNED (QWEN 2.5) · View Training Files
-            </button>
+              <Zap size={13} /> Powered by Nugen AI
+            </span>
           </div>
           <h2 style={{ fontSize: "1.8rem", fontWeight: 900, letterSpacing: "-0.04em", margin: 0 }}>
             AI Event Resource Architect

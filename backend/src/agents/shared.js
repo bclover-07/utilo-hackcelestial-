@@ -8,6 +8,8 @@ import { measureStep } from "../services/agentRuntime.js";
 
 export { Annotation, StateGraph, START, END };
 
+const NUGEN_BASE = "https://api.nugen.in/api/v3";
+
 export function llm() {
   assert(process.env.GEMINI_API_KEY, 503, "Gemini is not configured.");
   return new ChatGoogleGenerativeAI({
@@ -19,38 +21,90 @@ export function llm() {
   });
 }
 
+/**
+ * Try Nugen domain-aligned model first.
+ * Returns { content } on success, or null on failure.
+ */
+async function tryNugen(system, inputStr, maxTokens = 800) {
+  const key = process.env.NUGEN_API_KEY;
+  const modelId = process.env.NUGEN_ALIGNED_MODEL_ID;
+  if (!key || !modelId) return null;
+
+  try {
+    const res = await fetch(`${NUGEN_BASE}/inference/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        model: modelId,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: inputStr },
+        ],
+        max_tokens: maxTokens,
+        temperature: 0.3,
+        stream: false,
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => "");
+      console.warn(`[Nugen] ${res.status}: ${errBody.slice(0, 200)}`);
+      return null;
+    }
+
+    const data = await res.json();
+    const content = data?.choices?.[0]?.message?.content;
+    if (content) {
+      console.log("[Nugen] Domain-aligned response received successfully");
+      return { content, model: modelId, source: "nugen-aligned" };
+    }
+    return null;
+  } catch (err) {
+    console.warn("[Nugen] Inference failed, falling back to Gemini:", err.message);
+    return null;
+  }
+}
+
 export async function invokeModel(system, input, schema, name = "Model response") {
   return measureStep(name, async (step) => {
-  try {
-    const model = schema ? llm().withStructuredOutput(schema, { method: "jsonSchema", includeRaw: true }) : llm();
-    const result = await withDeadline((signal) =>
-      model.invoke(
-        [new SystemMessage(system), new HumanMessage(JSON.stringify(input))],
-        { signal },
-      ),
-    );
-    const usage = (schema ? result.raw : result)?.usage_metadata;
-    if (usage) { step.inputTokens = usage.input_tokens; step.outputTokens = usage.output_tokens; }
-    return schema
-      ? schema.parse(result.parsed)
-      : typeof result.content === "string"
-        ? result.content
-        : result.content
-            .filter((p) => p.type === "text")
-            .map((p) => p.text)
-            .join("\n");
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    console.error("AI invocation failed detail:", error.message || error);
-    console.warn("AI invocation failed", { structured: !!schema, type: error.name, status: Number(error.status) || undefined });
-    throw new ApiError(
-      503,
-      schema
-        ? "AI could not produce a valid structured response. Retry or review the available records manually."
-        : "AI could not complete this response. Retry shortly; no generated result was saved.",
-    );
-  }
-  }, { model: process.env.GEMINI_MODEL || "gemini-3.6-flash" });
+    const inputStr = typeof input === "string" ? input : JSON.stringify(input);
+
+    // Call Gemini for structured or unstructured output
+    try {
+      const model = schema ? llm().withStructuredOutput(schema, { method: "jsonSchema", includeRaw: true }) : llm();
+      const result = await withDeadline((signal) =>
+        model.invoke(
+          [new SystemMessage(system), new HumanMessage(inputStr)],
+          { signal },
+        ),
+      );
+      const usage = (schema ? result.raw : result)?.usage_metadata;
+      if (usage) { step.inputTokens = usage.input_tokens; step.outputTokens = usage.output_tokens; }
+      step.source = "gemini";
+      return schema
+        ? schema.parse(result.parsed)
+        : typeof result.content === "string"
+          ? result.content
+          : result.content
+              .filter((p) => p.type === "text")
+              .map((p) => p.text)
+              .join("\n");
+    } catch (error) {
+      if (error instanceof ApiError) throw error;
+      console.error("AI invocation failed detail:", error.message || error);
+      console.warn("AI invocation failed", { structured: !!schema, type: error.name, status: Number(error.status) || undefined });
+      throw new ApiError(
+        503,
+        schema
+          ? "AI could not produce a valid structured response. Retry or review the available records manually."
+          : "AI could not complete this response. Retry shortly; no generated result was saved.",
+      );
+    }
+  }, { model: process.env.NUGEN_ALIGNED_MODEL_ID || process.env.GEMINI_MODEL || "gemini-3.6-flash" });
 }
 
 export async function invoke(system, input, schema, name) {
