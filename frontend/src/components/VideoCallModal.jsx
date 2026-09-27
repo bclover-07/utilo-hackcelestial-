@@ -17,7 +17,6 @@ import {
   AlertCircle,
   PhoneCall,
   Clock,
-  RefreshCw,
 } from "lucide-react";
 
 const COLORS = {
@@ -620,7 +619,7 @@ export function VideoCallModal({
                     Active Challenge
                   </span>
                 </div>
-                <p style={{ margin: "6px 0 12px", fontSize: "0.88rem", fontWeight: 700, color: COLORS.panel }}>"{activeChallenge}"</p>
+                <p style={{ margin: "6px 0 12px", fontSize: "0.88rem", fontWeight: 700, color: COLORS.panel }}>&quot;{activeChallenge}&quot;</p>
                 <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
                   <button
                     type="button"
