@@ -14,17 +14,14 @@ class ApiFailure implements Exception {
 
 class Api {
   Api({String? baseUrl, bool persistSession = true}) {
-    // Android emulator uses 10.0.2.2 to access host machine; physical devices with adb reverse or desktop use 127.0.0.1
+    // When adb reverse tcp:4000 tcp:4000 is active, 127.0.0.1:4000 connects directly from physical Android devices
     final defaultHost = kIsWeb
         ? 'http://${Uri.base.host.isNotEmpty ? Uri.base.host : 'localhost'}:4000/api'
-        : (defaultTargetPlatform == TargetPlatform.android
-            ? 'http://10.0.2.2:4000/api'
-            : 'http://127.0.0.1:4000/api');
+        : 'http://127.0.0.1:4000/api';
     const envUrl = String.fromEnvironment('API_BASE_URL');
     var url = baseUrl ?? (envUrl.isNotEmpty ? envUrl : defaultHost);
     if (!kIsWeb && url.contains('localhost')) {
-      final replacement = defaultTargetPlatform == TargetPlatform.android ? '10.0.2.2' : '127.0.0.1';
-      url = url.replaceFirst('localhost', replacement);
+      url = url.replaceFirst('localhost', '127.0.0.1');
     }
     final uri = Uri.parse(url);
     if (!uri.hasAuthority || !['http', 'https'].contains(uri.scheme)) {
