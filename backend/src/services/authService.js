@@ -52,6 +52,7 @@ export async function login(body) {
       role: z.enum(["business", "admin"]),
       mode: z.enum(["provider", "seeker"]).optional(),
     })
+    .parse(body);
   const altEmail = data.email.includes("@utilo.com")
     ? data.email.replace("@utilo.com", "@utlio.com")
     : data.email.includes("@utlio.com")
