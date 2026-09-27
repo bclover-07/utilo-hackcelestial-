@@ -118,7 +118,12 @@ export default function AIEventArchitect({ onApplyToConductor, defaultCity = "Mu
             }}>
               <BrainCircuit size={14} /> AUTONOMOUS AI AGENT
             </span>
-            <span
+            <button
+              type="button"
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent("utilo:open-nugen-assistant", { detail: { tab: "pipeline" } }));
+                window.dispatchEvent(new CustomEvent("utlio:open-nugen-assistant", { detail: { tab: "pipeline" } }));
+              }}
               style={{
                 background: "#f0ecfc",
                 color: "#6c38cc",
@@ -130,10 +135,11 @@ export default function AIEventArchitect({ onApplyToConductor, defaultCity = "Mu
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "5px",
+                cursor: "pointer",
               }}
             >
               <Zap size={13} /> Powered by Nugen AI
-            </span>
+            </button>
           </div>
           <h2 style={{ fontSize: "1.8rem", fontWeight: 900, letterSpacing: "-0.04em", margin: 0 }}>
             AI Event Resource Architect
@@ -520,7 +526,7 @@ export default function AIEventArchitect({ onApplyToConductor, defaultCity = "Mu
                   </div>
                 ) : (
                   <div style={{ fontSize: "0.8rem", color: "#777", background: "#fdf8f6", padding: "0.5rem", borderRadius: "8px", border: "1px solid #fbd5c5" }}>
-                    No exact listings currently active in {result.eventIntent?.city} for this category. Utlio's multi-vendor RFQ will broadcast this requirement to regional verified suppliers upon package creation.
+                    No exact listings currently active in {result.eventIntent?.city} for this category. Utilo's multi-vendor RFQ will broadcast this requirement to regional verified suppliers upon package creation.
                   </div>
                 )}
               </div>

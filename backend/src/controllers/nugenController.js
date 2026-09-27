@@ -7,6 +7,71 @@ export const nugenController = {
     res.json(status);
   },
 
+  listBaseModels: async (_req, res) => {
+    const models = await nugen.listBaseModels();
+    res.json(models);
+  },
+
+  listAlignedModels: async (_req, res) => {
+    const models = await nugen.listAlignedModels();
+    res.json(models);
+  },
+
+  getCorpus: async (_req, res) => {
+    const corpus = await generateB2BRentalCorpus();
+    res.json({ count: corpus.length, documents: corpus });
+  },
+
+  uploadCorpus: async (_req, res) => {
+    const corpus = await generateB2BRentalCorpus();
+    const result = await nugen.uploadDocuments(corpus);
+    res.json({ message: "Domain corpus uploaded successfully", ...result });
+  },
+
+  listDocuments: async (_req, res) => {
+    const docs = await nugen.listDocuments();
+    res.json(docs);
+  },
+
+  documentStatus: async (req, res) => {
+    const docId = z.string().min(1).parse(req.params.id);
+    const status = await nugen.getDocumentStatus(docId);
+    res.json(status);
+  },
+
+  createAlignment: async (req, res) => {
+    const body = z.object({
+      name: z.string().min(3).max(200).default("Utilo B2B Rental Domain Alignment"),
+      documentIds: z.array(z.string()).min(1),
+      description: z.string().max(500).default("Domain alignment for B2B industrial equipment rental platform"),
+    }).parse(req.body);
+
+    const result = await nugen.createAlignment(body.name, body.documentIds, body.description);
+    res.json(result);
+  },
+
+  alignmentStatus: async (req, res) => {
+    const alignmentId = z.string().min(1).parse(req.params.id);
+    const status = await nugen.getAlignmentStatus(alignmentId);
+    res.json(status);
+  },
+
+  listAlignments: async (_req, res) => {
+    const alignments = await nugen.listAlignments();
+    res.json(alignments);
+  },
+
+  deployModel: async (req, res) => {
+    const modelId = z.string().min(1).parse(req.params.id);
+    const result = await nugen.deployModel(modelId);
+    res.json(result);
+  },
+
+  deploymentStatus: async (req, res) => {
+    const modelId = z.string().min(1).parse(req.params.id);
+    const status = await nugen.getDeploymentStatus(modelId);
+    res.json(status);
+  },
   chat: async (req, res) => {
     const body = z.object({
       message: z.string().trim().min(1).max(2000),

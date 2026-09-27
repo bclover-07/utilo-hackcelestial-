@@ -26,6 +26,7 @@ export function PlannerPage() {
   const [questions, setQuestions] = useState([]), [excluded, setExcluded] = useState([]), [acknowledged, setAcknowledged] = useState(false);
   const [budget, setBudget] = useState("");
   const [answer, setAnswer] = useState(null);
+  const [progress, setProgress] = useState([]);
   const result = plan?.result;
   const alternatives = Array.isArray(result?.alternatives) ? result.alternatives : [];
   const option = alternatives.find(p => p.id === selected) || alternatives[0] || null;

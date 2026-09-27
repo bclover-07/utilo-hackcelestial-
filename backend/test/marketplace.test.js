@@ -17,12 +17,12 @@ test("Real HTTP marketplace and agent contracts on an isolated replica set", { t
   const replica = await MongoMemoryReplSet.create({ replSet: { count: 1 }, binary: { version: "7.0.14" } });
   let server;
   try {
-    await mongoose.connect(replica.getUri(), { dbName: "utlio_contract_test" });
+    await mongoose.connect(replica.getUri(), { dbName: "utilo_contract_test" });
     await Promise.all(Object.values(mongoose.models).map(model => model.init()));
     server = await new Promise(resolve => { const instance = app.listen(0,"127.0.0.1",()=>resolve(instance)); });
     const base = `http://127.0.0.1:${server.address().port}/api`;
     async function call(path, { cookie, method="GET", body, verify=true }={}) {
-      const response=await fetch(base+path,{method,headers:{"Content-Type":"application/json",Origin:"http://localhost:3000",...(verify?{"X-Utlio-Request":"1"}:{}),...(cookie?{Cookie:cookie}:{})},body:body===undefined?undefined:JSON.stringify(body)});
+      const response=await fetch(base+path,{method,headers:{"Content-Type":"application/json",Origin:"http://localhost:3000",...(verify?{"X-Utilo-Request":"1", "X-Utlio-Request":"1"}:{}),...(cookie?{Cookie:cookie}:{})},body:body===undefined?undefined:JSON.stringify(body)});
       const content=response.headers.get("content-type") || "";
       const data=content.includes("application/json")?await response.json():await response.text();
       return { status:response.status,data,cookie:response.headers.get("set-cookie")?.split(";")[0] };

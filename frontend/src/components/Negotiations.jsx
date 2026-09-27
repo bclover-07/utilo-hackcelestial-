@@ -214,20 +214,18 @@ function QuoteDetail({ q, reload }) {
           return [...prev, res.message];
         });
       }
-      window.dispatchEvent(
-        new CustomEvent("utlio:open-video-call", {
-          detail: {
-            quoteId: String(q._id),
-            roomId: res.roomId,
-            partnerId: partnerId,
-            partnerName,
-            partnerRole,
-            listingTitle: q.listing?.title || "Asset Negotiation",
-            isInitiator: true,
-            messageId: res.messageId || res.message?._id,
-          },
-        })
-      );
+      const callDetail = {
+        quoteId: String(q._id),
+        roomId: res.roomId,
+        partnerId: partnerId,
+        partnerName,
+        partnerRole,
+        listingTitle: q.listing?.title || "Asset Negotiation",
+        isInitiator: true,
+        messageId: res.messageId || res.message?._id,
+      };
+      window.dispatchEvent(new CustomEvent("utilo:open-video-call", { detail: callDetail }));
+      window.dispatchEvent(new CustomEvent("utlio:open-video-call", { detail: callDetail }));
       setCallAlert("Video call request dispatched to provider.");
     } catch (err) {
       setCallAlert(err.message || "Failed to request video call.");
@@ -250,20 +248,18 @@ function QuoteDetail({ q, reload }) {
           body: { action: "accept", roomId, messageId },
         });
       }
-      window.dispatchEvent(
-        new CustomEvent("utlio:open-video-call", {
-          detail: {
-            quoteId: String(q._id),
-            roomId,
-            partnerId: partnerId,
-            partnerName,
-            partnerRole,
-            listingTitle: q.listing?.title || "Asset Negotiation",
-            isInitiator: isCaller,
-            messageId,
-          },
-        })
-      );
+      const acceptDetail = {
+        quoteId: String(q._id),
+        roomId,
+        partnerId: partnerId,
+        partnerName,
+        partnerRole,
+        listingTitle: q.listing?.title || "Asset Negotiation",
+        isInitiator: isCaller,
+        messageId,
+      };
+      window.dispatchEvent(new CustomEvent("utilo:open-video-call", { detail: acceptDetail }));
+      window.dispatchEvent(new CustomEvent("utlio:open-video-call", { detail: acceptDetail }));
     } catch (err) {
       console.error("Failed to accept call:", err);
     }

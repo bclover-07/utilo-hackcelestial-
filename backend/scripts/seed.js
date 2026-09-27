@@ -156,11 +156,11 @@ async function seed() {
 
   // ─── 3. Demo accounts ────────────────────────────────────────────
   const provider = await BusinessProfile.findOneAndUpdate(
-    { email: "arjun@utlio.com" },
+    { email: "arjun@utilo.com" },
     {
       $set: {
         name: "Arjun Mehta Events & Hospitality",
-        email: "arjun@utlio.com",
+        email: "arjun@utilo.com",
         passwordHash: hash,
         role: "business",
         mode: "provider",
@@ -178,11 +178,11 @@ async function seed() {
   );
 
   const seeker = await BusinessProfile.findOneAndUpdate(
-    { email: "priya@utlio.com" },
+    { email: "priya@utilo.com" },
     {
       $set: {
         name: "Priya Sharma Productions",
-        email: "priya@utlio.com",
+        email: "priya@utilo.com",
         passwordHash: hash,
         role: "business",
         mode: "seeker",
@@ -200,11 +200,11 @@ async function seed() {
   );
 
   const admin = await BusinessProfile.findOneAndUpdate(
-    { email: "admin@utlio.com" },
+    { email: "admin@utilo.com" },
     {
       $set: {
-        name: "Utlio Operations",
-        email: "admin@utlio.com",
+        name: "Utilo Operations",
+        email: "admin@utilo.com",
         passwordHash: hash,
         role: "admin",
         mode: "seeker",
@@ -220,11 +220,11 @@ async function seed() {
   );
 
   const shreshta = await BusinessProfile.findOneAndUpdate(
-    { email: "shreshta@utlio.com" },
+    { email: "shreshta@utilo.com" },
     {
       $set: {
         name: "Shreshta Banquets & Decor",
-        email: "shreshta@utlio.com",
+        email: "shreshta@utilo.com",
         passwordHash: hash,
         role: "business",
         mode: "provider",
@@ -242,11 +242,11 @@ async function seed() {
   );
 
   const shreyas = await BusinessProfile.findOneAndUpdate(
-    { email: "shreyas@utlio.com" },
+    { email: "shreyas@utilo.com" },
     {
       $set: {
         name: "Shreyas Sound & Audio Visuals",
-        email: "shreyas@utlio.com",
+        email: "shreyas@utilo.com",
         passwordHash: hash,
         role: "business",
         mode: "provider",
@@ -264,11 +264,11 @@ async function seed() {
   );
 
   const shivam = await BusinessProfile.findOneAndUpdate(
-    { email: "shivam@utlio.com" },
+    { email: "shivam@utilo.com" },
     {
       $set: {
         name: "Shivam Creative Events",
-        email: "shivam@utlio.com",
+        email: "shivam@utilo.com",
         passwordHash: hash,
         role: "business",
         mode: "seeker",
@@ -286,11 +286,11 @@ async function seed() {
   );
 
   const vaishnavi = await BusinessProfile.findOneAndUpdate(
-    { email: "vaishnavi@utlio.com" },
+    { email: "vaishnavi@utilo.com" },
     {
       $set: {
         name: "Vaishnavi Design & Production",
-        email: "vaishnavi@utlio.com",
+        email: "vaishnavi@utilo.com",
         passwordHash: hash,
         role: "business",
         mode: "seeker",
@@ -307,13 +307,13 @@ async function seed() {
     { upsert: true, new: true }
   );
 
-  console.log(`✔ Provider: arjun@utlio.com  (${provider._id})`);
-  console.log(`✔ Provider: shreshta@utlio.com (${shreshta._id})`);
-  console.log(`✔ Provider: shreyas@utlio.com  (${shreyas._id})`);
-  console.log(`✔ Seeker:   priya@utlio.com  (${seeker._id})`);
-  console.log(`✔ Seeker:   shivam@utlio.com (${shivam._id})`);
-  console.log(`✔ Seeker:   vaishnavi@utlio.com (${vaishnavi._id})`);
-  console.log(`✔ Admin:    admin@utlio.com  (${admin._id})`);
+  console.log(`✔ Provider: arjun@utilo.com  (${provider._id})`);
+  console.log(`✔ Provider: shreshta@utilo.com (${shreshta._id})`);
+  console.log(`✔ Provider: shreyas@utilo.com  (${shreyas._id})`);
+  console.log(`✔ Seeker:   priya@utilo.com  (${seeker._id})`);
+  console.log(`✔ Seeker:   shivam@utilo.com (${shivam._id})`);
+  console.log(`✔ Seeker:   vaishnavi@utilo.com (${vaishnavi._id})`);
+  console.log(`✔ Admin:    admin@utilo.com  (${admin._id})`);
 
   // ─── 4. Wipe old demo data ────────────────────────────────────────
   const ids = [provider._id, seeker._id];
@@ -1223,15 +1223,15 @@ async function seed() {
   // ─── DONE ─────────────────────────────────────────────────────────
   console.log(`
 =======================================================
-     UTLIO DEMO SEEDING COMPLETE
+     UTILO DEMO SEEDING COMPLETE
 =======================================================
 
 Password for all accounts: Password123!
 
 DEMO ACCOUNTS:
-  🏢 arjun@utlio.com   (Arjun Mehta — Provider)
-  🎯 priya@utlio.com   (Priya Sharma — Seeker)
-  🛡️  admin@utlio.com   (Platform Admin)
+  🏢 arjun@utilo.com   (Arjun Mehta — Provider)
+  🎯 priya@utilo.com   (Priya Sharma — Seeker)
+  🛡️  admin@utilo.com   (Platform Admin)
 
 DATA SUMMARY:
   • ${listings.length} active listings across ${categories.length} categories

@@ -18,12 +18,12 @@ export const authController = {
   }),
 
   me: send(async (req) => {
-    const token = req.cookies?.utlio_session || null;
+    const token = req.cookies?.utilo_session || req.cookies?.utlio_session || null;
     return { ...authService.publicUser(req.user), socketToken: token };
   }),
 
   socketToken: send(async (req) => {
-    return { token: req.cookies?.utlio_session || null };
+    return { token: req.cookies?.utilo_session || req.cookies?.utlio_session || null };
   }),
 
   logout: send(async (req, res) => {
@@ -31,11 +31,13 @@ export const authController = {
       { _id: req.user._id },
       { $inc: { sessionVersion: 1 } },
     );
-    res.clearCookie("utlio_session", {
+    const clearOpts = {
       path: "/",
       sameSite: config.production ? "none" : "lax",
       secure: config.production,
-    });
+    };
+    res.clearCookie("utilo_session", clearOpts);
+    res.clearCookie("utlio_session", clearOpts);
     return { ok: true };
   }),
 

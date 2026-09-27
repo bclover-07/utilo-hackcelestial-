@@ -251,7 +251,9 @@ export default function DashboardShell({ children, admin = false }) {
     socket.on("video_call_declined", handleDeclined);
     socket.on("notification", handleNotification);
     socket.on("notification_new", handleNotification);
+    window.addEventListener("utilo:notify", handleCustomNotify);
     window.addEventListener("utlio:notify", handleCustomNotify);
+    window.addEventListener("utilo:open-video-call", handleWindowStartCall);
     window.addEventListener("utlio:open-video-call", handleWindowStartCall);
 
     return () => {
@@ -260,7 +262,9 @@ export default function DashboardShell({ children, admin = false }) {
       socket.off("video_call_declined", handleDeclined);
       socket.off("notification", handleNotification);
       socket.off("notification_new", handleNotification);
+      window.removeEventListener("utilo:notify", handleCustomNotify);
       window.removeEventListener("utlio:notify", handleCustomNotify);
+      window.removeEventListener("utilo:open-video-call", handleWindowStartCall);
       window.removeEventListener("utlio:open-video-call", handleWindowStartCall);
     };
   }, [auth.user]);

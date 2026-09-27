@@ -16,16 +16,18 @@ export function session(res, user) {
   const token = jwt.sign({ version: user.sessionVersion }, config.jwt, {
     subject: String(user._id),
     expiresIn: "8h",
-    issuer: "utlio",
-    audience: "utlio-web",
+    issuer: "utilo",
+    audience: "utilo-web",
   });
-  res.cookie("utlio_session", token, {
+  const cookieOptions = {
     httpOnly: true,
     sameSite: config.production ? "none" : "lax",
     secure: config.production,
     maxAge: 8 * 3600000,
     path: "/",
-  });
+  };
+  res.cookie("utilo_session", token, cookieOptions);
+  res.cookie("utlio_session", token, cookieOptions);
   return token;
 }
 export async function register(body) {
@@ -50,10 +52,14 @@ export async function login(body) {
       role: z.enum(["business", "admin"]),
       mode: z.enum(["provider", "seeker"]).optional(),
     })
-    .parse(body);
-  const user = await BusinessProfile.findOne({ email: data.email }).select(
-    "+passwordHash",
-  );
+  const altEmail = data.email.includes("@utilo.com")
+    ? data.email.replace("@utilo.com", "@utlio.com")
+    : data.email.includes("@utlio.com")
+    ? data.email.replace("@utlio.com", "@utilo.com")
+    : null;
+  const user = await BusinessProfile.findOne(
+    altEmail ? { email: { $in: [data.email, altEmail] } } : { email: data.email }
+  ).select("+passwordHash");
   const valid = await bcrypt.compare(
     data.password,
     user?.passwordHash ||

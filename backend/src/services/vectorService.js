@@ -107,7 +107,7 @@ export async function retrieveVectorEvidence(vector, model, limit = 5) {
   if (mode !== "exact") {
     try {
       const sources = await Listing.aggregate([
-        { $vectorSearch: { index: process.env.MONGODB_VECTOR_INDEX || "utlio_resources_vector", path: "embedding", queryVector: vector, numCandidates: Math.max(100, limit * 20), limit, filter: { status: "active", moderationHold: { $ne: true }, embeddingModel: model } } },
+        { $vectorSearch: { index: process.env.MONGODB_VECTOR_INDEX || "utilo_resources_vector", path: "embedding", queryVector: vector, numCandidates: Math.max(100, limit * 20), limit, filter: { status: "active", moderationHold: { $ne: true }, embeddingModel: model } } },
         
         { $match: { status: "active", moderationHold: { $ne: true }, embeddingModel: model, indexedAt: { $exists: true }, embedding: { $size: vector.length } } },
         { $project: { ...evidenceProjection, similarity: { $meta: "vectorSearchScore" } } },

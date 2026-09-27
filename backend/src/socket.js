@@ -52,7 +52,7 @@ export function initSocketServer(httpServer) {
   io.use(async (socket, next) => {
     try {
       const cookieHeader = socket.handshake.headers.cookie || "";
-      const cookieMatch = cookieHeader.match(/utlio_session=([^;]+)/);
+      const cookieMatch = cookieHeader.match(/(?:utilo|utlio)_session=([^;]+)/);
       const authHeader = socket.handshake.headers.authorization || "";
       const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
       const token =
@@ -67,8 +67,8 @@ export function initSocketServer(httpServer) {
 
       const payload = jwt.verify(token, config.jwt, {
         algorithms: ["HS256"],
-        issuer: "utlio",
-        audience: "utlio-web",
+        issuer: ["utilo", "utlio"],
+        audience: ["utilo-web", "utlio-web"],
       });
 
       const user = await BusinessProfile.findById(payload.sub);

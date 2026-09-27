@@ -20,12 +20,16 @@ export default function VoiceSummary({ text }) {
             signal: AbortSignal.timeout(45000),
             headers: {
               "Content-Type": "application/json",
+              "X-Utilo-Request": "1",
               "X-Utlio-Request": "1",
             },
             body: JSON.stringify({ text: text.slice(0, 1500) }),
           });
           if (!response.ok) {
-            if (response.status === 401) window.dispatchEvent(new Event("utlio:session-expired"));
+            if (response.status === 401) {
+              window.dispatchEvent(new Event("utilo:session-expired"));
+              window.dispatchEvent(new Event("utlio:session-expired"));
+            }
             const body = await response.json().catch(() => ({}));
             throw new Error(body.error || "Voice playback unavailable.");
           }
