@@ -2,6 +2,7 @@ import * as ai from "../agents/workflows.js";
 import { speak } from "../services/speechService.js";
 import { id } from "../services/validation.js";
 import { trackAgent } from "../services/agentRuntime.js";
+import { planEvent } from "../agents/eventPlannerAgent.js";
 
 const send = (fn) => async (req, res) => res.json(await trackAgent(req.user, req.route.path, () => fn(req, res)));
 const recordId = (req) => id.parse(req.params.id);
@@ -9,6 +10,8 @@ const recordId = (req) => id.parse(req.params.id);
 import * as memoryService from "../services/memoryService.js";
 
 export const aiController = {
+  eventPlanner: send((req) => planEvent(req.user, req.body)),
+
   workflow: send((req) => ai.workflow(req.user, req.body)),
 
   rag: send((req) => ai.rag(req.user, req.body)),

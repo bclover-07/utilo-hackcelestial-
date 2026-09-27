@@ -41,7 +41,7 @@ export async function invokeModel(system, input, schema, name = "Model response"
             .join("\n");
   } catch (error) {
     if (error instanceof ApiError) throw error;
-    
+    console.error("AI invocation failed detail:", error.message || error);
     console.warn("AI invocation failed", { structured: !!schema, type: error.name, status: Number(error.status) || undefined });
     throw new ApiError(
       503,

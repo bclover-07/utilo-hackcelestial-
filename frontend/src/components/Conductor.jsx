@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Heading, Field, Badge, money, date, useData, ActionForm } from "./ui";
 import VoiceSummary from "./VoiceSummary";
 import ConductorVisuals from "./ConductorVisuals";
+import AIEventArchitect from "./AIEventArchitect";
 
 const blankItem = () => ({ label: "", query: "", category: "", quantity: 1, capacity: 1, specs: "", attributesText: "" });
 function formItems(items) {
@@ -28,6 +29,31 @@ export function PlannerPage() {
   const result = plan?.result;
   const alternatives = Array.isArray(result?.alternatives) ? result.alternatives : [];
   const option = alternatives.find(p => p.id === selected) || alternatives[0] || null;
+
+  function handleApplyAIPlan(aiResult) {
+    if (!aiResult) return;
+    const intent = aiResult.eventIntent || {};
+    const reqs = aiResult.requirements?.items || [];
+    
+    setTitle(intent.eventType ? `${intent.eventType} — ${intent.guestCount} guests` : aiResult.plan?.title || "My event resource plan");
+    if (reqs.length > 0) {
+      setItems(reqs.map(r => ({
+        label: r.label || r.category,
+        query: r.query || "",
+        category: r.category || "",
+        quantity: r.quantity || 1,
+        capacity: r.capacity || 1,
+        specs: r.specs || "",
+        attributesText: "",
+      })));
+    }
+    setFilters(prev => ({
+      ...prev,
+      city: intent.city || prev.city,
+      budget: intent.budgetInr || aiResult.plan?.summary?.estimatedTotal || prev.budget,
+    }));
+    setNotice("AI Event Plan loaded into Conductor! Fill in event start/end times and location coordinates below to test supplier failure resilience.");
+  }
 
   async function run(label, work) {
     if (busy) return;
@@ -62,6 +88,7 @@ export function PlannerPage() {
     <Heading eyebrow="UTLIO CONDUCTOR · PLAN / TEST / ADAPT" title="Make every moving part work." description="Turn an event brief into a checked resource package. Explore the trade-offs. Be ready when plans change." />
     <div role="status" aria-live="polite">{busy && <div className="notice conductor-busy"><span className="live-dot" /> {busy}</div>}{notice && <div className="notice">{notice}</div>}</div>
     {error && <div className="notice error-panel" role="alert">{error}</div>}
+    <AIEventArchitect onApplyToConductor={handleApplyAIPlan} defaultCity={user?.city || "Mumbai"} />
     <div className="conductor-workbench">
       <section className="panel conductor-intake">
         <div className="section-heading"><div><span className="eyebrow">01 / INTERPRET</span><h2>Start with the whole picture.</h2></div><Sparkles size={26} /></div>

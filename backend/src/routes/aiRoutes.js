@@ -15,6 +15,7 @@ const aiLimit = rateLimit({
 });
 
 aiRoutes.post("/ai/workflow", aiLimit, c.workflow);
+aiRoutes.post("/ai/event-planner", aiLimit, c.eventPlanner);
 aiRoutes.get("/ai/studio", agentStudioController.overview);
 aiRoutes.post("/ai/knowledge", aiLimit, c.rag);
 aiRoutes.post("/ai/speech", aiLimit, c.speech);
