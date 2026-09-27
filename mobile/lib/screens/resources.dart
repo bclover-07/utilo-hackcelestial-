@@ -56,6 +56,13 @@ class ListingCard extends StatelessWidget {
     final qty = listing['quantity'] is num ? (listing['quantity'] as num).toInt() : 1;
     final stockRatio = ((qty * 12).clamp(20, 100)) / 100;
     final reasons = listing['reasons'] is List ? (listing['reasons'] as List) : [];
+    final meaningfulReasons = reasons.where((r) {
+      final s = r.toString();
+      return !s.contains('not requested') &&
+          !s.contains('No budget constraint') &&
+          !s.contains('No reviews yet') &&
+          !s.contains('Select dates');
+    }).take(2).toList();
 
     return Panel(
       child: Column(
@@ -210,13 +217,6 @@ class ListingCard extends StatelessWidget {
             ),
           ),
 
-          final meaningfulReasons = reasons.where((r) {
-            final s = r.toString();
-            return !s.contains('not requested') &&
-                !s.contains('No budget constraint') &&
-                !s.contains('No reviews yet') &&
-                !s.contains('Select dates');
-          }).take(2).toList();
 
           if (meaningfulReasons.isNotEmpty) ...[
             const SizedBox(height: 8),

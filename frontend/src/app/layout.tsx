@@ -4,6 +4,7 @@ import "./workspace.css";
 import "./neo.css";
 import "./conductor.css";
 import "./agents.css";
+import "./digital-twin.css";
 import { AuthProvider } from "@/context/AuthContext";
 import MotionExperience from "@/components/MotionExperience";
 import GoogleTranslateScript from "@/components/GoogleTranslateScript";

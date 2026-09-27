@@ -32,6 +32,7 @@ import {
   AlertTriangle,
   X,
   ArrowRight,
+  CloudRain,
 } from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useTranslation } from "@/lib/i18n";
@@ -74,6 +75,7 @@ const providerSections = [
       ["agents", "Agent Studio", <Bot size={17} key="agents" />],
       ["market-pulse", "Live market pulse", <Activity size={17} key="pulse" />],
       ["analytics", "Market analytics", <BarChart3 size={17} key="analytics" />],
+      ["weather-twin", "Weather Digital Twin", <CloudRain size={17} key="twin" />],
     ],
   },
   {
@@ -120,6 +122,7 @@ const seekerSections = [
       ["agents", "Agent Studio", <Bot size={17} key="agents" />],
       ["market-pulse", "Live market pulse", <Activity size={17} key="pulse" />],
       ["analytics", "Market analytics", <BarChart3 size={17} key="analytics" />],
+      ["weather-twin", "Weather Digital Twin", <CloudRain size={17} key="twin" />],
     ],
   },
   {

@@ -16,6 +16,7 @@ import { notificationRoutes } from "./notificationRoutes.js";
 import { adminRoutes } from "./adminRoutes.js";
 import { workProcessRoutes } from "./workProcessRoutes.js";
 import { inventoryRoutes } from "./inventoryRoutes.js";
+import { digitalTwinRoutes } from "./digitalTwinRoutes.js";
 import { localAiConfig } from "../services/localAiConfig.js";
 
 export const api = Router();
@@ -48,6 +49,7 @@ api.use(uploadRoutes);
 api.use(notificationRoutes);
 api.use(analyticsRoutes);
 api.use(workProcessRoutes);
+api.use(digitalTwinRoutes);
 
 
 api.use("/admin", adminRoutes);

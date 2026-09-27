@@ -577,6 +577,7 @@ class MessageThread extends StatefulWidget {
 
 class _MessageThreadState extends State<MessageThread> {
   final message = TextEditingController();
+  final List<Map<String, dynamic>> _pendingMessages = [];
   Timer? timer;
   Future<void> Function()? reload;
   bool _requestingCall = false;
@@ -584,7 +585,8 @@ class _MessageThreadState extends State<MessageThread> {
   @override
   void initState() {
     super.initState();
-    timer = Timer.periodic(const Duration(seconds: 10), (_) {
+    // Fast 2.5s live sync interval for real-time responsiveness
+    timer = Timer.periodic(const Duration(milliseconds: 2500), (_) {
       reload?.call().catchError((Object _) {});
     });
   }
@@ -602,7 +604,15 @@ class _MessageThreadState extends State<MessageThread> {
     path: '/quotes/${widget.quoteId}/messages',
     builder: (data, refresh) {
       reload = refresh;
-      final messages = records(data);
+      final serverMessages = records(data);
+      // Merge server messages with optimistic pending messages (avoiding duplicates)
+      final messages = [
+        ...serverMessages,
+        ..._pendingMessages.where(
+          (pm) => !serverMessages.any((sm) => sm['text'] == pm['text']),
+        ),
+      ];
+
       return Panel(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -640,15 +650,19 @@ class _MessageThreadState extends State<MessageThread> {
                 child: Text('Start the conversation or request a video call with your partner.'),
               ),
             ...messages.map((m) {
-              final isMe = m['sender']?['_id'] == widget.session.user?['_id'];
+              final sender = m['sender'];
+              final senderId = (sender is Map) ? sender['_id']?.toString() : sender?.toString();
+              final myId = widget.session.user?['_id']?.toString();
+              final isMe = senderId != null && myId != null && senderId == myId;
               final isVideo = m['type'] == 'video_call';
+              final isPending = m['isPending'] == true;
 
               if (isVideo) {
                 final vCall = (m['videoCall'] is Map) ? (m['videoCall'] as Map) : {};
                 final callStatus = (vCall['status'] ?? 'requested').toString();
                 final roomId = (vCall['roomId'] ?? 'room_${widget.quoteId}').toString();
-                final callerId = (vCall['caller'] is Map) ? vCall['caller']['_id'] : vCall['caller'];
-                final isCaller = callerId == widget.session.user?['_id'] || isMe;
+                final callerId = (vCall['caller'] is Map) ? vCall['caller']['_id']?.toString() : vCall['caller']?.toString();
+                final isCaller = callerId == myId || isMe;
                 final durationSecs = vCall['durationSeconds'] ?? 0;
 
                 Color cardBg;
@@ -887,9 +901,18 @@ class _MessageThreadState extends State<MessageThread> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        '${identity(m['sender'])} • ${m['createdAt'] ?? ''}',
-                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.black54),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${identity(m['sender'])} • ${m['createdAt'] ?? ''}',
+                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.black54),
+                          ),
+                          if (isPending) ...[
+                            const SizedBox(width: 4),
+                            const Icon(Icons.schedule, size: 10, color: Colors.black54),
+                          ],
+                        ],
                       ),
                       const SizedBox(height: 4),
                       SelectableText(
@@ -905,7 +928,10 @@ class _MessageThreadState extends State<MessageThread> {
               controller: message,
               maxLines: 2,
               maxLength: 4000,
-              decoration: const InputDecoration(labelText: 'Write message...'),
+              decoration: const InputDecoration(
+                labelText: 'Write message...',
+                hintText: 'Type message to your partner here...',
+              ),
             ),
             const SizedBox(height: 6),
             Row(
@@ -915,17 +941,39 @@ class _MessageThreadState extends State<MessageThread> {
                     text: 'Send message',
                     icon: Icons.send_outlined,
                     run: () async {
-                      if (message.text.trim().isEmpty) {
+                      final cleanText = message.text.trim();
+                      if (cleanText.isEmpty) {
                         throw const ApiFailure('Write a message first.');
                       }
-                      await widget.session.api.call(
-                        '/quotes/${widget.quoteId}/messages',
-                        method: 'POST',
-                        body: {'text': message.text},
-                      );
+                      // Clear input immediately to eliminate lag
                       message.clear();
-                      await refresh();
-                      return 'Message sent.';
+
+                      // Optimistically append pending message
+                      final optMsg = {
+                        '_id': 'pending_${DateTime.now().millisecondsSinceEpoch}',
+                        'text': cleanText,
+                        'sender': widget.session.user,
+                        'createdAt': 'Just now',
+                        'isPending': true,
+                      };
+                      if (mounted) setState(() => _pendingMessages.add(optMsg));
+
+                      try {
+                        await widget.session.api.call(
+                          '/quotes/${widget.quoteId}/messages',
+                          method: 'POST',
+                          body: {'text': cleanText},
+                        );
+                        await refresh();
+                        if (mounted) setState(() => _pendingMessages.remove(optMsg));
+                        return 'Message sent.';
+                      } catch (e) {
+                        if (mounted) {
+                          setState(() => _pendingMessages.remove(optMsg));
+                          message.text = cleanText;
+                        }
+                        rethrow;
+                      }
                     },
                   ),
                 ),
